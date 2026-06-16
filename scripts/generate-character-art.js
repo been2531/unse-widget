@@ -1,23 +1,24 @@
-// Procedurally generates the 20 character sprites (4 growth stages x 5
-// moods) and the 3 companion age-tier accessory overlays, replacing the
-// flat "PLACEHOLDER ART" circles with a distinct silhouette per stage and a
-// distinct face/posture per mood. No external art assets or native image
-// libs needed — everything is rasterized with simple shape-membership tests
-// onto a 2x canvas, then downsampled with bilinear filtering for cheap
-// anti-aliasing.
+// Procedurally generates the 35 character sprites (7 growth stages x 5
+// moods). Earlier version painted smooth ellipses/triangles onto a large
+// canvas and downsampled with bilinear filtering — that produced a blurry
+// shape that was neither crisp pixel art nor a clean illustration. This
+// version commits fully to pixel art instead: every sprite is authored on
+// a small 40x40 logical grid (hard per-cell colors, no blending), a 1-cell
+// outline is grown around the silhouette, and each logical cell is blitted
+// as a flat SCALE x SCALE block — no resize/blur step exists at all.
 //
 // Run with: node scripts/generate-character-art.js
 const path = require('path');
 const Jimp = require('jimp-compact');
 
-const SCALE = 2;
-const SIZE = 240;
-const CANVAS = SIZE * SCALE;
+const LOGICAL = 40;
+const SCALE = 6;
+const CANVAS = LOGICAL * SCALE; // 240, matches existing <Image>/widget usage
 
 const CHARACTER_DIR = path.join(__dirname, '../src/assets/character');
-const ACCESSORY_DIR = path.join(CHARACTER_DIR, 'age-accessories');
 
-// ---- color helpers --------------------------------------------------
+// ---- color helpers (plain [r,g,b] triples, no alpha — pixel art here is
+// flat colors only) -------------------------------------------------------
 
 function hexToRgb(hex) {
   const v = hex.replace('#', '');
@@ -41,14 +42,10 @@ function desaturate([r, g, b], t) {
   return [lerp(r, gray, t), lerp(g, gray, t), lerp(b, gray, t)];
 }
 
-function rgba([r, g, b], a = 1) {
-  return [r, g, b, a];
-}
-
 const FACE_COLOR = hexToRgb('#3B362E');
-const WHITE = [255, 255, 255];
 const TEAR_COLOR = hexToRgb('#8FCBEA');
 const BLUSH_COLOR = hexToRgb('#F2849E');
+const OUTLINE_COLOR = hexToRgb('#2B2722'); // shared across every stage so the 7 sprites read as one evolution line
 
 const MOOD_BODY_ADJUST = {
   joyful: (c) => brighten(c, 0.08),
@@ -60,34 +57,50 @@ const MOOD_BODY_ADJUST = {
 
 const STAGE_PALETTE = {
   egg: { body: hexToRgb('#F4E4C1'), accent: hexToRgb('#DDBE8C'), dark: hexToRgb('#B89A6A') },
-  hatchling: { body: hexToRgb('#CFE7A0'), accent: hexToRgb('#94B86A'), shell: hexToRgb('#F4E4C1') },
-  juvenile: { body: hexToRgb('#7FC8C0'), accent: hexToRgb('#4F968D') },
-  companion: { body: hexToRgb('#F2A65A'), accent: hexToRgb('#D98A3D') },
+  newborn: { body: hexToRgb('#FBE3D6'), accent: hexToRgb('#F2A6A6'), shell: hexToRgb('#F4E4C1') },
+  infant: { body: hexToRgb('#D7EFC4'), accent: hexToRgb('#94C77A') },
+  child: { body: hexToRgb('#BFE3DE'), accent: hexToRgb('#5FAFA3') },
+  adolescent: { body: hexToRgb('#9FCBDB'), accent: hexToRgb('#4F8EA8'), accent2: hexToRgb('#2F6E86') },
+  youngAdult: { body: hexToRgb('#F2A65A'), accent: hexToRgb('#D98A3D'), accent2: hexToRgb('#E84F6B') },
+  elder: { body: hexToRgb('#C9C3D6'), accent: hexToRgb('#9A93AE'), accent2: hexToRgb('#E8D9A0') },
 };
 
-// ---- raw pixel + shape primitives (operate in actual canvas pixels) ----
+// ---- grid engine ---------------------------------------------------------
+// Every shape helper below writes into a 40x40 logical grid (cell = null or
+// an [r,g,b] color) instead of a raster image. The image only gets created
+// once, at blit time.
 
-function setPixelRGBA(image, x, y, color) {
-  const w = image.bitmap.width;
-  const h = image.bitmap.height;
-  if (x < 0 || y < 0 || x >= w || y >= h) return;
-  const [r, g, b, a = 1] = color;
-  if (a <= 0) return;
-  const idx = (y * w + x) * 4;
-  const data = image.bitmap.data;
-  const dstA = data[idx + 3] / 255;
-  const outA = a + dstA * (1 - a);
-  if (outA <= 0) {
-    data[idx + 3] = 0;
-    return;
-  }
-  data[idx + 0] = Math.round((r * a + data[idx + 0] * dstA * (1 - a)) / outA);
-  data[idx + 1] = Math.round((g * a + data[idx + 1] * dstA * (1 - a)) / outA);
-  data[idx + 2] = Math.round((b * a + data[idx + 2] * dstA * (1 - a)) / outA);
-  data[idx + 3] = Math.round(outA * 255);
+function createGrid() {
+  return Array.from({ length: LOGICAL }, () => new Array(LOGICAL).fill(null));
 }
 
-function fillRotatedEllipseRaw(image, cx, cy, rx, ry, angleDeg, color) {
+function inBounds(x, y) {
+  return x >= 0 && y >= 0 && x < LOGICAL && y < LOGICAL;
+}
+
+function setCell(grid, x, y, color) {
+  const ix = Math.round(x);
+  const iy = Math.round(y);
+  if (!inBounds(ix, iy)) return;
+  grid[iy][ix] = color;
+}
+
+function stampEllipse(grid, cx, cy, rx, ry, color) {
+  if (rx <= 0 || ry <= 0) return;
+  const minX = Math.floor(cx - rx - 1);
+  const maxX = Math.ceil(cx + rx + 1);
+  const minY = Math.floor(cy - ry - 1);
+  const maxY = Math.ceil(cy + ry + 1);
+  for (let y = minY; y <= maxY; y++) {
+    for (let x = minX; x <= maxX; x++) {
+      const dx = x + 0.5 - cx;
+      const dy = y + 0.5 - cy;
+      if ((dx * dx) / (rx * rx) + (dy * dy) / (ry * ry) <= 1) setCell(grid, x, y, color);
+    }
+  }
+}
+
+function stampRotatedEllipse(grid, cx, cy, rx, ry, angleDeg, color) {
   if (rx <= 0 || ry <= 0) return;
   const rad = (-angleDeg * Math.PI) / 180;
   const cos = Math.cos(rad);
@@ -103,7 +116,7 @@ function fillRotatedEllipseRaw(image, cx, cy, rx, ry, angleDeg, color) {
       const dy = y + 0.5 - cy;
       const lx = dx * cos - dy * sin;
       const ly = dx * sin + dy * cos;
-      if ((lx * lx) / (rx * rx) + (ly * ly) / (ry * ry) <= 1) setPixelRGBA(image, x, y, color);
+      if ((lx * lx) / (rx * rx) + (ly * ly) / (ry * ry) <= 1) setCell(grid, x, y, color);
     }
   }
 }
@@ -112,7 +125,7 @@ function triangleSign(p1, p2, p3) {
   return (p1[0] - p3[0]) * (p2[1] - p3[1]) - (p2[0] - p3[0]) * (p1[1] - p3[1]);
 }
 
-function fillTriangleRaw(image, v1, v2, v3, color) {
+function stampTriangle(grid, v1, v2, v3, color) {
   const xs = [v1[0], v2[0], v3[0]];
   const ys = [v1[1], v2[1], v3[1]];
   const minX = Math.floor(Math.min(...xs));
@@ -127,185 +140,282 @@ function fillTriangleRaw(image, v1, v2, v3, color) {
       const d3 = triangleSign(pt, v3, v1);
       const hasNeg = d1 < 0 || d2 < 0 || d3 < 0;
       const hasPos = d1 > 0 || d2 > 0 || d3 > 0;
-      if (!(hasNeg && hasPos)) setPixelRGBA(image, x, y, color);
+      if (!(hasNeg && hasPos)) setCell(grid, x, y, color);
     }
   }
 }
 
-// ---- logical-space (240x240) shape helpers -----------------------------
-// Everything above the generator functions works in actual canvas pixels;
-// everything below works in the logical 240x240 grid the stage/face layouts
-// are designed in, scaling up by SCALE at the last moment.
-
-function fillEllipse(image, cx, cy, rx, ry, color) {
-  fillRotatedEllipseRaw(image, cx * SCALE, cy * SCALE, rx * SCALE, ry * SCALE, 0, color);
-}
-
-function fillRotatedEllipse(image, cx, cy, rx, ry, angleDeg, color) {
-  fillRotatedEllipseRaw(image, cx * SCALE, cy * SCALE, rx * SCALE, ry * SCALE, angleDeg, color);
-}
-
-function fillTriangle(image, p1, p2, p3, color) {
-  const scaled = (p) => [p[0] * SCALE, p[1] * SCALE];
-  fillTriangleRaw(image, scaled(p1), scaled(p2), scaled(p3), color);
-}
-
-// Stamps small circles along a parabola to approximate a curved stroke —
-// used for mouths (smile/frown) and closed happy-eyes alike. Positive
-// amplitude bows the center downward (smile/U); negative bows it upward
-// (frown/∩).
-function drawArcStroke(image, cx, cy, halfWidth, amplitude, thickness, color) {
-  const steps = 28;
-  for (let i = 0; i <= steps; i++) {
-    const t = i / steps;
-    const dx = -halfWidth + t * halfWidth * 2;
-    const dy = amplitude * (1 - (dx / halfWidth) ** 2);
-    fillEllipse(image, cx + dx, cy + dy, thickness / 2, thickness / 2, color);
+function stampRect(grid, x0, y0, x1, y1, color) {
+  for (let y = Math.round(y0); y <= Math.round(y1); y++) {
+    for (let x = Math.round(x0); x <= Math.round(x1); x++) {
+      setCell(grid, x, y, color);
+    }
   }
+}
+
+// Stamps a small named pixel pattern (face features, speckles, cracks) —
+// `offsets` is a list of [dx, dy] cells relative to an anchor point.
+function stampOffsets(grid, ox, oy, offsets, color) {
+  for (const [dx, dy] of offsets) setCell(grid, ox + dx, oy + dy, color);
+}
+
+// The raw ellipse inequality leaves a wide flat plateau at the poles at
+// this resolution (the width-vs-height curve is steepest right at the tip,
+// so the first 1-2 rows already span several cells) — it reads as a
+// flat-topped cylinder instead of a rounded/pointed cap. Hand-taper those
+// rows down to a narrower width so the silhouette actually curves to a tip.
+function narrowCapRow(grid, y, cx, halfWidth) {
+  if (y < 0 || y >= LOGICAL) return;
+  for (let x = 0; x < LOGICAL; x++) {
+    if (Math.abs(x + 0.5 - cx) > halfWidth) grid[y][x] = null;
+  }
+}
+
+// Dilates the silhouette by 1 logical cell and returns just the new ring —
+// painted *underneath* the body grid at blit time, so it only ever shows up
+// as a 1-cell border (the dilated cells are by definition not part of the
+// original silhouette).
+function computeOutline(grid) {
+  const outline = createGrid();
+  for (let y = 0; y < LOGICAL; y++) {
+    for (let x = 0; x < LOGICAL; x++) {
+      if (grid[y][x]) continue;
+      const neighbors = [
+        [x - 1, y],
+        [x + 1, y],
+        [x, y - 1],
+        [x, y + 1],
+      ];
+      for (const [nx, ny] of neighbors) {
+        if (inBounds(nx, ny) && grid[ny][nx]) {
+          outline[y][x] = OUTLINE_COLOR;
+          break;
+        }
+      }
+    }
+  }
+  return outline;
 }
 
 // ---- stage silhouettes ---------------------------------------------------
+// Drawn back-to-front: tail/wings, then torso, then limbs, then head (so the
+// head cleanly overlaps the ear bases), then frontmost details (tuft/crest).
 
-function drawEgg(image, palette) {
-  fillEllipse(image, 120, 132, 56, 70, rgba(palette.body, 1));
+function drawEgg(grid, palette) {
+  stampEllipse(grid, 20, 23, 9, 12, palette.body);
+  stampEllipse(grid, 17, 17, 4, 5, palette.bodyLight);
   const speckles = [
-    [95, 90], [140, 95], [105, 160], [150, 150], [88, 130], [150, 118], [118, 182], [100, 118],
+    [15, 14],
+    [25, 16],
+    [16, 27],
+    [24, 29],
+    [20, 12],
+    [26, 22],
+    [14, 21],
   ];
-  for (const [sx, sy] of speckles) fillEllipse(image, sx, sy, 4, 4, rgba(palette.accent, 0.55));
-  fillTriangle(image, [108, 68], [128, 62], [118, 90], rgba(palette.dark, 0.5));
+  for (const [sx, sy] of speckles) setCell(grid, sx, sy, palette.accent);
+  narrowCapRow(grid, 11, 20, 1);
+  narrowCapRow(grid, 12, 20, 3);
+  narrowCapRow(grid, 13, 20, 6);
+  narrowCapRow(grid, 34, 20, 1);
+  narrowCapRow(grid, 33, 20, 3);
+  narrowCapRow(grid, 32, 20, 6);
 }
 
-function drawHatchling(image, palette) {
-  fillTriangle(image, [40, 205], [80, 205], [55, 235], rgba(palette.shell, 1));
-  fillTriangle(image, [160, 205], [200, 205], [185, 235], rgba(palette.shell, 1));
-  fillEllipse(image, 120, 140, 58, 56, rgba(palette.body, 1));
-  fillEllipse(image, 64, 150, 15, 11, rgba(palette.body, 1));
-  fillEllipse(image, 176, 150, 15, 11, rgba(palette.body, 1));
-  fillTriangle(image, [108, 70], [120, 40], [132, 70], rgba(palette.accent, 1));
+function paintEggCracks(grid, palette, mood) {
+  const crackColor = palette.dark;
+  const baseCrack = [
+    [20, 11],
+    [19, 12],
+    [21, 13],
+    [19, 14],
+    [20, 15],
+  ];
+  stampOffsets(grid, 0, 0, baseCrack, crackColor);
+  if (mood === 'down' || mood === 'lonely') {
+    stampOffsets(
+      grid,
+      0,
+      0,
+      [
+        [26, 18],
+        [25, 19],
+        [26, 20],
+        [25, 21],
+      ],
+      crackColor
+    );
+  }
+  if (mood === 'lonely') {
+    stampOffsets(
+      grid,
+      0,
+      0,
+      [
+        [14, 24],
+        [15, 25],
+        [14, 26],
+      ],
+      crackColor
+    );
+  }
 }
 
-function drawJuvenile(image, palette) {
-  fillRotatedEllipse(image, 178, 175, 22, 12, -30, rgba(palette.accent, 1));
-  fillRotatedEllipse(image, 70, 130, 26, 14, -35, rgba(palette.accent, 1));
-  fillRotatedEllipse(image, 170, 130, 26, 14, 35, rgba(palette.accent, 1));
-  fillEllipse(image, 120, 160, 50, 56, rgba(palette.body, 1));
-  fillEllipse(image, 96, 215, 14, 10, rgba(palette.body, 1));
-  fillEllipse(image, 144, 215, 14, 10, rgba(palette.body, 1));
-  fillEllipse(image, 120, 88, 40, 40, rgba(palette.body, 1));
-  fillEllipse(image, 92, 60, 10, 14, rgba(palette.accent, 1));
-  fillEllipse(image, 148, 60, 10, 14, rgba(palette.accent, 1));
+function drawNewborn(grid, palette) {
+  stampTriangle(grid, [6, 34], [14, 34], [9, 39], palette.shell);
+  stampTriangle(grid, [26, 34], [34, 34], [31, 39], palette.shell);
+  stampEllipse(grid, 20, 27, 10, 9, palette.body); // body
+  stampEllipse(grid, 8, 27, 3, 4, palette.body); // stub arms
+  stampEllipse(grid, 32, 27, 3, 4, palette.body);
+  stampEllipse(grid, 20, 16, 11, 10, palette.body); // head (drawn after arms/body)
+  stampTriangle(grid, [17, 5], [23, 5], [20, 1], palette.accent); // tuft
 }
 
-function drawCompanion(image, palette) {
-  fillRotatedEllipse(image, 184, 178, 28, 15, -35, rgba(palette.accent, 1));
-  fillRotatedEllipse(image, 62, 132, 30, 16, -40, rgba(palette.accent, 1));
-  fillRotatedEllipse(image, 178, 132, 30, 16, 40, rgba(palette.accent, 1));
-  fillEllipse(image, 120, 158, 56, 62, rgba(palette.body, 1));
-  fillEllipse(image, 120, 170, 28, 34, rgba(palette.bodyLight, 1));
-  fillEllipse(image, 92, 218, 16, 11, rgba(palette.body, 1));
-  fillEllipse(image, 148, 218, 16, 11, rgba(palette.body, 1));
-  fillEllipse(image, 120, 80, 44, 44, rgba(palette.body, 1));
-  fillTriangle(image, [82, 55], [100, 20], [108, 58], rgba(palette.accent, 1));
-  fillTriangle(image, [158, 55], [140, 20], [132, 58], rgba(palette.accent, 1));
+function drawInfant(grid, palette) {
+  stampEllipse(grid, 33, 30, 3, 3, palette.accent); // tail nub
+  stampEllipse(grid, 20, 28, 11, 10, palette.body); // body
+  stampRect(grid, 13, 35, 17, 38, palette.body); // legs
+  stampRect(grid, 23, 35, 27, 38, palette.body);
+  stampEllipse(grid, 11, 8, 3, 4, palette.accent); // ears
+  stampEllipse(grid, 29, 8, 3, 4, palette.accent);
+  stampEllipse(grid, 20, 13, 10, 9, palette.body); // head
 }
 
-const STAGE_DRAW = { egg: drawEgg, hatchling: drawHatchling, juvenile: drawJuvenile, companion: drawCompanion };
+function drawChild(grid, palette) {
+  stampRotatedEllipse(grid, 32, 26, 6, 3, -25, palette.accent); // tail
+  stampEllipse(grid, 36, 20, 3, 3, palette.accent);
+  stampEllipse(grid, 20, 27, 10, 11, palette.body); // torso
+  stampEllipse(grid, 20, 29, 5, 7, palette.bodyLight); // belly patch
+  stampRect(grid, 8, 22, 11, 30, palette.body); // arms
+  stampRect(grid, 29, 22, 32, 30, palette.body);
+  stampRect(grid, 14, 35, 18, 39, palette.body); // legs
+  stampRect(grid, 22, 35, 26, 39, palette.body);
+  stampTriangle(grid, [10, 6], [16, 4], [14, 12], palette.accent); // ears
+  stampTriangle(grid, [30, 6], [24, 4], [26, 12], palette.accent);
+  stampEllipse(grid, 20, 11, 9, 8, palette.body); // head
+}
+
+function drawAdolescent(grid, palette) {
+  stampRotatedEllipse(grid, 33, 24, 7, 3, -30, palette.accent); // tail
+  stampEllipse(grid, 38, 16, 3, 3, palette.accent);
+  stampTriangle(grid, [6, 20], [2, 12], [10, 18], palette.accent2); // wing buds
+  stampTriangle(grid, [34, 20], [38, 12], [30, 18], palette.accent2);
+  stampEllipse(grid, 20, 26, 9, 12, palette.body); // torso, lankier
+  stampRotatedEllipse(grid, 20, 24, 3, 8, 0, palette.accent2); // marking stripe
+  stampRect(grid, 7, 18, 10, 31, palette.body); // longer arms
+  stampRect(grid, 30, 18, 33, 31, palette.body);
+  stampRect(grid, 14, 36, 18, 39, palette.body); // longer legs
+  stampRect(grid, 22, 36, 26, 39, palette.body);
+  stampTriangle(grid, [9, 5], [15, 2], [14, 11], palette.accent); // ears
+  stampTriangle(grid, [31, 5], [25, 2], [26, 11], palette.accent);
+  stampEllipse(grid, 20, 10, 8, 7, palette.body); // head
+  stampTriangle(grid, [16, 2], [20, 0], [20, 4], palette.accent); // spiky tuft
+  stampTriangle(grid, [20, 1], [24, 0], [24, 4], palette.accent);
+}
+
+function drawYoungAdult(grid, palette) {
+  stampRotatedEllipse(grid, 34, 25, 8, 3, -30, palette.accent); // tail
+  stampEllipse(grid, 39, 15, 3, 3, palette.accent);
+  stampRotatedEllipse(grid, 6, 18, 9, 4, -35, palette.accent2); // spread wings
+  stampRotatedEllipse(grid, 34, 18, 9, 4, 35, palette.accent2);
+  stampEllipse(grid, 20, 25, 9, 12, palette.body); // athletic torso
+  stampRotatedEllipse(grid, 20, 23, 3, 9, 0, palette.accent2); // markings
+  stampRotatedEllipse(grid, 14, 25, 2, 6, 10, palette.accent2);
+  stampRotatedEllipse(grid, 26, 25, 2, 6, -10, palette.accent2);
+  stampRect(grid, 8, 17, 11, 29, palette.body); // arms
+  stampRect(grid, 29, 17, 32, 29, palette.body);
+  stampRect(grid, 14, 35, 18, 39, palette.body); // legs
+  stampRect(grid, 22, 35, 26, 39, palette.body);
+  stampTriangle(grid, [9, 4], [15, 1], [14, 10], palette.accent); // ears
+  stampTriangle(grid, [31, 4], [25, 1], [26, 10], palette.accent);
+  stampEllipse(grid, 20, 9, 8, 7, palette.body); // head
+  stampTriangle(grid, [18, 1], [22, 0], [22, 5], palette.accent2); // crest
+}
+
+function drawElder(grid, palette) {
+  stampRotatedEllipse(grid, 32, 27, 6, 3, -20, palette.accent); // curled tail
+  stampEllipse(grid, 36, 22, 2, 2, palette.accent);
+  stampRotatedEllipse(grid, 9, 22, 5, 3, -20, palette.accent2); // folded wings
+  stampRotatedEllipse(grid, 31, 22, 5, 3, 20, palette.accent2);
+  stampEllipse(grid, 20, 27, 9, 11, palette.body); // stooped torso
+  stampRect(grid, 9, 20, 12, 30, palette.body); // arms
+  stampRect(grid, 28, 20, 31, 30, palette.body);
+  stampRect(grid, 14, 35, 18, 39, palette.body); // legs
+  stampRect(grid, 22, 35, 26, 39, palette.body);
+  stampTriangle(grid, [10, 7], [16, 5], [14, 13], palette.accent); // drooped ears
+  stampTriangle(grid, [30, 7], [24, 5], [26, 13], palette.accent);
+  stampEllipse(grid, 20, 12, 8, 7, palette.body); // head
+  stampRect(grid, 4, 16, 11, 17, palette.accent2); // long whiskers
+  stampRect(grid, 29, 16, 36, 17, palette.accent2);
+  stampEllipse(grid, 20, 9, 2, 2, palette.accent2); // wisdom mark
+}
+
+const STAGE_DRAW = {
+  newborn: drawNewborn,
+  infant: drawInfant,
+  child: drawChild,
+  adolescent: drawAdolescent,
+  youngAdult: drawYoungAdult,
+  elder: drawElder,
+};
 
 const STAGE_FACE = {
-  egg: { cx: 120, cy: 148, eyeDX: 16, eyeR: 7, mouthY: 168, mouthHalf: 14 },
-  hatchling: { cx: 120, cy: 138, eyeDX: 20, eyeR: 10, mouthY: 158, mouthHalf: 16 },
-  juvenile: { cx: 120, cy: 90, eyeDX: 14, eyeR: 7, mouthY: 102, mouthHalf: 12 },
-  companion: { cx: 120, cy: 82, eyeDX: 15, eyeR: 8, mouthY: 96, mouthHalf: 13 },
+  newborn: { cx: 20, cy: 17, eyeDX: 5, mouthY: 21 },
+  infant: { cx: 20, cy: 14, eyeDX: 5, mouthY: 18 },
+  child: { cx: 20, cy: 12, eyeDX: 4, mouthY: 15 },
+  adolescent: { cx: 20, cy: 11, eyeDX: 4, mouthY: 14 },
+  youngAdult: { cx: 20, cy: 10, eyeDX: 4, mouthY: 13 },
+  elder: { cx: 20, cy: 13, eyeDX: 4, mouthY: 16 },
 };
 
 // ---- mood faces ------------------------------------------------------
+// Blocky pixel patterns instead of antialiased arcs — reads as intentional
+// at this resolution instead of as a smoothing artifact. Same per-mood
+// meaning as before: joyful=closed happy ^, content=small round eye,
+// neutral=flat dot, down=droopy+eyebrow, lonely=droopy+tear (no eyebrow).
 
-function paintFace(image, face, mood) {
-  const { cx, cy, eyeDX, eyeR, mouthY, mouthHalf } = face;
+const EYE_OFFSETS = {
+  joyful: [[-1, 1], [0, 0], [1, 1]],
+  content: [[0, -1], [-1, 0], [0, 0], [1, 0], [0, 1]],
+  neutral: [[0, -1], [0, 0], [0, 1]],
+  down: [[-1, 0], [0, 0], [1, 0]],
+  lonely: [[-1, 0], [0, 0], [1, 0]],
+};
+
+const MOUTH_OFFSETS = {
+  joyful: [[-2, 0], [-1, 1], [0, 1], [1, 1], [2, 0]],
+  content: [[-1, 0], [0, 1], [1, 0]],
+  neutral: [[-1, 0], [0, 0], [1, 0]],
+  down: [[-1, 1], [0, 0], [1, 1]],
+  lonely: [[-1, 1], [0, 0], [1, 1]],
+};
+
+const EYEBROW_LEFT = [[-1, -3], [0, -2], [1, -2]];
+const EYEBROW_RIGHT = [[1, -3], [0, -2], [-1, -2]];
+
+function paintFace(grid, face, mood) {
+  const { cx, cy, eyeDX, mouthY } = face;
   const leftEyeX = cx - eyeDX;
   const rightEyeX = cx + eyeDX;
-  const faceColor = rgba(FACE_COLOR, 1);
 
-  if (mood === 'joyful') {
-    drawArcStroke(image, leftEyeX, cy, eyeR * 0.9, eyeR * 0.7, eyeR * 0.55, faceColor);
-    drawArcStroke(image, rightEyeX, cy, eyeR * 0.9, eyeR * 0.7, eyeR * 0.55, faceColor);
-    drawArcStroke(image, cx, mouthY, mouthHalf * 1.1, mouthHalf * 0.9, mouthHalf * 0.5, faceColor);
-    fillEllipse(image, leftEyeX - eyeR * 0.9, cy + eyeR * 1.6, eyeR * 0.9, eyeR * 0.6, rgba(BLUSH_COLOR, 0.35));
-    fillEllipse(image, rightEyeX + eyeR * 0.9, cy + eyeR * 1.6, eyeR * 0.9, eyeR * 0.6, rgba(BLUSH_COLOR, 0.35));
-    return;
-  }
-
-  if (mood === 'content') {
-    fillEllipse(image, leftEyeX, cy, eyeR * 0.85, eyeR * 0.85, faceColor);
-    fillEllipse(image, rightEyeX, cy, eyeR * 0.85, eyeR * 0.85, faceColor);
-    fillEllipse(image, leftEyeX - eyeR * 0.3, cy - eyeR * 0.3, eyeR * 0.25, eyeR * 0.25, rgba(WHITE, 0.9));
-    fillEllipse(image, rightEyeX - eyeR * 0.3, cy - eyeR * 0.3, eyeR * 0.25, eyeR * 0.25, rgba(WHITE, 0.9));
-    drawArcStroke(image, cx, mouthY, mouthHalf * 0.8, mouthHalf * 0.4, mouthHalf * 0.4, faceColor);
-    return;
-  }
-
-  if (mood === 'neutral') {
-    fillEllipse(image, leftEyeX, cy, eyeR * 0.8, eyeR * 0.8, faceColor);
-    fillEllipse(image, rightEyeX, cy, eyeR * 0.8, eyeR * 0.8, faceColor);
-    fillRotatedEllipse(image, cx, mouthY, mouthHalf * 0.7, mouthHalf * 0.18, 0, faceColor);
-    return;
-  }
+  stampOffsets(grid, leftEyeX, cy, EYE_OFFSETS[mood], FACE_COLOR);
+  stampOffsets(grid, rightEyeX, cy, EYE_OFFSETS[mood], FACE_COLOR);
+  stampOffsets(grid, cx, mouthY, MOUTH_OFFSETS[mood], FACE_COLOR);
 
   if (mood === 'down') {
-    fillRotatedEllipse(image, leftEyeX, cy + eyeR * 0.2, eyeR * 0.85, eyeR * 0.4, 0, faceColor);
-    fillRotatedEllipse(image, rightEyeX, cy + eyeR * 0.2, eyeR * 0.85, eyeR * 0.4, 0, faceColor);
-    fillRotatedEllipse(image, leftEyeX - eyeR * 0.1, cy - eyeR * 1.3, eyeR * 0.9, eyeR * 0.22, -18, faceColor);
-    fillRotatedEllipse(image, rightEyeX + eyeR * 0.1, cy - eyeR * 1.3, eyeR * 0.9, eyeR * 0.22, 18, faceColor);
-    drawArcStroke(image, cx, mouthY, mouthHalf * 0.9, -mouthHalf * 0.55, mouthHalf * 0.4, faceColor);
-    return;
+    stampOffsets(grid, leftEyeX, cy, EYEBROW_LEFT, FACE_COLOR);
+    stampOffsets(grid, rightEyeX, cy, EYEBROW_RIGHT, FACE_COLOR);
   }
 
-  // lonely — droopy eyes like `down` but no eyebrows, a single tear, and a
-  // shallower frown: meant to read as wistful/isolated rather than upset.
-  fillRotatedEllipse(image, leftEyeX, cy + eyeR * 0.2, eyeR * 0.85, eyeR * 0.4, 0, faceColor);
-  fillRotatedEllipse(image, rightEyeX, cy + eyeR * 0.2, eyeR * 0.85, eyeR * 0.4, 0, faceColor);
-  drawArcStroke(image, cx, mouthY, mouthHalf * 0.7, -mouthHalf * 0.3, mouthHalf * 0.4, faceColor);
-  const tearX = rightEyeX + eyeR * 0.3;
-  const tearY = cy + eyeR * 1.4;
-  fillEllipse(image, tearX, tearY, eyeR * 0.32, eyeR * 0.45, rgba(TEAR_COLOR, 0.85));
-  fillTriangle(
-    image,
-    [tearX - eyeR * 0.32, tearY - eyeR * 0.25],
-    [tearX + eyeR * 0.32, tearY - eyeR * 0.25],
-    [tearX, tearY - eyeR * 0.55],
-    rgba(TEAR_COLOR, 0.85)
-  );
-}
+  if (mood === 'joyful') {
+    setCell(grid, leftEyeX - 2, cy + 2, BLUSH_COLOR);
+    setCell(grid, rightEyeX + 2, cy + 2, BLUSH_COLOR);
+  }
 
-// ---- accessory overlays (companion age tiers) ---------------------------
-
-function drawBow(image) {
-  const color = rgba(hexToRgb('#E8748A'), 1);
-  const knot = rgba(hexToRgb('#C24F66'), 1);
-  const cx = 120;
-  const cy = 40;
-  fillTriangle(image, [cx - 24, cy - 11], [cx - 3, cy], [cx - 24, cy + 11], color);
-  fillTriangle(image, [cx + 24, cy - 11], [cx + 3, cy], [cx + 24, cy + 11], color);
-  fillEllipse(image, cx, cy, 6, 6, knot);
-}
-
-function drawSparkle(image) {
-  const color = rgba(hexToRgb('#FFD166'), 1);
-  const cx = 120;
-  const cy = 38;
-  fillRotatedEllipse(image, cx, cy, 22, 6, 0, color);
-  fillRotatedEllipse(image, cx, cy, 22, 6, 90, color);
-}
-
-function drawCrown(image) {
-  const color = rgba(hexToRgb('#F2B705'), 1);
-  const jewel = rgba(hexToRgb('#E8483A'), 1);
-  const baseY = 46;
-  fillRotatedEllipse(image, 120, baseY, 30, 7, 0, color);
-  fillTriangle(image, [96, baseY], [104, baseY - 26], [112, baseY], color);
-  fillTriangle(image, [110, baseY], [120, baseY - 32], [130, baseY], color);
-  fillTriangle(image, [128, baseY], [136, baseY - 26], [144, baseY], color);
-  fillEllipse(image, 120, baseY - 30, 4, 4, jewel);
+  if (mood === 'lonely') {
+    setCell(grid, rightEyeX + 1, cy + 2, TEAR_COLOR);
+    setCell(grid, rightEyeX + 1, cy + 3, TEAR_COLOR);
+  }
 }
 
 // ---- orchestration -----------------------------------------------------
@@ -316,14 +426,44 @@ function createImage() {
   });
 }
 
+function setPixelOpaque(image, x, y, r, g, b) {
+  const w = image.bitmap.width;
+  const h = image.bitmap.height;
+  if (x < 0 || y < 0 || x >= w || y >= h) return;
+  const idx = (y * w + x) * 4;
+  const data = image.bitmap.data;
+  data[idx + 0] = r;
+  data[idx + 1] = g;
+  data[idx + 2] = b;
+  data[idx + 3] = 255;
+}
+
+function blitGrid(image, bodyGrid, outlineGrid) {
+  for (let gy = 0; gy < LOGICAL; gy++) {
+    for (let gx = 0; gx < LOGICAL; gx++) {
+      const color = bodyGrid[gy][gx] || outlineGrid[gy][gx];
+      if (!color) continue;
+      const r = Math.round(color[0]);
+      const g = Math.round(color[1]);
+      const b = Math.round(color[2]);
+      const baseX = gx * SCALE;
+      const baseY = gy * SCALE;
+      for (let sy = 0; sy < SCALE; sy++) {
+        for (let sx = 0; sx < SCALE; sx++) {
+          setPixelOpaque(image, baseX + sx, baseY + sy, r, g, b);
+        }
+      }
+    }
+  }
+}
+
 function writeImage(image, outPath) {
-  image.resize(SIZE, SIZE, Jimp.RESIZE_BILINEAR);
   return new Promise((resolve, reject) => {
     image.write(outPath, (err) => (err ? reject(err) : resolve()));
   });
 }
 
-const STAGES = ['egg', 'hatchling', 'juvenile', 'companion'];
+const STAGES = ['egg', 'newborn', 'infant', 'child', 'adolescent', 'youngAdult', 'elder'];
 const MOODS = ['joyful', 'content', 'neutral', 'down', 'lonely'];
 
 async function generateCharacterSprites() {
@@ -336,9 +476,22 @@ async function generateCharacterSprites() {
         body: adjust(basePalette.body),
         bodyLight: brighten(adjust(basePalette.body), 0.25),
       };
+
+      const grid = createGrid();
+      if (stage === 'egg') {
+        drawEgg(grid, palette);
+      } else {
+        STAGE_DRAW[stage](grid, palette);
+      }
+      const outline = computeOutline(grid);
+      if (stage === 'egg') {
+        paintEggCracks(grid, palette, mood);
+      } else {
+        paintFace(grid, STAGE_FACE[stage], mood);
+      }
+
       const image = await createImage();
-      STAGE_DRAW[stage](image, palette);
-      paintFace(image, STAGE_FACE[stage], mood);
+      blitGrid(image, grid, outline);
       const outPath = path.join(CHARACTER_DIR, `${stage}-${mood}.png`);
       await writeImage(image, outPath);
       console.log('wrote', outPath);
@@ -346,27 +499,7 @@ async function generateCharacterSprites() {
   }
 }
 
-async function generateAccessories() {
-  const accessories = [
-    ['tier1.png', drawBow],
-    ['tier2.png', drawSparkle],
-    ['tier3.png', drawCrown],
-  ];
-  for (const [fileName, draw] of accessories) {
-    const image = await createImage();
-    draw(image);
-    const outPath = path.join(ACCESSORY_DIR, fileName);
-    await writeImage(image, outPath);
-    console.log('wrote', outPath);
-  }
-}
-
-async function main() {
-  await generateCharacterSprites();
-  await generateAccessories();
-}
-
-main().catch((err) => {
+generateCharacterSprites().catch((err) => {
   console.error(err);
   process.exit(1);
 });

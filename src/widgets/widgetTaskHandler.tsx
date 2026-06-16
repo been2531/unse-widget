@@ -1,6 +1,6 @@
 import type { WidgetTaskHandler, WidgetTaskHandlerProps } from 'react-native-android-widget';
 
-import { applyFeed, canFeedToday } from '@/character/careActions';
+import { applyFeed, formatRemaining, getFeedAvailability } from '@/character/careActions';
 import { deriveMood } from '@/character/mood';
 import { computeEffectiveAffection, computeNeglectDays } from '@/character/state';
 import type { CharacterState } from '@/character/types';
@@ -30,13 +30,15 @@ export async function renderCurrentWidgetState() {
   const neglectDays = computeNeglectDays(character, today);
   const affection = computeEffectiveAffection(character, today);
   const mood = deriveMood({ affection, neglectDays, fortuneValence: valence });
+  const feedAvailability = getFeedAvailability(character, Date.now());
 
   return (
     <FortuneWidget
       stage={character.stage}
       mood={mood}
       fortuneText={fortune.general.text}
-      feedAvailable={canFeedToday(character, today)}
+      feedAvailable={feedAvailability.available}
+      feedRemainingLabel={feedAvailability.available ? undefined : formatRemaining(feedAvailability.remainingMs)}
     />
   );
 }
@@ -52,12 +54,12 @@ export const widgetTaskHandler: WidgetTaskHandler = async (props: WidgetTaskHand
   if (widgetAction === 'WIDGET_DELETED') return;
 
   if (widgetAction === 'WIDGET_CLICK' && clickAction === 'QUICK_FEED') {
-    // applyFeed is itself gated by canFeedToday, so a double-tap (or a stale
-    // already-fed widget the user taps before it refreshes) is a no-op
-    // rather than double-counting affection.
+    // applyFeed is itself gated by getFeedAvailability, so a double-tap (or
+    // a stale already-fed widget the user taps before it refreshes) is a
+    // no-op rather than double-counting affection.
     const today = getTodayDateString();
     const character = await loadCharacterState();
-    const next: CharacterState = applyFeed(character, today);
+    const next: CharacterState = applyFeed(character, today, Date.now());
     await saveCharacterState(next);
   }
 

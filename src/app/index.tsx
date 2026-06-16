@@ -2,11 +2,11 @@ import { Redirect } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Image, Pressable, StyleSheet, Text, View } from 'react-native';
 
-import { computeAgeTier } from '@/character/ageTier';
-import { AGE_ACCESSORY_ASSET_MAP, CHARACTER_ASSET_MAP } from '@/character/assetMap';
-import { applyFeed, applyPet, canFeedToday, canPetToday } from '@/character/careActions';
+import { CHARACTER_ASSET_MAP } from '@/character/assetMap';
+import { applyFeed, applyPet, formatRemaining, getFeedAvailability, getPetAvailability } from '@/character/careActions';
 import { computeEffectiveAffection, computeMonthsSinceAdoption, computeNeglectDays } from '@/character/state';
 import type { CharacterState } from '@/character/types';
+import { STAGE_LABELS_KO } from '@/character/types';
 import { deriveValence } from '@/fortune/deriveValence';
 import { selectDailyFortune } from '@/fortune/selectFortune';
 import type { DailyFortune, UserProfile } from '@/fortune/types';
@@ -21,6 +21,12 @@ export default function HomeScreen() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [character, setCharacter] = useState<CharacterState | null>(null);
   const [fortune, setFortune] = useState<DailyFortune | null>(null);
+  const [nowMs, setNowMs] = useState(() => Date.now());
+
+  useEffect(() => {
+    const interval = setInterval(() => setNowMs(Date.now()), 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -64,22 +70,20 @@ export default function HomeScreen() {
   const affection = computeEffectiveAffection(character, today);
   const mood = deriveMood({ affection, neglectDays, fortuneValence: valence });
   const monthsSinceAdoption = computeMonthsSinceAdoption(character, today);
-  const ageTier = computeAgeTier(monthsSinceAdoption);
 
   const characterImage = CHARACTER_ASSET_MAP[character.stage][mood];
-  const accessoryImage = character.stage === 'companion' ? AGE_ACCESSORY_ASSET_MAP[ageTier] : undefined;
 
-  const feedAvailable = canFeedToday(character, today);
-  const petAvailable = canPetToday(character, today);
+  const feedAvailability = getFeedAvailability(character, nowMs);
+  const petAvailability = getPetAvailability(character, today, nowMs);
 
   async function handleFeed() {
-    const next = applyFeed(character!, today);
+    const next = applyFeed(character!, today, nowMs);
     setCharacter(await saveCharacterState(next));
     await refreshFortuneWidget();
   }
 
   async function handlePet() {
-    const next = applyPet(character!, today);
+    const next = applyPet(character!, today, nowMs);
     setCharacter(await saveCharacterState(next));
     await refreshFortuneWidget();
   }
@@ -90,27 +94,34 @@ export default function HomeScreen() {
 
       <View style={styles.characterArea}>
         <Image source={characterImage} style={styles.characterImage} />
-        {accessoryImage ? <Image source={accessoryImage} style={styles.accessoryImage} /> : null}
       </View>
 
-      {character.stage === 'companion' ? (
-        <Text style={styles.ageLabel}>함께한 지 {monthsSinceAdoption}개월째</Text>
-      ) : null}
+      <Text style={styles.ageLabel}>
+        {STAGE_LABELS_KO[character.stage]} · 함께한 지 {monthsSinceAdoption}개월째
+      </Text>
 
       <View style={styles.careRow}>
         <Pressable
-          style={[styles.careButton, !feedAvailable && styles.careButtonDisabled]}
+          style={[styles.careButton, !feedAvailability.available && styles.careButtonDisabled]}
           onPress={handleFeed}
-          disabled={!feedAvailable}
+          disabled={!feedAvailability.available}
         >
-          <Text style={styles.careButtonText}>{feedAvailable ? '먹이 주기' : '오늘은 다 먹었어요'}</Text>
+          <Text style={styles.careButtonText}>
+            {feedAvailability.available ? '먹이 주기' : `먹이 주기 (${formatRemaining(feedAvailability.remainingMs)})`}
+          </Text>
         </Pressable>
         <Pressable
-          style={[styles.careButton, !petAvailable && styles.careButtonDisabled]}
+          style={[styles.careButton, !petAvailability.available && styles.careButtonDisabled]}
           onPress={handlePet}
-          disabled={!petAvailable}
+          disabled={!petAvailability.available}
         >
-          <Text style={styles.careButtonText}>{petAvailable ? '쓰다듬기' : '충분히 쓰다듬었어요'}</Text>
+          <Text style={styles.careButtonText}>
+            {petAvailability.available
+              ? '쓰다듬기'
+              : petAvailability.capReached
+                ? '충분히 쓰다듬었어요'
+                : `쓰다듬기 (${formatRemaining(petAvailability.remainingMs)})`}
+          </Text>
         </Pressable>
       </View>
 
@@ -130,7 +141,6 @@ const styles = StyleSheet.create({
   dateLabel: { fontSize: 14, color: '#888' },
   characterArea: { width: 240, height: 240, alignItems: 'center', justifyContent: 'center' },
   characterImage: { width: 240, height: 240, position: 'absolute' },
-  accessoryImage: { width: 240, height: 240, position: 'absolute' },
   ageLabel: { fontSize: 13, color: '#999' },
   careRow: { flexDirection: 'row', gap: 12 },
   careButton: { backgroundColor: '#4f8ef7', paddingVertical: 10, paddingHorizontal: 18, borderRadius: 20 },

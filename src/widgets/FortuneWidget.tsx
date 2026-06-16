@@ -8,6 +8,11 @@ export interface FortuneWidgetProps {
   mood: Mood;
   fortuneText: string;
   feedAvailable: boolean;
+  // Snapshot text like "2시간 후" computed at render time — the widget is a
+  // static bitmap (no running JS timer on the home screen), so it can't
+  // tick a live countdown the way the app screen's button does. It just
+  // reflects whatever was true the last time the widget was redrawn.
+  feedRemainingLabel?: string;
 }
 
 // Widget UI must be built from this library's primitives only — it is
@@ -17,7 +22,7 @@ export interface FortuneWidgetProps {
 // independent tap region, so it doesn't fall through to the root's
 // OPEN_APP. Omitting clickAction entirely (feedAvailable === false) leaves
 // that region non-clickable, matching the app screen's disabled-button look.
-export function FortuneWidget({ stage, mood, fortuneText, feedAvailable }: FortuneWidgetProps) {
+export function FortuneWidget({ stage, mood, fortuneText, feedAvailable, feedRemainingLabel }: FortuneWidgetProps) {
   return (
     <FlexWidget
       clickAction="OPEN_APP"
@@ -50,7 +55,7 @@ export function FortuneWidget({ stage, mood, fortuneText, feedAvailable }: Fortu
         }}
       >
         <TextWidget
-          text={feedAvailable ? '먹이 주기' : '오늘은 다 먹었어요'}
+          text={feedAvailable ? '먹이 주기' : `먹이 주기 (${feedRemainingLabel ?? '대기 중'})`}
           style={{ fontSize: 12, color: '#FFFFFF' }}
         />
       </FlexWidget>

@@ -5,7 +5,15 @@ const DECAY_PER_NEGLECTED_DAY = 8;
 const AFFECTION_FLOOR = 5;
 const AFFECTION_CEILING = 100;
 
-const STAGE_ORDER: GrowthStage[] = ['egg', 'hatchling', 'juvenile', 'companion'];
+const STAGE_ORDER: GrowthStage[] = [
+  'egg',
+  'newborn',
+  'infant',
+  'child',
+  'adolescent',
+  'youngAdult',
+  'elder',
+];
 
 interface StageThreshold {
   minDaysInStage: number;
@@ -15,11 +23,16 @@ interface StageThreshold {
 // Both elapsed time AND cumulative care-days are required to advance a
 // stage — time alone would make care pointless, care-days alone would let
 // a single binge day rush through every stage. See plan's growth-rule
-// rationale.
+// rationale. minTotalCareDays is cumulative across the character's whole
+// life, not per-stage — about 53 days minimum to reach elder if cared for
+// every single day.
 const STAGE_THRESHOLDS: Partial<Record<GrowthStage, StageThreshold>> = {
   egg: { minDaysInStage: 2, minTotalCareDays: 2 },
-  hatchling: { minDaysInStage: 7, minTotalCareDays: 7 },
-  juvenile: { minDaysInStage: 14, minTotalCareDays: 16 },
+  newborn: { minDaysInStage: 5, minTotalCareDays: 6 },
+  infant: { minDaysInStage: 7, minTotalCareDays: 12 },
+  child: { minDaysInStage: 9, minTotalCareDays: 19 },
+  adolescent: { minDaysInStage: 12, minTotalCareDays: 28 },
+  youngAdult: { minDaysInStage: 18, minTotalCareDays: 40 },
 };
 
 // neglectDays is intentionally never persisted — both the widget headless
@@ -48,7 +61,7 @@ export function computeMonthsSinceAdoption(state: CharacterState, today: string)
 // right after a care action) rather than on a separate scheduler.
 export function recomputeStage(state: CharacterState, today: string): CharacterState {
   const threshold = STAGE_THRESHOLDS[state.stage];
-  if (!threshold) return state; // already at the final stage (companion)
+  if (!threshold) return state; // already at the final stage (elder)
 
   const daysInStage = daysBetween(state.stageEnteredAt, today);
   const qualifies =
