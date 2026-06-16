@@ -1,0 +1,30 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+import { recomputeStage } from '../character/state';
+import { createInitialCharacterState } from '../character/types';
+import type { CharacterState } from '../character/types';
+import { getTodayDateString } from '../shared/dateUtils';
+
+const STORAGE_KEY = 'unse:characterState';
+
+// Always runs recomputeStage before returning — this is the one place a
+// stage-up actually gets detected and persisted, whether triggered by the
+// app opening, the widget refreshing, or right after a care action.
+export async function loadCharacterState(): Promise<CharacterState> {
+  const today = getTodayDateString();
+  const raw = await AsyncStorage.getItem(STORAGE_KEY);
+  const state: CharacterState = raw ? (JSON.parse(raw) as CharacterState) : createInitialCharacterState(today, new Date().toISOString());
+
+  const recomputed = recomputeStage(state, today);
+  if (recomputed !== state) {
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(recomputed));
+  }
+  return recomputed;
+}
+
+export async function saveCharacterState(state: CharacterState): Promise<CharacterState> {
+  const today = getTodayDateString();
+  const recomputed = recomputeStage(state, today);
+  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(recomputed));
+  return recomputed;
+}

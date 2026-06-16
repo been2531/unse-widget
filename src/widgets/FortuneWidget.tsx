@@ -1,0 +1,59 @@
+import { FlexWidget, ImageWidget, TextWidget } from 'react-native-android-widget';
+
+import { CHARACTER_ASSET_MAP } from '@/character/assetMap';
+import type { GrowthStage, Mood } from '@/character/types';
+
+export interface FortuneWidgetProps {
+  stage: GrowthStage;
+  mood: Mood;
+  fortuneText: string;
+  feedAvailable: boolean;
+}
+
+// Widget UI must be built from this library's primitives only — it is
+// rendered off-screen to a bitmap, not mounted as real RN views.
+// The feed button is a separate nested FlexWidget with its own clickAction
+// (QUICK_FEED) — the library registers each clickAction'd view as an
+// independent tap region, so it doesn't fall through to the root's
+// OPEN_APP. Omitting clickAction entirely (feedAvailable === false) leaves
+// that region non-clickable, matching the app screen's disabled-button look.
+export function FortuneWidget({ stage, mood, fortuneText, feedAvailable }: FortuneWidgetProps) {
+  return (
+    <FlexWidget
+      clickAction="OPEN_APP"
+      style={{
+        height: 'match_parent',
+        width: 'match_parent',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#FFFFFF',
+        borderRadius: 20,
+        padding: 12,
+      }}
+    >
+      <ImageWidget image={CHARACTER_ASSET_MAP[stage][mood]} imageWidth={84} imageHeight={84} />
+      <TextWidget
+        text={fortuneText}
+        truncate="END"
+        maxLines={2}
+        style={{ fontSize: 13, color: '#333333', textAlign: 'center', marginTop: 6 }}
+      />
+      <FlexWidget
+        clickAction={feedAvailable ? 'QUICK_FEED' : undefined}
+        style={{
+          marginTop: 8,
+          paddingVertical: 6,
+          paddingHorizontal: 14,
+          borderRadius: 14,
+          backgroundColor: feedAvailable ? '#4F8EF7' : '#CCCCCC',
+        }}
+      >
+        <TextWidget
+          text={feedAvailable ? '먹이 주기' : '오늘은 다 먹었어요'}
+          style={{ fontSize: 12, color: '#FFFFFF' }}
+        />
+      </FlexWidget>
+    </FlexWidget>
+  );
+}
