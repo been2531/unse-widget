@@ -47,6 +47,10 @@ export interface UserProfile extends UserSigns {
 export interface DailyFortune {
   date: string; // YYYY-MM-DD
   general: FortuneEntry;
+  wealth: FortuneEntry;
+  love: FortuneEntry;
+  health: FortuneEntry;
+  work: FortuneEntry;
   dii: FortuneEntry;
   star: FortuneEntry;
 }

@@ -1,6 +1,6 @@
 export type GrowthStage = 'egg' | 'newborn' | 'infant' | 'child' | 'adolescent' | 'youngAdult' | 'elder';
 
-export type Mood = 'joyful' | 'content' | 'neutral' | 'down' | 'lonely';
+export type Mood = 'joyful' | 'neutral' | 'lonely';
 
 // Display-only Korean names for the current stage progress indicator in the
 // app screen — purely cosmetic, never used as a lookup key elsewhere.
@@ -25,10 +25,6 @@ export interface CharacterState {
   careStreak: number; // consecutive calendar days with >=1 care action
 
   lastCareDate: string | null; // YYYY-MM-DD, source of truth for neglect calculation
-  lastFedAt: string | null; // ISO timestamp, cooldown anchor for feed
-  lastPettedAt: string | null; // ISO timestamp, cooldown anchor for pet
-  lastPettedDate: string | null; // YYYY-MM-DD, resets petCountToday on rollover
-  petCountToday: number; // 0-3+, diminishing-returns counter for pet
 
   createdAt: string; // ISO timestamp, adoption date — also the basis for "age"
 }
@@ -42,10 +38,6 @@ export function createInitialCharacterState(today: string, now: string): Charact
     totalCareDays: 0,
     careStreak: 0,
     lastCareDate: null,
-    lastFedAt: null,
-    lastPettedAt: null,
-    lastPettedDate: null,
-    petCountToday: 0,
     createdAt: now,
   };
 }

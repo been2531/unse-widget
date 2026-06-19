@@ -1,505 +1,515 @@
-// Procedurally generates the 35 character sprites (7 growth stages x 5
-// moods). Earlier version painted smooth ellipses/triangles onto a large
-// canvas and downsampled with bilinear filtering — that produced a blurry
-// shape that was neither crisp pixel art nor a clean illustration. This
-// version commits fully to pixel art instead: every sprite is authored on
-// a small 40x40 logical grid (hard per-cell colors, no blending), a 1-cell
-// outline is grown around the silhouette, and each logical cell is blitted
-// as a flat SCALE x SCALE block — no resize/blur step exists at all.
-//
-// Run with: node scripts/generate-character-art.js
+// 캐릭터 스프라이트 생성 v2
+// 64×64 논리 그리드, 5단계 쉐이딩, chibi 민트 드래곤
+// 실행: node scripts/generate-character-art.js
 const path = require('path');
 const Jimp = require('jimp-compact');
 
-const LOGICAL = 40;
-const SCALE = 6;
-const CANVAS = LOGICAL * SCALE; // 240, matches existing <Image>/widget usage
+const LOGICAL = 64;
+const SCALE   = 4;
+const CANVAS  = LOGICAL * SCALE; // 256px
 
 const CHARACTER_DIR = path.join(__dirname, '../src/assets/character');
 
-// ---- color helpers (plain [r,g,b] triples, no alpha — pixel art here is
-// flat colors only) -------------------------------------------------------
-
+// ── 색상 헬퍼 ────────────────────────────────────────────────────────────────
 function hexToRgb(hex) {
   const v = hex.replace('#', '');
-  return [parseInt(v.slice(0, 2), 16), parseInt(v.slice(2, 4), 16), parseInt(v.slice(4, 6), 16)];
+  return [parseInt(v.slice(0,2),16), parseInt(v.slice(2,4),16), parseInt(v.slice(4,6),16)];
+}
+function lerp(a,b,t) { return a + (b-a)*t; }
+function brighten([r,g,b],t) { return [lerp(r,255,t),lerp(g,255,t),lerp(b,255,t)]; }
+function darken([r,g,b],t)   { return [lerp(r,0,t),lerp(g,0,t),lerp(b,0,t)]; }
+function desaturate([r,g,b],t) {
+  const gray = 0.3*r + 0.59*g + 0.11*b;
+  return [lerp(r,gray,t),lerp(g,gray,t),lerp(b,gray,t)];
 }
 
-function lerp(a, b, t) {
-  return a + (b - a) * t;
-}
+// ── 팔레트 ───────────────────────────────────────────────────────────────────
+const BASE_BODY   = hexToRgb('#8ECBA6'); // 민트 그린
+const BASE_BELLY  = hexToRgb('#E6EBDA'); // 크림
+const BASE_WING   = hexToRgb('#68B48A'); // 진한 민트
+const OUTLINE_COL = hexToRgb('#2A4035');
+const FACE_COL    = hexToRgb('#2A4035');
+const TEAR_COL    = hexToRgb('#88BBDE');
+const BLUSH_COL   = hexToRgb('#F09AAE');
+const SPARKLE_COL = hexToRgb('#FFFFFF');
 
-function brighten([r, g, b], t) {
-  return [lerp(r, 255, t), lerp(g, 255, t), lerp(b, 255, t)];
-}
-
-function darken([r, g, b], t) {
-  return [lerp(r, 0, t), lerp(g, 0, t), lerp(b, 0, t)];
-}
-
-function desaturate([r, g, b], t) {
-  const gray = 0.3 * r + 0.59 * g + 0.11 * b;
-  return [lerp(r, gray, t), lerp(g, gray, t), lerp(b, gray, t)];
-}
-
-const FACE_COLOR = hexToRgb('#3B362E');
-const TEAR_COLOR = hexToRgb('#8FCBEA');
-const BLUSH_COLOR = hexToRgb('#F2849E');
-const OUTLINE_COLOR = hexToRgb('#2B2722'); // shared across every stage so the 7 sprites read as one evolution line
-
-const MOOD_BODY_ADJUST = {
-  joyful: (c) => brighten(c, 0.08),
-  content: (c) => c,
-  neutral: (c) => desaturate(c, 0.05),
-  down: (c) => desaturate(darken(c, 0.12), 0.15),
-  lonely: (c) => desaturate(darken(c, 0.18), 0.25),
+const MOOD_ADJUST = {
+  joyful:  c => brighten(c, 0.09),
+  content: c => c,
+  neutral: c => desaturate(c, 0.04),
+  down:    c => desaturate(darken(c, 0.16), 0.22),
+  lonely:  c => desaturate(darken(c, 0.22), 0.30),
 };
 
-const STAGE_PALETTE = {
-  egg: { body: hexToRgb('#F4E4C1'), accent: hexToRgb('#DDBE8C'), dark: hexToRgb('#B89A6A') },
-  newborn: { body: hexToRgb('#FBE3D6'), accent: hexToRgb('#F2A6A6'), shell: hexToRgb('#F4E4C1') },
-  infant: { body: hexToRgb('#D7EFC4'), accent: hexToRgb('#94C77A') },
-  child: { body: hexToRgb('#BFE3DE'), accent: hexToRgb('#5FAFA3') },
-  adolescent: { body: hexToRgb('#9FCBDB'), accent: hexToRgb('#4F8EA8'), accent2: hexToRgb('#2F6E86') },
-  youngAdult: { body: hexToRgb('#F2A65A'), accent: hexToRgb('#D98A3D'), accent2: hexToRgb('#E84F6B') },
-  elder: { body: hexToRgb('#C9C3D6'), accent: hexToRgb('#9A93AE'), accent2: hexToRgb('#E8D9A0') },
-};
+function makePalette(mood) {
+  const adj  = MOOD_ADJUST[mood];
+  const body = adj(BASE_BODY);
+  const wing = adj(BASE_WING);
+  return {
+    body,
+    bodyLight:  brighten(body, 0.24),
+    highlight:  brighten(body, 0.52),
+    shadow:     darken(body, 0.22),
+    deepShadow: darken(body, 0.44),
+    belly:      BASE_BELLY,
+    bellyLight: brighten(BASE_BELLY, 0.12),
+    bellyShad:  darken(BASE_BELLY, 0.08),
+    wing,
+    wingLight:  brighten(wing, 0.30),
+    wingShad:   darken(wing, 0.30),
+    wingDeep:   darken(wing, 0.50),
+  };
+}
 
-// ---- grid engine ---------------------------------------------------------
-// Every shape helper below writes into a 40x40 logical grid (cell = null or
-// an [r,g,b] color) instead of a raster image. The image only gets created
-// once, at blit time.
-
+// ── 그리드 엔진 ───────────────────────────────────────────────────────────────
 function createGrid() {
-  return Array.from({ length: LOGICAL }, () => new Array(LOGICAL).fill(null));
+  return Array.from({length: LOGICAL}, () => new Array(LOGICAL).fill(null));
 }
-
-function inBounds(x, y) {
-  return x >= 0 && y >= 0 && x < LOGICAL && y < LOGICAL;
-}
-
-function setCell(grid, x, y, color) {
-  const ix = Math.round(x);
-  const iy = Math.round(y);
-  if (!inBounds(ix, iy)) return;
+function inBounds(x,y) { return x>=0 && y>=0 && x<LOGICAL && y<LOGICAL; }
+function setCell(grid,x,y,color) {
+  const ix=Math.round(x), iy=Math.round(y);
+  if (!inBounds(ix,iy)) return;
   grid[iy][ix] = color;
 }
-
-function stampEllipse(grid, cx, cy, rx, ry, color) {
-  if (rx <= 0 || ry <= 0) return;
-  const minX = Math.floor(cx - rx - 1);
-  const maxX = Math.ceil(cx + rx + 1);
-  const minY = Math.floor(cy - ry - 1);
-  const maxY = Math.ceil(cy + ry + 1);
-  for (let y = minY; y <= maxY; y++) {
-    for (let x = minX; x <= maxX; x++) {
-      const dx = x + 0.5 - cx;
-      const dy = y + 0.5 - cy;
-      if ((dx * dx) / (rx * rx) + (dy * dy) / (ry * ry) <= 1) setCell(grid, x, y, color);
+function stampEllipse(grid,cx,cy,rx,ry,color) {
+  if (rx<=0||ry<=0) return;
+  for (let y=Math.floor(cy-ry-1); y<=Math.ceil(cy+ry+1); y++)
+    for (let x=Math.floor(cx-rx-1); x<=Math.ceil(cx+rx+1); x++) {
+      const dx=x+0.5-cx, dy=y+0.5-cy;
+      if ((dx*dx)/(rx*rx)+(dy*dy)/(ry*ry)<=1) setCell(grid,x,y,color);
     }
-  }
 }
-
-function stampRotatedEllipse(grid, cx, cy, rx, ry, angleDeg, color) {
-  if (rx <= 0 || ry <= 0) return;
-  const rad = (-angleDeg * Math.PI) / 180;
-  const cos = Math.cos(rad);
-  const sin = Math.sin(rad);
-  const maxR = Math.max(rx, ry);
-  const minX = Math.floor(cx - maxR - 1);
-  const maxX = Math.ceil(cx + maxR + 1);
-  const minY = Math.floor(cy - maxR - 1);
-  const maxY = Math.ceil(cy + maxR + 1);
-  for (let y = minY; y <= maxY; y++) {
-    for (let x = minX; x <= maxX; x++) {
-      const dx = x + 0.5 - cx;
-      const dy = y + 0.5 - cy;
-      const lx = dx * cos - dy * sin;
-      const ly = dx * sin + dy * cos;
-      if ((lx * lx) / (rx * rx) + (ly * ly) / (ry * ry) <= 1) setCell(grid, x, y, color);
+function stampRotEllipse(grid,cx,cy,rx,ry,angleDeg,color) {
+  if (rx<=0||ry<=0) return;
+  const rad=(-angleDeg*Math.PI)/180, cos=Math.cos(rad), sin=Math.sin(rad);
+  const maxR=Math.max(rx,ry);
+  for (let y=Math.floor(cy-maxR-1); y<=Math.ceil(cy+maxR+1); y++)
+    for (let x=Math.floor(cx-maxR-1); x<=Math.ceil(cx+maxR+1); x++) {
+      const dx=x+0.5-cx, dy=y+0.5-cy;
+      const lx=dx*cos-dy*sin, ly=dx*sin+dy*cos;
+      if ((lx*lx)/(rx*rx)+(ly*ly)/(ry*ry)<=1) setCell(grid,x,y,color);
     }
-  }
 }
-
-function triangleSign(p1, p2, p3) {
-  return (p1[0] - p3[0]) * (p2[1] - p3[1]) - (p2[0] - p3[0]) * (p1[1] - p3[1]);
+function stampRect(grid,x0,y0,x1,y1,color) {
+  for (let y=Math.round(y0); y<=Math.round(y1); y++)
+    for (let x=Math.round(x0); x<=Math.round(x1); x++)
+      setCell(grid,x,y,color);
 }
-
-function stampTriangle(grid, v1, v2, v3, color) {
-  const xs = [v1[0], v2[0], v3[0]];
-  const ys = [v1[1], v2[1], v3[1]];
-  const minX = Math.floor(Math.min(...xs));
-  const maxX = Math.ceil(Math.max(...xs));
-  const minY = Math.floor(Math.min(...ys));
-  const maxY = Math.ceil(Math.max(...ys));
-  for (let y = minY; y <= maxY; y++) {
-    for (let x = minX; x <= maxX; x++) {
-      const pt = [x + 0.5, y + 0.5];
-      const d1 = triangleSign(pt, v1, v2);
-      const d2 = triangleSign(pt, v2, v3);
-      const d3 = triangleSign(pt, v3, v1);
-      const hasNeg = d1 < 0 || d2 < 0 || d3 < 0;
-      const hasPos = d1 > 0 || d2 > 0 || d3 > 0;
-      if (!(hasNeg && hasPos)) setCell(grid, x, y, color);
+function stampTriangle(grid,v1,v2,v3,color) {
+  const sign=(p1,p2,p3)=>(p1[0]-p3[0])*(p2[1]-p3[1])-(p2[0]-p3[0])*(p1[1]-p3[1]);
+  const xs=[v1[0],v2[0],v3[0]], ys=[v1[1],v2[1],v3[1]];
+  for (let y=Math.floor(Math.min(...ys)); y<=Math.ceil(Math.max(...ys)); y++)
+    for (let x=Math.floor(Math.min(...xs)); x<=Math.ceil(Math.max(...xs)); x++) {
+      const pt=[x+0.5,y+0.5];
+      const d1=sign(pt,v1,v2),d2=sign(pt,v2,v3),d3=sign(pt,v3,v1);
+      if (!((d1<0||d2<0||d3<0)&&(d1>0||d2>0||d3>0))) setCell(grid,x,y,color);
     }
-  }
+}
+function stampOffsets(grid,ox,oy,offsets,color) {
+  for (const [dx,dy] of offsets) setCell(grid,ox+dx,oy+dy,color);
 }
 
-function stampRect(grid, x0, y0, x1, y1, color) {
-  for (let y = Math.round(y0); y <= Math.round(y1); y++) {
-    for (let x = Math.round(x0); x <= Math.round(x1); x++) {
-      setCell(grid, x, y, color);
-    }
-  }
+// 5레이어 구체 음영: deepShadow 테두리 → shadow → body → bodyLight 하이라이트 → highlight 스페큘러
+function shadedBlob(grid,cx,cy,rx,ry,p) {
+  stampEllipse(grid,cx,cy,rx,ry,p.deepShadow);
+  stampEllipse(grid,cx-rx*0.07,cy-ry*0.07,rx*0.90,ry*0.90,p.shadow);
+  stampEllipse(grid,cx-rx*0.07,cy-ry*0.07,rx*0.81,ry*0.81,p.body);
+  stampEllipse(grid,cx-rx*0.26,cy-ry*0.30,rx*0.40,ry*0.32,p.bodyLight);
+  stampEllipse(grid,cx-rx*0.38,cy-ry*0.42,rx*0.16,ry*0.12,p.highlight);
 }
 
-// Stamps a small named pixel pattern (face features, speckles, cracks) —
-// `offsets` is a list of [dx, dy] cells relative to an anchor point.
-function stampOffsets(grid, ox, oy, offsets, color) {
-  for (const [dx, dy] of offsets) setCell(grid, ox + dx, oy + dy, color);
+// 날개 막 (막 2층 + 뼈대 선)
+function shadedWing(grid,cx,cy,rx,ry,angle,p) {
+  stampRotEllipse(grid,cx,cy,rx,ry,angle,p.wingDeep);
+  stampRotEllipse(grid,cx,cy,rx*0.88,ry*0.88,angle,p.wingShad);
+  stampRotEllipse(grid,cx-1,cy-1,rx*0.78,ry*0.78,angle,p.wing);
+  stampRotEllipse(grid,cx-2,cy-2,rx*0.55,ry*0.50,angle,p.wingLight);
 }
 
-// The raw ellipse inequality leaves a wide flat plateau at the poles at
-// this resolution (the width-vs-height curve is steepest right at the tip,
-// so the first 1-2 rows already span several cells) — it reads as a
-// flat-topped cylinder instead of a rounded/pointed cap. Hand-taper those
-// rows down to a narrower width so the silhouette actually curves to a tip.
-function narrowCapRow(grid, y, cx, halfWidth) {
-  if (y < 0 || y >= LOGICAL) return;
-  for (let x = 0; x < LOGICAL; x++) {
-    if (Math.abs(x + 0.5 - cx) > halfWidth) grid[y][x] = null;
-  }
-}
-
-// Dilates the silhouette by 1 logical cell and returns just the new ring —
-// painted *underneath* the body grid at blit time, so it only ever shows up
-// as a 1-cell border (the dilated cells are by definition not part of the
-// original silhouette).
+// 외곽선: 실루엣 1셀 팽창 후 빈 셀에 색상 칠하기
 function computeOutline(grid) {
-  const outline = createGrid();
-  for (let y = 0; y < LOGICAL; y++) {
-    for (let x = 0; x < LOGICAL; x++) {
+  const out = createGrid();
+  for (let y=0; y<LOGICAL; y++)
+    for (let x=0; x<LOGICAL; x++) {
       if (grid[y][x]) continue;
-      const neighbors = [
-        [x - 1, y],
-        [x + 1, y],
-        [x, y - 1],
-        [x, y + 1],
-      ];
-      for (const [nx, ny] of neighbors) {
-        if (inBounds(nx, ny) && grid[ny][nx]) {
-          outline[y][x] = OUTLINE_COLOR;
-          break;
-        }
-      }
+      for (const [nx,ny] of [[x-1,y],[x+1,y],[x,y-1],[x,y+1],[x-1,y-1],[x+1,y-1],[x-1,y+1],[x+1,y+1]])
+        if (inBounds(nx,ny) && grid[ny][nx]) { out[y][x]=OUTLINE_COL; break; }
     }
-  }
-  return outline;
+  return out;
 }
 
-// ---- stage silhouettes ---------------------------------------------------
-// Drawn back-to-front: tail/wings, then torso, then limbs, then head (so the
-// head cleanly overlaps the ear bases), then frontmost details (tuft/crest).
+// ── 얼굴 표현 ────────────────────────────────────────────────────────────────
+// cx,cy: 얼굴 중심  eyeDX: 눈 중심 X 오프셋  eyeY: 눈 Y
+function paintFace(grid, cx, eyeY, eyeDX, mouthY, mood) {
+  const lx=cx-eyeDX, rx=cx+eyeDX;
 
-function drawEgg(grid, palette) {
-  stampEllipse(grid, 20, 23, 9, 12, palette.body);
-  stampEllipse(grid, 17, 17, 4, 5, palette.bodyLight);
-  const speckles = [
-    [15, 14],
-    [25, 16],
-    [16, 27],
-    [24, 29],
-    [20, 12],
-    [26, 22],
-    [14, 21],
-  ];
-  for (const [sx, sy] of speckles) setCell(grid, sx, sy, palette.accent);
-  narrowCapRow(grid, 11, 20, 1);
-  narrowCapRow(grid, 12, 20, 3);
-  narrowCapRow(grid, 13, 20, 6);
-  narrowCapRow(grid, 34, 20, 1);
-  narrowCapRow(grid, 33, 20, 3);
-  narrowCapRow(grid, 32, 20, 6);
-}
+  // 눈 흰자
+  stampEllipse(grid, lx, eyeY, 3.5, 3, SPARKLE_COL);
+  stampEllipse(grid, rx, eyeY, 3.5, 3, SPARKLE_COL);
 
-function paintEggCracks(grid, palette, mood) {
-  const crackColor = palette.dark;
-  const baseCrack = [
-    [20, 11],
-    [19, 12],
-    [21, 13],
-    [19, 14],
-    [20, 15],
-  ];
-  stampOffsets(grid, 0, 0, baseCrack, crackColor);
-  if (mood === 'down' || mood === 'lonely') {
-    stampOffsets(
-      grid,
-      0,
-      0,
-      [
-        [26, 18],
-        [25, 19],
-        [26, 20],
-        [25, 21],
-      ],
-      crackColor
-    );
+  // 눈동자 + 표정
+  if (mood==='joyful') {
+    // 초승달 눈 (위로 굽음)
+    for (const [dx,dy] of [[-1,1],[0,0],[1,1],[-2,2],[2,2]]) {
+      setCell(grid,lx+dx,eyeY+dy,FACE_COL);
+      setCell(grid,rx+dx,eyeY+dy,FACE_COL);
+    }
+    // 볼터치
+    stampEllipse(grid,lx-3,eyeY+3,2,1.2,BLUSH_COL);
+    stampEllipse(grid,rx+3,eyeY+3,2,1.2,BLUSH_COL);
+  } else if (mood==='content') {
+    // 눈 감은 상태 (가로 선)
+    for (const [dx,dy] of [[-2,0],[-1,-1],[0,-1],[1,-1],[2,0]]) {
+      setCell(grid,lx+dx,eyeY+dy,FACE_COL);
+      setCell(grid,rx+dx,eyeY+dy,FACE_COL);
+    }
+  } else if (mood==='down') {
+    // 찡그린 눈 + 눈썹
+    stampEllipse(grid,lx,eyeY,2.5,2,FACE_COL);
+    stampEllipse(grid,rx,eyeY,2.5,2,FACE_COL);
+    // 눈썹 (안쪽이 올라감)
+    for (const [dx,dy] of [[-2,-3],[-1,-4],[0,-4],[1,-3]])
+      setCell(grid,lx+dx,eyeY+dy,FACE_COL);
+    for (const [dx,dy] of [[-1,-3],[0,-4],[1,-4],[2,-3]])
+      setCell(grid,rx+dx,eyeY+dy,FACE_COL);
+  } else if (mood==='lonely') {
+    // 처진 눈 + 눈물
+    stampEllipse(grid,lx,eyeY,2.5,2,FACE_COL);
+    stampEllipse(grid,rx,eyeY,2.5,2,FACE_COL);
+    // 눈물방울
+    setCell(grid,rx+3,eyeY+2,TEAR_COL);
+    setCell(grid,rx+3,eyeY+4,TEAR_COL);
+    setCell(grid,rx+4,eyeY+3,TEAR_COL);
+  } else {
+    // neutral: 동그란 눈
+    stampEllipse(grid,lx,eyeY,2.5,2.5,FACE_COL);
+    stampEllipse(grid,rx,eyeY,2.5,2.5,FACE_COL);
+    // 하이라이트
+    setCell(grid,lx-1,eyeY-1,SPARKLE_COL);
+    setCell(grid,rx-1,eyeY-1,SPARKLE_COL);
   }
-  if (mood === 'lonely') {
-    stampOffsets(
-      grid,
-      0,
-      0,
-      [
-        [14, 24],
-        [15, 25],
-        [14, 26],
-      ],
-      crackColor
-    );
+
+  // 입
+  if (mood==='joyful') {
+    stampOffsets(grid,cx,mouthY,[[-3,0],[-2,1],[-1,1],[0,1],[1,1],[2,1],[3,0]],FACE_COL);
+  } else if (mood==='down'||mood==='lonely') {
+    stampOffsets(grid,cx,mouthY,[[-2,2],[-1,1],[0,1],[1,1],[2,2]],FACE_COL);
+  } else {
+    stampOffsets(grid,cx,mouthY,[[-2,0],[-1,0],[0,0],[1,0],[2,0]],FACE_COL);
   }
 }
 
-function drawNewborn(grid, palette) {
-  stampTriangle(grid, [6, 34], [14, 34], [9, 39], palette.shell);
-  stampTriangle(grid, [26, 34], [34, 34], [31, 39], palette.shell);
-  stampEllipse(grid, 20, 27, 10, 9, palette.body); // body
-  stampEllipse(grid, 8, 27, 3, 4, palette.body); // stub arms
-  stampEllipse(grid, 32, 27, 3, 4, palette.body);
-  stampEllipse(grid, 20, 16, 11, 10, palette.body); // head (drawn after arms/body)
-  stampTriangle(grid, [17, 5], [23, 5], [20, 1], palette.accent); // tuft
+// ── 단계별 실루엣 ─────────────────────────────────────────────────────────────
+
+function drawEgg(grid, p) {
+  // 단순 타원 알 — 얼굴 없음
+  shadedBlob(grid, 32, 35, 14, 18, p);
+  // 달걀 끝부분 좁히기
+  for (let y=17; y<=20; y++) {
+    const hw = (y-17)*3.5;
+    for (let x=0; x<LOGICAL; x++)
+      if (grid[y][x] && Math.abs(x+0.5-32) > hw) grid[y][x] = null;
+  }
+  // 크림 반점
+  const spots = [[24,26],[39,24],[41,34],[22,38],[35,46],[27,48],[40,43]];
+  for (const [sx,sy] of spots) stampEllipse(grid,sx,sy,1.8,1.4,p.bellyLight);
 }
 
-function drawInfant(grid, palette) {
-  stampEllipse(grid, 33, 30, 3, 3, palette.accent); // tail nub
-  stampEllipse(grid, 20, 28, 11, 10, palette.body); // body
-  stampRect(grid, 13, 35, 17, 38, palette.body); // legs
-  stampRect(grid, 23, 35, 27, 38, palette.body);
-  stampEllipse(grid, 11, 8, 3, 4, palette.accent); // ears
-  stampEllipse(grid, 29, 8, 3, 4, palette.accent);
-  stampEllipse(grid, 20, 13, 10, 9, palette.body); // head
+function drawNewborn(grid, p) {
+  // 아주 작은 몸 — 방금 부화, 날개 없음
+  const hcy=26, bcy=42;
+  // 꼬리
+  stampRotEllipse(grid,42,46,6,2.5,-20,p.shadow);
+  stampRotEllipse(grid,41,45,5,2,  -20,p.body);
+  // 알 껍데기 조각
+  stampTriangle(grid,[18,52],[24,52],[20,58],p.bellyShad);
+  stampTriangle(grid,[38,52],[44,52],[42,58],p.bellyShad);
+  // 몸통
+  shadedBlob(grid,32,bcy,9,10,p);
+  stampEllipse(grid,32,bcy+2,5,7,p.belly);
+  // 짧은 팔
+  stampRect(grid,20,40,22,47,p.shadow); stampRect(grid,21,40,22,47,p.body);
+  stampRect(grid,42,40,44,47,p.shadow); stampRect(grid,42,40,43,47,p.body);
+  // 발
+  stampEllipse(grid,27,54,4,3,p.shadow); stampEllipse(grid,27,53,3.5,2.5,p.body);
+  stampEllipse(grid,37,54,4,3,p.shadow); stampEllipse(grid,37,53,3.5,2.5,p.body);
+  // 귀 뾰족이
+  stampTriangle(grid,[26,17],[30,17],[28,12],p.shadow);
+  stampTriangle(grid,[26,17],[30,17],[28,13],p.body);
+  stampTriangle(grid,[34,17],[38,17],[36,12],p.shadow);
+  stampTriangle(grid,[34,17],[38,17],[36,13],p.body);
+  // 머리
+  shadedBlob(grid,32,hcy,12,10,p);
+  stampEllipse(grid,32,hcy+2,6,5,p.belly);
+  paintFace(grid,32,hcy-1,6,hcy+5,'neutral');
 }
 
-function drawChild(grid, palette) {
-  stampRotatedEllipse(grid, 32, 26, 6, 3, -25, palette.accent); // tail
-  stampEllipse(grid, 36, 20, 3, 3, palette.accent);
-  stampEllipse(grid, 20, 27, 10, 11, palette.body); // torso
-  stampEllipse(grid, 20, 29, 5, 7, palette.bodyLight); // belly patch
-  stampRect(grid, 8, 22, 11, 30, palette.body); // arms
-  stampRect(grid, 29, 22, 32, 30, palette.body);
-  stampRect(grid, 14, 35, 18, 39, palette.body); // legs
-  stampRect(grid, 22, 35, 26, 39, palette.body);
-  stampTriangle(grid, [10, 6], [16, 4], [14, 12], palette.accent); // ears
-  stampTriangle(grid, [30, 6], [24, 4], [26, 12], palette.accent);
-  stampEllipse(grid, 20, 11, 9, 8, palette.body); // head
+function drawInfant(grid, p) {
+  const hcy=24, bcy=41;
+  // 짧은 꼬리
+  stampRotEllipse(grid,44,44,7,3,-25,p.shadow);
+  stampRotEllipse(grid,43,43,6,2.5,-25,p.body);
+  // 몸통
+  shadedBlob(grid,32,bcy,10,11,p);
+  stampEllipse(grid,32,bcy+2,6,8,p.belly);
+  // 날개 싹 (아주 작은 돌기)
+  stampEllipse(grid,21,39,3,2,p.wingShad);
+  stampEllipse(grid,20,38,2.5,1.5,p.wing);
+  stampEllipse(grid,43,39,3,2,p.wingShad);
+  stampEllipse(grid,44,38,2.5,1.5,p.wing);
+  // 팔
+  stampRect(grid,19,38,22,47,p.shadow); stampRect(grid,20,38,22,47,p.body);
+  stampRect(grid,42,38,45,47,p.shadow); stampRect(grid,42,38,44,47,p.body);
+  // 발
+  stampRect(grid,24,52,28,58,p.shadow); stampRect(grid,25,52,28,58,p.body);
+  stampRect(grid,36,52,40,58,p.shadow); stampRect(grid,36,52,39,58,p.body);
+  // 귀
+  stampTriangle(grid,[24,15],[29,15],[27,9],p.wingShad);
+  stampTriangle(grid,[24,15],[29,15],[27,10],p.wing);
+  stampTriangle(grid,[35,15],[40,15],[37,9],p.wingShad);
+  stampTriangle(grid,[35,15],[40,15],[37,10],p.wing);
+  // 머리
+  shadedBlob(grid,32,hcy,13,11,p);
+  stampEllipse(grid,32,hcy+3,7,6,p.belly);
 }
 
-function drawAdolescent(grid, palette) {
-  stampRotatedEllipse(grid, 33, 24, 7, 3, -30, palette.accent); // tail
-  stampEllipse(grid, 38, 16, 3, 3, palette.accent);
-  stampTriangle(grid, [6, 20], [2, 12], [10, 18], palette.accent2); // wing buds
-  stampTriangle(grid, [34, 20], [38, 12], [30, 18], palette.accent2);
-  stampEllipse(grid, 20, 26, 9, 12, palette.body); // torso, lankier
-  stampRotatedEllipse(grid, 20, 24, 3, 8, 0, palette.accent2); // marking stripe
-  stampRect(grid, 7, 18, 10, 31, palette.body); // longer arms
-  stampRect(grid, 30, 18, 33, 31, palette.body);
-  stampRect(grid, 14, 36, 18, 39, palette.body); // longer legs
-  stampRect(grid, 22, 36, 26, 39, palette.body);
-  stampTriangle(grid, [9, 5], [15, 2], [14, 11], palette.accent); // ears
-  stampTriangle(grid, [31, 5], [25, 2], [26, 11], palette.accent);
-  stampEllipse(grid, 20, 10, 8, 7, palette.body); // head
-  stampTriangle(grid, [16, 2], [20, 0], [20, 4], palette.accent); // spiky tuft
-  stampTriangle(grid, [20, 1], [24, 0], [24, 4], palette.accent);
+function drawChild(grid, p) {
+  const hcy=23, bcy=40;
+  // 꼬리
+  stampRotEllipse(grid,46,43,8,3,-30,p.shadow);
+  stampRotEllipse(grid,45,42,7,2.5,-30,p.body);
+  stampEllipse(grid,52,37,3,3,p.wingShad); stampEllipse(grid,52,37,2,2,p.body);
+  // 작은 날개
+  shadedWing(grid,20,33,9,5,-20,p);
+  shadedWing(grid,44,33,9,5,20,p);
+  // 몸통
+  shadedBlob(grid,32,bcy,11,12,p);
+  stampEllipse(grid,32,bcy+2,7,9,p.belly);
+  // 팔
+  stampRect(grid,18,37,21,48,p.shadow); stampRect(grid,19,37,21,48,p.body);
+  stampRect(grid,43,37,46,48,p.shadow); stampRect(grid,43,37,45,48,p.body);
+  // 발
+  stampRect(grid,23,52,28,59,p.shadow); stampRect(grid,24,52,28,59,p.body);
+  stampRect(grid,36,52,41,59,p.shadow); stampRect(grid,36,52,40,59,p.body);
+  // 귀
+  stampTriangle(grid,[23,14],[29,14],[26,8],p.wingShad);
+  stampTriangle(grid,[23,14],[29,14],[26,9],p.wing);
+  stampTriangle(grid,[35,14],[41,14],[38,8],p.wingShad);
+  stampTriangle(grid,[35,14],[41,14],[38,9],p.wing);
+  // 머리
+  shadedBlob(grid,32,hcy,13,11,p);
+  stampEllipse(grid,32,hcy+3,7,6,p.belly);
+  // 이마 작은 뿔
+  stampTriangle(grid,[29,12],[35,12],[32,6],p.wingShad);
+  stampTriangle(grid,[29,12],[35,12],[32,7],p.wing);
 }
 
-function drawYoungAdult(grid, palette) {
-  stampRotatedEllipse(grid, 34, 25, 8, 3, -30, palette.accent); // tail
-  stampEllipse(grid, 39, 15, 3, 3, palette.accent);
-  stampRotatedEllipse(grid, 6, 18, 9, 4, -35, palette.accent2); // spread wings
-  stampRotatedEllipse(grid, 34, 18, 9, 4, 35, palette.accent2);
-  stampEllipse(grid, 20, 25, 9, 12, palette.body); // athletic torso
-  stampRotatedEllipse(grid, 20, 23, 3, 9, 0, palette.accent2); // markings
-  stampRotatedEllipse(grid, 14, 25, 2, 6, 10, palette.accent2);
-  stampRotatedEllipse(grid, 26, 25, 2, 6, -10, palette.accent2);
-  stampRect(grid, 8, 17, 11, 29, palette.body); // arms
-  stampRect(grid, 29, 17, 32, 29, palette.body);
-  stampRect(grid, 14, 35, 18, 39, palette.body); // legs
-  stampRect(grid, 22, 35, 26, 39, palette.body);
-  stampTriangle(grid, [9, 4], [15, 1], [14, 10], palette.accent); // ears
-  stampTriangle(grid, [31, 4], [25, 1], [26, 10], palette.accent);
-  stampEllipse(grid, 20, 9, 8, 7, palette.body); // head
-  stampTriangle(grid, [18, 1], [22, 0], [22, 5], palette.accent2); // crest
+function drawAdolescent(grid, p) {
+  const hcy=21, bcy=39;
+  // 꼬리
+  stampRotEllipse(grid,47,42,9,3.5,-30,p.shadow);
+  stampRotEllipse(grid,46,41,8,3,-30,p.body);
+  stampEllipse(grid,54,35,3.5,3.5,p.wingShad); stampEllipse(grid,54,35,2.5,2.5,p.body);
+  // 중간 크기 날개
+  shadedWing(grid,17,31,12,6,-25,p);
+  shadedWing(grid,47,31,12,6,25,p);
+  // 날개 아래 접힌 부분
+  shadedWing(grid,18,38,8,4,-50,p);
+  shadedWing(grid,46,38,8,4,50,p);
+  // 몸통
+  shadedBlob(grid,32,bcy,11,13,p);
+  stampEllipse(grid,32,bcy+2,7,10,p.belly);
+  // 팔
+  stampRect(grid,17,36,21,49,p.shadow); stampRect(grid,18,36,21,49,p.body);
+  stampRect(grid,43,36,47,49,p.shadow); stampRect(grid,43,36,46,49,p.body);
+  // 발
+  stampRect(grid,23,53,28,60,p.shadow); stampRect(grid,24,53,28,60,p.body);
+  stampRect(grid,36,53,41,60,p.shadow); stampRect(grid,36,53,40,60,p.body);
+  // 귀
+  stampTriangle(grid,[22,13],[28,13],[25,6],p.wingShad);
+  stampTriangle(grid,[22,13],[28,13],[25,7],p.wing);
+  stampTriangle(grid,[36,13],[42,13],[39,6],p.wingShad);
+  stampTriangle(grid,[36,13],[42,13],[39,7],p.wing);
+  // 머리
+  shadedBlob(grid,32,hcy,13,11,p);
+  stampEllipse(grid,32,hcy+3,7,6,p.belly);
+  // 뿔 2개
+  stampTriangle(grid,[27,11],[32,11],[29,4],p.wingShad);
+  stampTriangle(grid,[27,11],[32,11],[29,5],p.wing);
+  stampTriangle(grid,[32,11],[37,11],[35,4],p.wingShad);
+  stampTriangle(grid,[32,11],[37,11],[35,5],p.wing);
 }
 
-function drawElder(grid, palette) {
-  stampRotatedEllipse(grid, 32, 27, 6, 3, -20, palette.accent); // curled tail
-  stampEllipse(grid, 36, 22, 2, 2, palette.accent);
-  stampRotatedEllipse(grid, 9, 22, 5, 3, -20, palette.accent2); // folded wings
-  stampRotatedEllipse(grid, 31, 22, 5, 3, 20, palette.accent2);
-  stampEllipse(grid, 20, 27, 9, 11, palette.body); // stooped torso
-  stampRect(grid, 9, 20, 12, 30, palette.body); // arms
-  stampRect(grid, 28, 20, 31, 30, palette.body);
-  stampRect(grid, 14, 35, 18, 39, palette.body); // legs
-  stampRect(grid, 22, 35, 26, 39, palette.body);
-  stampTriangle(grid, [10, 7], [16, 5], [14, 13], palette.accent); // drooped ears
-  stampTriangle(grid, [30, 7], [24, 5], [26, 13], palette.accent);
-  stampEllipse(grid, 20, 12, 8, 7, palette.body); // head
-  stampRect(grid, 4, 16, 11, 17, palette.accent2); // long whiskers
-  stampRect(grid, 29, 16, 36, 17, palette.accent2);
-  stampEllipse(grid, 20, 9, 2, 2, palette.accent2); // wisdom mark
+function drawYoungAdult(grid, p) {
+  const hcy=20, bcy=38;
+  // 꼬리
+  stampRotEllipse(grid,48,41,10,4,-28,p.shadow);
+  stampRotEllipse(grid,47,40,9,3.5,-28,p.body);
+  stampRotEllipse(grid,55,33,6,2.5,-45,p.body);
+  stampTriangle(grid,[58,28],[63,24],[57,27],p.wingShad);
+  // 큰 날개 (상단 + 하단 막)
+  shadedWing(grid,13,26,14,7,-20,p);
+  shadedWing(grid,14,35,10,5,-55,p);
+  shadedWing(grid,51,26,14,7,20,p);
+  shadedWing(grid,50,35,10,5,55,p);
+  // 날개 뼈대 선
+  stampRect(grid,13,24,14,38,p.wingDeep);
+  stampRect(grid,50,24,51,38,p.wingDeep);
+  // 몸통
+  shadedBlob(grid,32,bcy,12,14,p);
+  stampEllipse(grid,32,bcy+3,8,11,p.belly);
+  stampEllipse(grid,32,bcy-3,5,3,p.bellyShad); // 목 그림자
+  // 팔
+  stampRect(grid,17,35,21,50,p.shadow); stampRect(grid,18,35,21,50,p.body);
+  stampRect(grid,43,35,47,50,p.shadow); stampRect(grid,43,35,46,50,p.body);
+  // 발
+  stampRect(grid,23,53,28,61,p.shadow); stampRect(grid,24,53,28,61,p.body);
+  stampRect(grid,36,53,41,61,p.shadow); stampRect(grid,36,53,40,61,p.body);
+  // 발톱
+  stampTriangle(grid,[23,61],[25,61],[24,63],p.deepShadow);
+  stampTriangle(grid,[26,61],[28,61],[27,63],p.deepShadow);
+  stampTriangle(grid,[36,61],[38,61],[37,63],p.deepShadow);
+  stampTriangle(grid,[39,61],[41,61],[40,63],p.deepShadow);
+  // 귀
+  stampTriangle(grid,[21,12],[27,12],[24,5],p.wingShad);
+  stampTriangle(grid,[21,12],[27,12],[24,6],p.wing);
+  stampTriangle(grid,[37,12],[43,12],[40,5],p.wingShad);
+  stampTriangle(grid,[37,12],[43,12],[40,6],p.wing);
+  // 머리
+  shadedBlob(grid,32,hcy,14,12,p);
+  stampEllipse(grid,32,hcy+4,8,7,p.belly);
+  // 뿔 3개 (크레스트)
+  stampTriangle(grid,[25,10],[31,10],[28,2],p.wingShad);
+  stampTriangle(grid,[25,10],[31,10],[28,3],p.wing);
+  stampTriangle(grid,[29,9],[35,9],[32,-1],p.wingShad);
+  stampTriangle(grid,[29,9],[35,9],[32,1],p.wing);
+  stampTriangle(grid,[33,10],[39,10],[36,2],p.wingShad);
+  stampTriangle(grid,[33,10],[39,10],[36,3],p.wing);
 }
+
+function drawElder(grid, p) {
+  const hcy=19, bcy=38;
+  // 꼬리 (더 두껍고 길음)
+  stampRotEllipse(grid,49,42,11,5,-25,p.shadow);
+  stampRotEllipse(grid,48,41,10,4,-25,p.body);
+  stampRotEllipse(grid,57,34,7,3,-42,p.body);
+  stampTriangle(grid,[60,28],[63,22],[58,27],p.wingShad);
+  // 웅장한 날개
+  shadedWing(grid,10,23,16,8,-18,p);
+  shadedWing(grid,11,34,12,6,-55,p);
+  shadedWing(grid,54,23,16,8,18,p);
+  shadedWing(grid,53,34,12,6,55,p);
+  stampRect(grid,10,21,11,38,p.wingDeep);
+  stampRect(grid,53,21,54,38,p.wingDeep);
+  // 몸통 (더 크고 둥글)
+  shadedBlob(grid,32,bcy,13,15,p);
+  stampEllipse(grid,32,bcy+3,9,12,p.belly);
+  // 가슴 문양 (장식)
+  stampEllipse(grid,32,bcy-1,4,3,p.wingShad);
+  stampEllipse(grid,32,bcy+5,3,4,p.wingShad);
+  // 팔 (약간 더 두꺼움)
+  stampRect(grid,16,35,21,51,p.shadow); stampRect(grid,17,35,21,51,p.body);
+  stampRect(grid,43,35,48,51,p.shadow); stampRect(grid,43,35,47,51,p.body);
+  // 발
+  stampRect(grid,22,54,28,62,p.shadow); stampRect(grid,23,54,28,62,p.body);
+  stampRect(grid,36,54,42,62,p.shadow); stampRect(grid,36,54,41,62,p.body);
+  // 발톱
+  for (const [ax,ay] of [[22,62],[25,62],[28,62],[36,62],[39,62],[42,62]])
+    stampTriangle(grid,[ax-1,ay],[ax+1,ay],[ax,ay+3],p.deepShadow);
+  // 수염 (장로 특징)
+  stampRect(grid,8,30,17,31,p.wingShad);
+  stampRect(grid,47,30,56,31,p.wingShad);
+  stampRect(grid,6,33,14,34,p.wingShad);
+  stampRect(grid,50,33,58,34,p.wingShad);
+  // 귀 (더 크고 장식적)
+  stampTriangle(grid,[19,11],[26,11],[22,3],p.wingShad);
+  stampTriangle(grid,[19,11],[26,11],[22,4],p.wing);
+  stampTriangle(grid,[38,11],[45,11],[42,3],p.wingShad);
+  stampTriangle(grid,[38,11],[45,11],[42,4],p.wing);
+  // 머리
+  shadedBlob(grid,32,hcy,14,12,p);
+  stampEllipse(grid,32,hcy+4,8,7,p.belly);
+  // 이마 보석 (장로 특징)
+  stampEllipse(grid,32,hcy-4,3,2.5,p.wingShad);
+  stampEllipse(grid,32,hcy-4,2,1.5,p.wingLight);
+  // 뿔 (더 굵고 휘어짐)
+  stampTriangle(grid,[23,10],[30,10],[25,1],p.wingShad);
+  stampTriangle(grid,[23,10],[30,10],[25,2],p.wing);
+  stampTriangle(grid,[28,8],[35,8],[31,-2],p.wingShad);
+  stampTriangle(grid,[28,8],[35,8],[31,0],p.wing);
+  stampTriangle(grid,[34,10],[41,10],[39,1],p.wingShad);
+  stampTriangle(grid,[34,10],[41,10],[39,2],p.wing);
+}
+
+// ── 단계별 얼굴 위치 ──────────────────────────────────────────────────────────
+const STAGE_FACE = {
+  newborn:    { cx:32, eyeY:25, eyeDX:6,  mouthY:30 },
+  infant:     { cx:32, eyeY:23, eyeDX:7,  mouthY:29 },
+  child:      { cx:32, eyeY:22, eyeDX:7,  mouthY:28 },
+  adolescent: { cx:32, eyeY:20, eyeDX:7,  mouthY:26 },
+  youngAdult: { cx:32, eyeY:19, eyeDX:7,  mouthY:25 },
+  elder:      { cx:32, eyeY:18, eyeDX:7,  mouthY:24 },
+};
 
 const STAGE_DRAW = {
-  newborn: drawNewborn,
-  infant: drawInfant,
-  child: drawChild,
+  egg:        drawEgg,
+  newborn:    drawNewborn,
+  infant:     drawInfant,
+  child:      drawChild,
   adolescent: drawAdolescent,
   youngAdult: drawYoungAdult,
-  elder: drawElder,
+  elder:      drawElder,
 };
 
-const STAGE_FACE = {
-  newborn: { cx: 20, cy: 17, eyeDX: 5, mouthY: 21 },
-  infant: { cx: 20, cy: 14, eyeDX: 5, mouthY: 18 },
-  child: { cx: 20, cy: 12, eyeDX: 4, mouthY: 15 },
-  adolescent: { cx: 20, cy: 11, eyeDX: 4, mouthY: 14 },
-  youngAdult: { cx: 20, cy: 10, eyeDX: 4, mouthY: 13 },
-  elder: { cx: 20, cy: 13, eyeDX: 4, mouthY: 16 },
-};
-
-// ---- mood faces ------------------------------------------------------
-// Blocky pixel patterns instead of antialiased arcs — reads as intentional
-// at this resolution instead of as a smoothing artifact. Same per-mood
-// meaning as before: joyful=closed happy ^, content=small round eye,
-// neutral=flat dot, down=droopy+eyebrow, lonely=droopy+tear (no eyebrow).
-
-const EYE_OFFSETS = {
-  joyful: [[-1, 1], [0, 0], [1, 1]],
-  content: [[0, -1], [-1, 0], [0, 0], [1, 0], [0, 1]],
-  neutral: [[0, -1], [0, 0], [0, 1]],
-  down: [[-1, 0], [0, 0], [1, 0]],
-  lonely: [[-1, 0], [0, 0], [1, 0]],
-};
-
-const MOUTH_OFFSETS = {
-  joyful: [[-2, 0], [-1, 1], [0, 1], [1, 1], [2, 0]],
-  content: [[-1, 0], [0, 1], [1, 0]],
-  neutral: [[-1, 0], [0, 0], [1, 0]],
-  down: [[-1, 1], [0, 0], [1, 1]],
-  lonely: [[-1, 1], [0, 0], [1, 1]],
-};
-
-const EYEBROW_LEFT = [[-1, -3], [0, -2], [1, -2]];
-const EYEBROW_RIGHT = [[1, -3], [0, -2], [-1, -2]];
-
-function paintFace(grid, face, mood) {
-  const { cx, cy, eyeDX, mouthY } = face;
-  const leftEyeX = cx - eyeDX;
-  const rightEyeX = cx + eyeDX;
-
-  stampOffsets(grid, leftEyeX, cy, EYE_OFFSETS[mood], FACE_COLOR);
-  stampOffsets(grid, rightEyeX, cy, EYE_OFFSETS[mood], FACE_COLOR);
-  stampOffsets(grid, cx, mouthY, MOUTH_OFFSETS[mood], FACE_COLOR);
-
-  if (mood === 'down') {
-    stampOffsets(grid, leftEyeX, cy, EYEBROW_LEFT, FACE_COLOR);
-    stampOffsets(grid, rightEyeX, cy, EYEBROW_RIGHT, FACE_COLOR);
-  }
-
-  if (mood === 'joyful') {
-    setCell(grid, leftEyeX - 2, cy + 2, BLUSH_COLOR);
-    setCell(grid, rightEyeX + 2, cy + 2, BLUSH_COLOR);
-  }
-
-  if (mood === 'lonely') {
-    setCell(grid, rightEyeX + 1, cy + 2, TEAR_COLOR);
-    setCell(grid, rightEyeX + 1, cy + 3, TEAR_COLOR);
-  }
-}
-
-// ---- orchestration -----------------------------------------------------
-
+// ── 렌더링 ────────────────────────────────────────────────────────────────────
 function createImage() {
-  return new Promise((resolve, reject) => {
-    new Jimp(CANVAS, CANVAS, Jimp.rgbaToInt(0, 0, 0, 0), (err, img) => (err ? reject(err) : resolve(img)));
-  });
+  return new Promise((res,rej) =>
+    new Jimp(CANVAS,CANVAS,Jimp.rgbaToInt(0,0,0,0),(err,img)=>err?rej(err):res(img))
+  );
 }
-
-function setPixelOpaque(image, x, y, r, g, b) {
-  const w = image.bitmap.width;
-  const h = image.bitmap.height;
-  if (x < 0 || y < 0 || x >= w || y >= h) return;
-  const idx = (y * w + x) * 4;
-  const data = image.bitmap.data;
-  data[idx + 0] = r;
-  data[idx + 1] = g;
-  data[idx + 2] = b;
-  data[idx + 3] = 255;
+function setPixel(img,x,y,r,g,b) {
+  const {width:w,height:h,data:d}=img.bitmap;
+  if (x<0||y<0||x>=w||y>=h) return;
+  const i=(y*w+x)*4;
+  d[i]=Math.round(r); d[i+1]=Math.round(g); d[i+2]=Math.round(b); d[i+3]=255;
 }
-
-function blitGrid(image, bodyGrid, outlineGrid) {
-  for (let gy = 0; gy < LOGICAL; gy++) {
-    for (let gx = 0; gx < LOGICAL; gx++) {
-      const color = bodyGrid[gy][gx] || outlineGrid[gy][gx];
-      if (!color) continue;
-      const r = Math.round(color[0]);
-      const g = Math.round(color[1]);
-      const b = Math.round(color[2]);
-      const baseX = gx * SCALE;
-      const baseY = gy * SCALE;
-      for (let sy = 0; sy < SCALE; sy++) {
-        for (let sx = 0; sx < SCALE; sx++) {
-          setPixelOpaque(image, baseX + sx, baseY + sy, r, g, b);
-        }
-      }
+function blitGrid(img,body,outline) {
+  for (let gy=0;gy<LOGICAL;gy++)
+    for (let gx=0;gx<LOGICAL;gx++) {
+      const c=body[gy][gx]||outline[gy][gx];
+      if (!c) continue;
+      for (let sy=0;sy<SCALE;sy++)
+        for (let sx=0;sx<SCALE;sx++)
+          setPixel(img,gx*SCALE+sx,gy*SCALE+sy,...c);
     }
-  }
+}
+function writeImage(img,p) {
+  return new Promise((res,rej)=>img.write(p,e=>e?rej(e):res()));
 }
 
-function writeImage(image, outPath) {
-  return new Promise((resolve, reject) => {
-    image.write(outPath, (err) => (err ? reject(err) : resolve()));
-  });
-}
+// ── 생성 실행 ─────────────────────────────────────────────────────────────────
+const STAGES = ['egg','newborn','infant','child','adolescent','youngAdult','elder'];
+const MOODS  = ['neutral','joyful','content','down','lonely'];
 
-const STAGES = ['egg', 'newborn', 'infant', 'child', 'adolescent', 'youngAdult', 'elder'];
-const MOODS = ['joyful', 'content', 'neutral', 'down', 'lonely'];
-
-async function generateCharacterSprites() {
+async function generate() {
   for (const stage of STAGES) {
-    const basePalette = STAGE_PALETTE[stage];
     for (const mood of MOODS) {
-      const adjust = MOOD_BODY_ADJUST[mood];
-      const palette = {
-        ...basePalette,
-        body: adjust(basePalette.body),
-        bodyLight: brighten(adjust(basePalette.body), 0.25),
-      };
-
+      const p    = makePalette(mood);
       const grid = createGrid();
-      if (stage === 'egg') {
-        drawEgg(grid, palette);
-      } else {
-        STAGE_DRAW[stage](grid, palette);
-      }
+      STAGE_DRAW[stage](grid, p);
       const outline = computeOutline(grid);
-      if (stage === 'egg') {
-        paintEggCracks(grid, palette, mood);
-      } else {
-        paintFace(grid, STAGE_FACE[stage], mood);
+      if (stage !== 'egg') {
+        const f = STAGE_FACE[stage];
+        paintFace(grid, f.cx, f.eyeY, f.eyeDX, f.mouthY, mood);
       }
-
-      const image = await createImage();
-      blitGrid(image, grid, outline);
-      const outPath = path.join(CHARACTER_DIR, `${stage}-${mood}.png`);
-      await writeImage(image, outPath);
-      console.log('wrote', outPath);
+      const img = await createImage();
+      blitGrid(img, grid, outline);
+      const out = path.join(CHARACTER_DIR, `${stage}-${mood}.png`);
+      await writeImage(img, out);
+      console.log('wrote', `${stage}-${mood}.png`);
     }
   }
+  console.log('\n전체 완료');
 }
 
-generateCharacterSprites().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+generate().catch(e=>{ console.error(e); process.exit(1); });

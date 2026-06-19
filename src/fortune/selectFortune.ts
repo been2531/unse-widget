@@ -1,4 +1,8 @@
 import generalPool from '../assets/content/general.json';
+import wealthPool from '../assets/content/wealth.json';
+import lovePool from '../assets/content/love.json';
+import healthPool from '../assets/content/health.json';
+import workPool from '../assets/content/work.json';
 import diiRat from '../assets/content/by-dii/rat.json';
 import diiOx from '../assets/content/by-dii/ox.json';
 import diiTiger from '../assets/content/by-dii/tiger.json';
@@ -74,5 +78,10 @@ export function selectDailyFortune(date: string, diiSign: DiiSign, starSign: Sta
   const dii = pick(diiPool, fnv1aHash(`${baseSeed}:dii`));
   const star = pick(starPool, fnv1aHash(`${baseSeed}:star`));
 
-  return { date, general, dii, star };
+  const wealth = pick(wealthPool as FortuneEntry[], fnv1aHash(`${baseSeed}:wealth`));
+  const love   = pick(lovePool   as FortuneEntry[], fnv1aHash(`${baseSeed}:love`));
+  const health = pick(healthPool as FortuneEntry[], fnv1aHash(`${baseSeed}:health`));
+  const work   = pick(workPool   as FortuneEntry[], fnv1aHash(`${baseSeed}:work`));
+
+  return { date, general, wealth, love, health, work, dii, star };
 }
