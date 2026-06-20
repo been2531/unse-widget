@@ -917,13 +917,13 @@ export default function HomeScreen() {
             const dotColor = v === 'good' ? '#FFD700' : v === 'neutral' ? '#88AAFF' : '#FF6B9D';
             return (
               <View key={d} style={styles.weekCell}>
-                <Text style={[styles.weekDayLabel, isToday && { color: '#FFFFFF', fontWeight: '700' }]}>{dayLabel}</Text>
+                <Text style={[styles.weekDayLabel, isToday && { color: '#FFFFFF' }]}>{dayLabel}</Text>
                 <View style={[
                   styles.weekDot,
                   {
                     backgroundColor: isToday ? dotColor : `${dotColor}33`,
                     borderColor: isToday ? dotColor : `${dotColor}55`,
-                    borderWidth: isToday ? 2 : 1,
+                    borderWidth: 1,
                   },
                 ]} />
               </View>
@@ -1027,7 +1027,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   weekCell: { alignItems: 'center', gap: 6, flex: 1 },
-  weekDayLabel: { fontFamily: F.sb, color: 'rgba(255,255,255,0.28)', fontSize: 10 },
+  weekDayLabel: { fontFamily: F.sb, color: 'rgba(255,255,255,0.28)', fontSize: 10, lineHeight: 13 },
   weekDot: {
     width: 12, height: 12, borderRadius: 6,
   },
