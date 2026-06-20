@@ -315,31 +315,34 @@ export default function CollectionScreen() {
         </View>
       </View>
 
-      {/* 카테고리 필터 탭 */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.tabsContainer} style={{ flexGrow: 0 }}>
-        {FILTERS.map(({ key, label }) => (
-          <Pressable key={key}
-            style={[styles.tab, filter === key && styles.tabActive]}
-            onPress={() => { setFilter(key); setElemFilter('all'); }}>
-            <Text style={[styles.tabText, filter === key && styles.tabTextActive]}>
-              {label}
-            </Text>
-          </Pressable>
-        ))}
-      </ScrollView>
+      {/* 카테고리 필터 탭 — 언더라인 스타일 */}
+      <View style={styles.tabTrack}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.tabsContainer} style={{ flexGrow: 0 }}>
+          {FILTERS.map(({ key, label }) => (
+            <Pressable key={key}
+              style={[styles.tab, filter === key && styles.tabActive]}
+              onPress={() => { setFilter(key); setElemFilter('all'); }}>
+              <Text style={[styles.tabText, filter === key && styles.tabTextActive]}>
+                {label}
+              </Text>
+            </Pressable>
+          ))}
+        </ScrollView>
+      </View>
 
       {/* 원소 필터 — 캐릭터 탭에서만 */}
       {filter === 'character' && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false}
-          contentContainerStyle={[styles.tabsContainer, { paddingTop: 4, paddingBottom: 12 }]} style={{ flexGrow: 0 }}>
+          contentContainerStyle={styles.elemTabsContainer} style={{ flexGrow: 0 }}>
           {ELEM_FILTERS.map(({ key, label }) => {
             const color = key !== 'all' ? (ELEM_COLOR[key] ?? '#888') : undefined;
+            const isActive = elemFilter === key;
             return (
               <Pressable key={key}
-                style={[styles.elemTab, elemFilter === key && { borderColor: `${color ?? '#FFF'}88`, backgroundColor: `${color ?? '#FFF'}18` }]}
+                style={[styles.elemTab, isActive && { borderColor: color ? `${color}99` : 'rgba(255,255,255,0.55)', backgroundColor: color ? `${color}18` : 'rgba(255,255,255,0.10)' }]}
                 onPress={() => setElemFilter(key)}>
-                <Text style={[styles.elemTabText, elemFilter === key && { color: color ?? '#FFF' }]}>
+                <Text style={[styles.elemTabText, isActive && { color: color ?? '#FFF', fontFamily: F.sb }]}>
                   {label}
                 </Text>
               </Pressable>
@@ -387,22 +390,17 @@ const styles = StyleSheet.create({
   backIcon: { fontFamily: F.r, color: '#fff', fontSize: 28, lineHeight: 32, marginTop: -2 },
   title: { fontFamily: F.eb, fontSize: 18, color: '#FFF', letterSpacing: 1 },
   countBadge: { fontFamily: F.sb, color: 'rgba(255,255,255,0.45)', fontSize: 13 },
-  tabsContainer: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 12, gap: 10 },
+  tabTrack: {
+    borderBottomWidth: 1, borderBottomColor: 'rgba(255,255,255,0.08)',
+  },
+  tabsContainer: { paddingHorizontal: 20, gap: 0 },
   tab: {
-    height: 44,
-    paddingHorizontal: 22, borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+    paddingHorizontal: 16, paddingTop: 10, paddingBottom: 12,
+    borderBottomWidth: 2, borderBottomColor: 'transparent', marginBottom: -1,
   },
-  tabActive: {
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    borderColor: 'rgba(255,255,255,0.30)',
-  },
-  tabText: {
-    fontFamily: F.sb, color: 'rgba(255,255,255,0.78)', fontSize: 14,
-    lineHeight: 44, textAlign: 'center', includeFontPadding: false,
-  },
-  tabTextActive: { fontFamily: F.sb, color: '#FFF' },
+  tabActive: { borderBottomColor: '#FFD700' },
+  tabText: { fontFamily: F.r, color: 'rgba(255,255,255,0.40)', fontSize: 14 },
+  tabTextActive: { fontFamily: F.b, color: '#FFF' },
   progressWrap: {
     marginHorizontal: 20, marginBottom: 10, gap: 6,
   },
@@ -417,15 +415,16 @@ const styles = StyleSheet.create({
     height: '100%', borderRadius: 2,
     backgroundColor: '#FFD700',
   },
+  elemTabsContainer: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 14, gap: 8 },
   elemTab: {
-    height: 38,
-    paddingHorizontal: 16, borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+    height: 34,
+    paddingHorizontal: 14, borderRadius: 17,
+    backgroundColor: 'transparent',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
   },
   elemTabText: {
-    fontFamily: F.sb, color: 'rgba(255,255,255,0.35)', fontSize: 13,
-    lineHeight: 38, textAlign: 'center', includeFontPadding: false,
+    fontFamily: F.r, color: 'rgba(255,255,255,0.40)', fontSize: 12,
+    lineHeight: 34, textAlign: 'center', includeFontPadding: false,
   },
 });
 
