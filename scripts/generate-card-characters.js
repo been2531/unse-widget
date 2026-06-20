@@ -1,194 +1,248 @@
-// 가차 카드 캐릭터 아트 생성 — Pollinations.ai (가입 불필요)
-// 6원소 × 3단계 = 18장
+// 가차 카드 캐릭터 아트 생성 — 한국신화 테마 (Pollinations.ai, 가입 불필요)
+// 6원소 × 4단계 = 24장
 // 실행: node scripts/generate-card-characters.js
-// 출력: scripts/test-output/cards/
+// 출력: scripts/test-output/cards/ → 완료 후 src/assets/character/ 에 자동 복사
 
 const https = require('https');
 const fs    = require('fs');
 const path  = require('path');
 
-const OUT_DIR = path.join(__dirname, 'test-output', 'cards');
+const OUT_DIR    = path.join(__dirname, 'test-output', 'cards');
+const ASSETS_DIR = path.join(__dirname, '..', 'src', 'assets', 'character');
 if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, { recursive: true });
 
 const W = 512, H = 512;
-const SEED = 7777;
+const SEED = 9142;
 
-// ── 공통 스타일 ────────────────────────────────────────────────────────────────
+// ── 공통 스타일 ──────────────────────────────────────────────────────────────
 const STYLE =
   'single character, centered, full body, white background, ' +
-  'clean 2D digital illustration, flat color with soft cel shading, ' +
-  'smooth clean outlines, mobile TCG card game character art style, ' +
-  'vibrant saturated colors, high quality';
+  'Korean mythology TCG card illustration, cel shading, clean smooth outlines, ' +
+  'vibrant saturated colors, dynamic pose, high quality digital art';
 
 const NEGATIVE =
-  'multiple characters, character sheet, reference sheet, collage, grid, ' +
-  'human, person, realistic, photo, pixel art, 3D render, ' +
-  'blurry, deformed, extra limbs, watermark, text, border, frame, background scenery';
+  'multiple characters, collage, grid, realistic photograph, ' +
+  'blurry, deformed, extra limbs, watermark, text, border, frame, background scenery, ' +
+  'western fantasy, generic dragon without Korean style';
 
-// ── 원소별 생물 + 단계별 프롬프트 ──────────────────────────────────────────────
+// ── 24 캐릭터 ────────────────────────────────────────────────────────────────
 const CHARACTERS = [
-  // ── 화염 (삼족오) ─────────────────────────────────────────────────────────────
+
+  // ── 봉황 계열 (fire) ──────────────────────────────────────────────────────
   {
-    id: 'fire_1', nameKo: '화이',
+    id: 'fire_1', nameKo: '봉아',
     prompt:
-      'cute chibi baby three-legged crow (Korean mythological Samjogo), ' +
-      'fluffy bright orange-red feathers, tiny third leg visible, ' +
-      'round chubby body, huge innocent eyes, small glowing embers floating around, ' +
-      'warm red-orange color palette, ' + STYLE,
+      'cute chibi baby Korean phoenix Bonghwang chick, ' +
+      'tiny fluffy five-colored feathers, round chubby baby bird body, ' +
+      'huge innocent eyes, stubby little wings, warm ember sparks floating, ' +
+      'warm orange-gold color palette, ' + STYLE,
   },
   {
-    id: 'fire_2', nameKo: '불새',
+    id: 'fire_2', nameKo: '봉황',
     prompt:
-      'teenage three-legged crow (Samjogo), sleek fiery red-gold feathers, ' +
-      'three sharp talons, dynamic spread wings, flame aura around wingtips, ' +
-      'confident bold pose, burning orange eyes, ' +
-      'bright fire color palette, ' + STYLE,
+      'young Korean mythological phoenix Bonghwang, ' +
+      'elegant five-colored plumage red green blue yellow white, ' +
+      'spread wings showing full feather glory, regal upright pose, ' +
+      'flame aura at wing tips, glowing amber eyes, ' +
+      'rich red-gold color palette, ' + STYLE,
   },
   {
-    id: 'fire_3', nameKo: '염왕',
+    id: 'fire_3', nameKo: '삼족오',
     prompt:
-      'majestic adult three-legged crow king (Samjogo), ' +
-      'magnificent scarlet and gold plumage, giant blazing wings fully spread, ' +
-      'golden crown of flames on head, intense glowing ember eyes, ' +
-      'dramatic powerful stance, flames swirling at feet, ' +
-      'epic legendary fire color palette, ' + STYLE,
+      'Samjogo Korean three-legged sun crow, ' +
+      'sleek jet-black feathers with blazing golden solar glow at edges, ' +
+      'three powerful clawed legs visible, wings fully spread, ' +
+      'radiant sun disc halo behind head, fierce ember eyes, ' +
+      'dramatic black and gold solar color palette, ' + STYLE,
+  },
+  {
+    id: 'fire_4', nameKo: '태양신조',
+    prompt:
+      'divine Korean solar deity bird Taeyangsinjo, ' +
+      'enormous radiant wings of pure solar fire, ' +
+      'blazing white-gold feathers with sunflare tips, ' +
+      'divine golden halo of flames, celestial awe-inspiring presence, ' +
+      'transcendent white-gold fire color palette, ' + STYLE,
   },
 
-  // ── 수계 (이무기) ─────────────────────────────────────────────────────────────
+  // ── 이무기·용 계열 (water) ────────────────────────────────────────────────
   {
-    id: 'water_1', nameKo: '물이',
+    id: 'water_1', nameKo: '이무기',
     prompt:
-      'cute chibi baby imugi (Korean water serpent), ' +
-      'small round serpent body, soft blue-green shimmering scales, ' +
-      'no claws yet, tiny fins on head, wide watery eyes, ' +
-      'water droplets floating around, pastel blue color palette, ' + STYLE,
+      'cute chibi baby imugi Korean water serpent, ' +
+      'small coiled serpent body, soft teal-blue shimmering scales, ' +
+      'no claws yet, tiny fin crests, wide innocent watery eyes, ' +
+      'water droplets and small bubbles floating around, ' +
+      'pastel aqua blue color palette, ' + STYLE,
   },
   {
-    id: 'water_2', nameKo: '파람',
+    id: 'water_2', nameKo: '용녀',
     prompt:
-      'teenage imugi Korean sea serpent, sleek aquamarine scales, ' +
-      'small elegant claws, flowing water mane, wave patterns on body, ' +
-      'dynamic coiled pose, glowing teal eyes, ' +
-      'cool ocean blue color palette, ' + STYLE,
+      'Korean dragon maiden Yongnyeo, elegant young woman with dragon horns and tail, ' +
+      'flowing ocean-blue hanbok with dragon scale patterns, holds glowing orb, ' +
+      'graceful beauty, ocean wave motifs around her, ' +
+      'teal-blue and white color palette, ' + STYLE,
   },
   {
-    id: 'water_3', nameKo: '해왕',
+    id: 'water_3', nameKo: '용왕',
     prompt:
-      'majestic adult imugi Korean dragon king of the sea, ' +
-      'enormous serpentine body with deep sapphire-silver scales, ' +
-      'flowing luminous mane, large elegant claws, ' +
-      'swirling ocean currents around body, regal commanding presence, ' +
-      'deep ocean color palette, ' + STYLE,
-  },
-
-  // ── 번개 (백호) ───────────────────────────────────────────────────────────────
-  {
-    id: 'lightning_1', nameKo: '번이',
-    prompt:
-      'cute chibi baby white tiger cub, ' +
-      'snow-white fur with pale electric blue lightning bolt stripe markings, ' +
-      'round chubby body, huge bright eyes, tiny spark effects around ears, ' +
-      'electric blue accent color palette, ' + STYLE,
+      'Korean Dragon King Yongwang, powerful male deity in dragon-lord form, ' +
+      'magnificent royal robes with ocean wave and dragon patterns, golden dragon crown, ' +
+      'commanding majestic presence, deep sapphire dragon aura, ' +
+      'dark ocean blue and gold color palette, ' + STYLE,
   },
   {
-    id: 'lightning_2', nameKo: '전이',
+    id: 'water_4', nameKo: '하백',
     prompt:
-      'teenage white tiger, sleek white fur with glowing yellow-blue lightning stripes, ' +
-      'crackling static electricity around body, sharp focused eyes, ' +
-      'athletic dynamic pose, lightning sparks in background, ' +
-      'electric yellow-white color palette, ' + STYLE,
-  },
-  {
-    id: 'lightning_3', nameKo: '천왕',
-    prompt:
-      'majestic powerful adult white tiger, sky king, ' +
-      'pristine white fur with blazing golden lightning markings, ' +
-      'storm clouds swirling beneath paws, intense piercing eyes, ' +
-      'golden lightning crown aura, dramatic heroic stance, ' +
-      'golden storm color palette, ' + STYLE,
+      'Habaek Korean river god, powerful divine male figure in silver-blue flowing robes, ' +
+      'hair flowing like rivers, surrounded by sacred fish and water currents, ' +
+      'trident staff of the rivers, silver-blue divine energy, ' +
+      'silver and deep blue color palette, ' + STYLE,
   },
 
-  // ── 자연 (사슴) ───────────────────────────────────────────────────────────────
+  // ── 뇌신 계열 (lightning) ─────────────────────────────────────────────────
   {
-    id: 'nature_1', nameKo: '솔이',
+    id: 'lightning_1', nameKo: '천붕이',
     prompt:
-      'cute chibi baby jade deer fawn, ' +
-      'soft mint-green fur with white flower petal spots, ' +
-      'tiny budding antlers with small leaves, huge gentle eyes, ' +
-      'small flowers blooming around hooves, ' +
-      'soft green nature color palette, ' + STYLE,
+      'cute chibi baby Korean thunder spirit child, ' +
+      'round chubby toddler with storm cloud puff hair, tiny yellow lightning bolts, ' +
+      'surprised delighted expression, electric sparks dancing around, ' +
+      'bright electric yellow-blue color palette, ' + STYLE,
   },
   {
-    id: 'nature_2', nameKo: '풀이',
+    id: 'lightning_2', nameKo: '뇌공',
     prompt:
-      'young jade deer with growing branching antlers covered in moss and small leaves, ' +
-      'emerald green glowing fur, ivy vines gently curling around legs, ' +
-      'serene graceful pose, ' +
-      'rich forest green color palette, ' + STYLE,
+      'Noegong Korean thunder duke, powerful warrior deity, ' +
+      'golden armor engraved with lightning bolt patterns, ' +
+      'raises a heavenly drum mallet, crackling electric aura surrounding body, ' +
+      'bold dynamic striking pose, gold-blue electric color palette, ' + STYLE,
   },
   {
-    id: 'nature_3', nameKo: '자왕',
+    id: 'lightning_3', nameKo: '뇌신',
     prompt:
-      'majestic adult jade guardian deer, ' +
-      'magnificent emerald and gold fur, ' +
-      'towering antlers like an ancient tree with blooming flowers and glowing leaves, ' +
-      'ancient powerful presence, golden nature energy radiating, ' +
-      'deep forest and gold color palette, ' + STYLE,
-  },
-
-  // ── 암흑 (구미호) ─────────────────────────────────────────────────────────────
-  {
-    id: 'dark_1', nameKo: '밤이',
-    prompt:
-      'cute chibi baby black fox kit, ' +
-      'glossy midnight black fur with tiny single fluffy tail, ' +
-      'purple starlight sparkles around body, curious mischievous eyes, ' +
-      'dark purple night color palette, ' + STYLE,
+      'Noesin Korean god of thunder, fierce divine warrior, ' +
+      'dark indigo armor with blazing golden lightning runes, ' +
+      'storm clouds swirling behind, lightning bolts at command, ' +
+      'piercing electric white eyes, powerful heroic stance, ' +
+      'dark indigo and electric gold color palette, ' + STYLE,
   },
   {
-    id: 'dark_2', nameKo: '흑이',
+    id: 'lightning_4', nameKo: '옥황',
     prompt:
-      'teenage black fox with three sleek dark tails, ' +
-      'obsidian black fur with purple shadow aura, ' +
-      'clever glowing violet eyes, shadow wisps trailing from tails, ' +
-      'elegant mysterious pose, ' +
-      'deep violet-black color palette, ' + STYLE,
-  },
-  {
-    id: 'dark_3', nameKo: '어왕',
-    prompt:
-      'majestic adult nine-tailed black fox, lord of darkness, ' +
-      'magnificent jet-black fur with nine flowing cosmic tails filled with stars, ' +
-      'deep galaxy swirling within each tail, ' +
-      'commanding regal presence, glowing deep purple eyes, ' +
-      'cosmic dark purple-black color palette, ' + STYLE,
+      'Okhwang Korean Jade Emperor, supreme ruler of heaven, ' +
+      'resplendent imperial jade-gold robes, ornate celestial crown, ' +
+      'commands lightning with fingertip, divine absolute authority, ' +
+      'all celestial deities bow before him, ' +
+      'imperial jade green and gold color palette, ' + STYLE,
   },
 
-  // ── 빛 (봉황) ─────────────────────────────────────────────────────────────────
+  // ── 산신 계열 (nature) ────────────────────────────────────────────────────
   {
-    id: 'light_1', nameKo: '빛이',
+    id: 'nature_1', nameKo: '산신이',
     prompt:
-      'cute chibi baby phoenix chick, ' +
-      'soft glowing golden-white feathers, tiny wings, round fluffy body, ' +
-      'warm sparkle light particles floating around, gentle bright eyes, ' +
-      'soft gold and white color palette, ' + STYLE,
+      'cute chibi baby Korean mountain spirit, ' +
+      'adorable tiny old-man-child with tiny white beard stubble, acorn hat, ' +
+      'little tiger cub companion beside him, mossy green robes, ' +
+      'mushrooms and wildflowers blooming around feet, ' +
+      'warm soft forest green-brown color palette, ' + STYLE,
   },
   {
-    id: 'light_2', nameKo: '햇님',
+    id: 'nature_2', nameKo: '지신',
     prompt:
-      'young phoenix with spreading radiant gold and ivory wings, ' +
-      'sunbeam feathers, cheerful warm expression, ' +
-      'halo of soft light above head, glowing tail feathers, ' +
-      'warm sunlight gold color palette, ' + STYLE,
+      'Jisin Korean earth deity, powerful female figure rising from the earth, ' +
+      'earthy clay-brown and moss-green hanbok, ancient tree root and flower motifs, ' +
+      'flowers blooming in her wake, grounded powerful stance, ' +
+      'rich terracotta and forest green color palette, ' + STYLE,
   },
   {
-    id: 'light_3', nameKo: '광왕',
+    id: 'nature_3', nameKo: '산신',
     prompt:
-      'majestic adult phoenix king of light, ' +
-      'enormous brilliant wings of blazing white-gold and solar fire, ' +
-      'divine radiance emanating from body, ' +
-      'resplendent crown of pure light, awe-inspiring noble presence, ' +
-      'divine white and gold color palette, ' + STYLE,
+      'Sansin Korean mountain god, wise ancient man with flowing silver beard, ' +
+      'majestic sage robes in forest green, mighty tiger at his side, ' +
+      'pine tree and mountain energy surrounding, calm divine authority, ' +
+      'silver-white and deep forest green color palette, ' + STYLE,
+  },
+  {
+    id: 'nature_4', nameKo: '단군',
+    prompt:
+      'Dangun mythical founder of ancient Joseon, divine half-deity king, ' +
+      'ancient Korean royal robes adorned with bear and sun motifs, ' +
+      'noble commanding presence, bear totem spirit floating nearby, ' +
+      'celestial mountains behind, ancient divine-king energy, ' +
+      'golden-amber and deep brown color palette, ' + STYLE,
+  },
+
+  // ── 도깨비 계열 (dark) ────────────────────────────────────────────────────
+  {
+    id: 'dark_1', nameKo: '도깨비',
+    prompt:
+      'cute chibi baby Korean Dokkaebi goblin, ' +
+      'small chubby teal-green skin goblin child, tiny gnarled club, ' +
+      'wild spiky hair, mischievous grinning expression, round glowing eyes, ' +
+      'purple star-sparks, dark teal-purple color palette, ' + STYLE,
+  },
+  {
+    id: 'dark_2', nameKo: '저승사자',
+    prompt:
+      'Jeoseung Saja Korean underworld messenger, ' +
+      'stoic pale-faced figure in midnight-black official robes and gat hat, ' +
+      'carries a ghostly lantern with soul-flame inside, ' +
+      'ethereal calm presence, shadow wisps trailing, ' +
+      'deep navy-black and cold blue color palette, ' + STYLE,
+  },
+  {
+    id: 'dark_3', nameKo: '염라대왕',
+    prompt:
+      'Yeomra great king of the Korean underworld, ' +
+      'imposing powerful judge in dark crimson-black armor, ' +
+      'holds a judgment scroll, eyes blazing with crimson fire, ' +
+      'underworld flames and souls swirling at feet, ' +
+      'dark crimson and smoldering gold color palette, ' + STYLE,
+  },
+  {
+    id: 'dark_4', nameKo: '명부왕',
+    prompt:
+      'Myeongwang supreme lord of Korean death and fate, ' +
+      'ancient ethereal figure in cosmic void robes filled with stars and souls, ' +
+      'ageless transcendent face, holds the book of fate, ' +
+      'reality bends around him, ' +
+      'deep cosmic purple-black with star-silver color palette, ' + STYLE,
+  },
+
+  // ── 선녀 계열 (light) ─────────────────────────────────────────────────────
+  {
+    id: 'light_1', nameKo: '선녀',
+    prompt:
+      'cute chibi baby Korean celestial fairy Seonnyeo, ' +
+      'tiny girl in flowing white-gold feathered hanbok, delicate fairy wings, ' +
+      'flower petals raining around her, softly glowing with warm light, ' +
+      'sparkling gentle eyes, pastel gold and white color palette, ' + STYLE,
+  },
+  {
+    id: 'light_2', nameKo: '달님',
+    prompt:
+      'Dalnim Korean moon goddess, ethereal graceful woman in silver-white robes, ' +
+      'crescent moon halo crown, moonbeam flowing silver hair, ' +
+      'silver star motifs on dress, serene radiant beauty, ' +
+      'cool silver-white and pale blue color palette, ' + STYLE,
+  },
+  {
+    id: 'light_3', nameKo: '해모수',
+    prompt:
+      'Haemosu Korean sun god hero from Jumong legend, ' +
+      'radiant young male deity in blazing golden armor-robes, ' +
+      'rides five-dragon chariot motif, solar crown blazing, ' +
+      'brilliant light pouring from body, heroic divine presence, ' +
+      'divine gold and radiant orange color palette, ' + STYLE,
+  },
+  {
+    id: 'light_4', nameKo: '환인',
+    prompt:
+      'Hwanim supreme Korean sky god, ancient divine patriarch of all creation, ' +
+      'celestial white-gold robes embroidered with cosmos patterns, ' +
+      'three jade talismans hovering in hand, eternal heavenly light radiating, ' +
+      'absolute divine authority, universe behind, ' +
+      'transcendent white-gold and azure color palette, ' + STYLE,
   },
 ];
 
@@ -204,7 +258,7 @@ function download(url, dest) {
       res.pipe(file);
       file.on('finish', () => { file.close(); resolve(); });
     });
-    req.on('error', err  => { fs.unlink(dest, () => {}); reject(err); });
+    req.on('error', err => { fs.unlink(dest, () => {}); reject(err); });
     req.setTimeout(120000, () => { req.destroy(); reject(new Error('timeout')); });
   });
 }
@@ -217,8 +271,10 @@ function buildUrl(char) {
 
 // ── 메인 ─────────────────────────────────────────────────────────────────────
 async function main() {
-  console.log(`카드 캐릭터 생성 시작 — 총 ${CHARACTERS.length}장`);
+  console.log(`한국신화 카드 캐릭터 생성 — 총 ${CHARACTERS.length}장`);
   console.log(`출력: ${OUT_DIR}\n`);
+
+  const failed = [];
 
   for (let i = 0; i < CHARACTERS.length; i++) {
     const char = CHARACTERS[i];
@@ -232,13 +288,26 @@ async function main() {
       console.log(`완료 (${((Date.now() - t0) / 1000).toFixed(1)}s)`);
     } catch (e) {
       console.log(`실패: ${e.message}`);
+      failed.push(char.id);
     }
 
-    if (i < CHARACTERS.length - 1) await new Promise(r => setTimeout(r, 2000));
+    if (i < CHARACTERS.length - 1) await new Promise(r => setTimeout(r, 1500));
   }
 
-  console.log(`\n완료 → ${OUT_DIR}`);
-  console.log('이미지 확인 후 src/assets/character/ 에 복사하세요.');
+  // ── 성공한 파일 → src/assets/character/ 자동 복사
+  console.log('\n─── assets 폴더에 복사 중...');
+  let copied = 0;
+  for (const char of CHARACTERS) {
+    const src  = path.join(OUT_DIR, `${char.id}.png`);
+    const dest = path.join(ASSETS_DIR, `${char.id}.png`);
+    if (fs.existsSync(src)) {
+      fs.copyFileSync(src, dest);
+      copied++;
+    }
+  }
+
+  console.log(`\n완료 — ${copied}/${CHARACTERS.length}장 복사됨 → ${ASSETS_DIR}`);
+  if (failed.length) console.log(`실패: ${failed.join(', ')}`);
 }
 
 main().catch(e => { console.error(e); process.exit(1); });

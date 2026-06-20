@@ -23,138 +23,136 @@ export interface PulledCard extends CardDef {
 // 알 없음. 각 캐릭터는 독립 IP.
 
 export const CARD_POOL: CardDef[] = [
-  // ── 화염 ──────────────────────────────────────────────────────────────────
+  // ── 봉황 (불) ──────────────────────────────────────────────────────────────
   {
-    id: 'fire_1', name: 'Hwai', nameKo: '화이',
+    id: 'fire_1', name: 'Bong-a', nameKo: '봉아',
     category: 'character', rarity: 'common', element: 'fire',
-    description: '세상 모든 것에 호기심 가득한 어린 화염 드래곤. 재채기할 때마다 불꽃이 튄다.',
+    description: '불꽃 속에서 알을 깨고 나온 아기 봉황. 날갯짓마다 작은 불꽃이 흩날리고, 재채기를 하면 불씨가 핀다.',
   },
   {
-    id: 'fire_2', name: 'Bulsae', nameKo: '불새',
+    id: 'fire_2', name: 'Bonghwang', nameKo: '봉황',
     category: 'character', rarity: 'rare', element: 'fire',
-    description: '활화산을 단숨에 넘는 청년 화염 드래곤. 두려움이 없다.',
+    description: '오색 불꽃으로 하늘을 물들이는 봉황. 천 년에 한 번 알에서 태어나 죽고 다시 태어나며 불멸을 산다.',
   },
   {
-    id: 'fire_3', name: 'Yeomwang', nameKo: '염왕',
+    id: 'fire_3', name: 'Samjogo', nameKo: '삼족오',
     category: 'character', rarity: 'legendary', element: 'fire',
-    description: '화염의 왕. 날갯짓 한 번으로 도시를 밝힌다.',
-  },
-
-  // ── 수계 ──────────────────────────────────────────────────────────────────
-  {
-    id: 'water_1', name: 'Muri', nameKo: '물이',
-    category: 'character', rarity: 'common', element: 'water',
-    description: '웅덩이만 보면 뛰어드는 장난꾸러기 어린 물 드래곤.',
+    description: '태양 속에 산다는 세 발 달린 까마귀. 날갯짓으로 여명을 깨우고 석양을 연다. 고구려 벽화에 그 모습이 남아 있다.',
   },
   {
-    id: 'water_2', name: 'Param', nameKo: '파람',
-    category: 'character', rarity: 'rare', element: 'water',
-    description: '파도를 자유자재로 다루는 청년 물 드래곤. 울면 소나기가 내린다.',
-  },
-  {
-    id: 'water_3', name: 'Haewang', nameKo: '해왕',
-    category: 'character', rarity: 'legendary', element: 'water',
-    description: '바다의 지배자. 잠들면 폭풍이 멎고, 깨어나면 해일이 인다.',
-  },
-
-  // ── 번개 ──────────────────────────────────────────────────────────────────
-  {
-    id: 'lightning_1', name: 'Beoni', nameKo: '번이',
-    category: 'character', rarity: 'common', element: 'lightning',
-    description: '이것저것 건드리다 매일 감전되는 어린 번개 드래곤.',
-  },
-  {
-    id: 'lightning_2', name: 'Jeoni', nameKo: '전이',
-    category: 'character', rarity: 'rare', element: 'lightning',
-    description: '번개보다 빠른 반사 신경. 청년 번개 드래곤.',
-  },
-  {
-    id: 'lightning_3', name: 'Cheonwang', nameKo: '천왕',
-    category: 'character', rarity: 'legendary', element: 'lightning',
-    description: '하늘의 지배자. 날개를 펼칠 때마다 천둥이 울린다.',
-  },
-
-  // ── 자연 ──────────────────────────────────────────────────────────────────
-  {
-    id: 'nature_1', name: 'Sori', nameKo: '솔이',
-    category: 'character', rarity: 'common', element: 'nature',
-    description: '식물과 대화하는 어린 자연 드래곤. 발걸음마다 새싹이 난다.',
-  },
-  {
-    id: 'nature_2', name: 'Puri', nameKo: '풀이',
-    category: 'character', rarity: 'rare', element: 'nature',
-    description: '고목과 덩굴을 다루는 청년 자연 드래곤.',
-  },
-  {
-    id: 'nature_3', name: 'Jawang', nameKo: '자왕',
-    category: 'character', rarity: 'epic', element: 'nature',
-    description: '자연의 수호자. 숨결 하나로 황무지를 숲으로 바꾼다.',
-  },
-
-  // ── 암흑 ──────────────────────────────────────────────────────────────────
-  {
-    id: 'dark_1', name: 'Bami', nameKo: '밤이',
-    category: 'character', rarity: 'common', element: 'dark',
-    description: '낮보다 밤이 좋은 어린 암흑 드래곤. 꿈속에서 내일을 본다.',
-  },
-  {
-    id: 'dark_2', name: 'Heuki', nameKo: '흑이',
-    category: 'character', rarity: 'rare', element: 'dark',
-    description: '어둠을 옷처럼 두르는 청년 암흑 드래곤.',
-  },
-  {
-    id: 'dark_3', name: 'Eowang', nameKo: '어왕',
-    category: 'character', rarity: 'epic', element: 'dark',
-    description: '어둠과 별의 군주. 그가 나타나면 낮도 밤이 된다.',
-  },
-
-  // ── 빛 ────────────────────────────────────────────────────────────────────
-  {
-    id: 'light_1', name: 'Bici', nameKo: '빛이',
-    category: 'character', rarity: 'common', element: 'light',
-    description: '어두운 곳에서도 은은하게 빛나는 어린 빛 드래곤.',
-  },
-  {
-    id: 'light_2', name: 'Haetnim', nameKo: '햇님',
-    category: 'character', rarity: 'rare', element: 'light',
-    description: '태양을 닮아가는 청년 빛 드래곤. 웃으면 주변이 환해진다.',
-  },
-  {
-    id: 'light_3', name: 'Gwangwang', nameKo: '광왕',
-    category: 'character', rarity: 'legendary', element: 'light',
-    description: '빛의 왕. 그가 존재하는 것만으로 세상의 어둠이 걷힌다.',
-  },
-
-  // ── 신화 등급 드래곤 (각 원소 최고 단계) ──────────────────────────────────
-  {
-    id: 'fire_4', name: 'Cheonhwa', nameKo: '천화신',
+    id: 'fire_4', name: 'Taeyangsinjo', nameKo: '태양신조',
     category: 'character', rarity: 'mythic', element: 'fire',
-    description: '우주의 불꽃을 다스리는 신. 탄생할 때 은하계 하나가 불타올랐다 전해진다.',
+    description: '하늘의 불을 수호하는 신조(神鳥). 깃털 하나가 떨어지면 세상에 빛이 가득 차고, 울음소리가 울리면 암흑이 물러간다.',
+  },
+
+  // ── 이무기·용 (물) ─────────────────────────────────────────────────────────
+  {
+    id: 'water_1', name: 'Imugi', nameKo: '이무기',
+    category: 'character', rarity: 'common', element: 'water',
+    description: '용이 되길 꿈꾸는 어린 이무기. 폭포 아래에서 천 년을 수련하며 여의주를 기다린다.',
   },
   {
-    id: 'water_4', name: 'Yongwang', nameKo: '용왕',
+    id: 'water_2', name: 'Yongnyeo', nameKo: '용녀',
+    category: 'character', rarity: 'rare', element: 'water',
+    description: '동해 바다를 수호하는 용왕의 딸 용녀. 그녀의 눈물은 진주가 되고, 웃음은 파도를 잠재운다.',
+  },
+  {
+    id: 'water_3', name: 'Yongwang', nameKo: '용왕',
+    category: 'character', rarity: 'legendary', element: 'water',
+    description: '사해를 다스리는 해룡왕. 노하면 폭풍이 일고 웃으면 바다가 잔잔해진다. 수궁에서 뭇 생령을 다스린다.',
+  },
+  {
+    id: 'water_4', name: 'Habaek', nameKo: '하백',
     category: 'character', rarity: 'mythic', element: 'water',
-    description: '모든 바다의 지배자이자 시간의 흐름을 조율하는 신. 그의 눈물이 첫 번째 대양이 되었다.',
+    description: '강과 물의 신 하백. 주몽의 외조부이며 유화를 딸로 두었다. 물결을 일으켜 세상의 흐름을 바꾼다.',
+  },
+
+  // ── 뇌신 (번개) ────────────────────────────────────────────────────────────
+  {
+    id: 'lightning_1', name: 'Chunbung', nameKo: '천붕이',
+    category: 'character', rarity: 'common', element: 'lightning',
+    description: '천둥 소리에 깜짝 놀라 재채기하는 개구쟁이 아기 뇌신. 먹구름을 타고 놀다 벼락을 떨어뜨리기도 한다.',
   },
   {
-    id: 'lightning_4', name: 'Noesin', nameKo: '뇌신',
+    id: 'lightning_2', name: 'Noegong', nameKo: '뇌공',
+    category: 'character', rarity: 'rare', element: 'lightning',
+    description: '하늘의 북을 두드려 천둥을 일으키는 뇌공. 번개를 화살처럼 날리고, 먹구름을 구름마차처럼 탄다.',
+  },
+  {
+    id: 'lightning_3', name: 'Noesin', nameKo: '뇌신',
+    category: 'character', rarity: 'legendary', element: 'lightning',
+    description: '천상의 번개를 관장하는 뇌신. 손길이 닿은 곳마다 벼락이 내리치고, 그의 분노는 폭풍우로 세상을 뒤흔든다.',
+  },
+  {
+    id: 'lightning_4', name: 'Okhwang', nameKo: '옥황',
     category: 'character', rarity: 'mythic', element: 'lightning',
-    description: '천둥의 근원. 우주가 태어날 때 가장 먼저 울린 번개의 화신이다.',
+    description: '하늘 위 모든 신들을 통솔하는 옥황상제. 뇌신·풍신·우신을 거느리고 천지의 질서를 주관한다.',
+  },
+
+  // ── 산신 (자연) ────────────────────────────────────────────────────────────
+  {
+    id: 'nature_1', name: 'Sansini', nameKo: '산신이',
+    category: 'character', rarity: 'common', element: 'nature',
+    description: '깊은 산속에 사는 아기 산신령. 호랑이를 친구 삼아 뛰어놀고, 발걸음마다 새싹이 돋아난다.',
   },
   {
-    id: 'nature_4', name: 'Moksin', nameKo: '목신',
+    id: 'nature_2', name: 'Jisin', nameKo: '지신',
+    category: 'character', rarity: 'rare', element: 'nature',
+    description: '대지의 기운을 다스리는 지신. 발을 구르면 땅이 울리고, 손을 얹으면 씨앗이 꽃을 피운다.',
+  },
+  {
+    id: 'nature_3', name: 'Sansin', nameKo: '산신',
+    category: 'character', rarity: 'epic', element: 'nature',
+    description: '백두대간을 관장하는 산신. 흰 수염의 노인 모습으로 호랑이와 함께 나타나며, 산의 모든 생명을 수호한다.',
+  },
+  {
+    id: 'nature_4', name: 'Dangun', nameKo: '단군',
     category: 'character', rarity: 'mythic', element: 'nature',
-    description: '세계수 뿌리에 잠든 생명의 신. 한 번 눈을 뜨면 새로운 생명이 탄생한다.',
+    description: '하늘의 아들 환웅과 웅녀 사이에서 태어난 신인. 아사달에 도읍을 정해 조선을 세우고 1,500년을 다스렸다.',
+  },
+
+  // ── 도깨비 (암흑) ──────────────────────────────────────────────────────────
+  {
+    id: 'dark_1', name: 'Dokkaebi', nameKo: '도깨비',
+    category: 'character', rarity: 'common', element: 'dark',
+    description: '인간 세상이 궁금해 집 처마에 숨어 사는 아기 도깨비. 씨름을 좋아하고, 개가 오면 도망간다.',
   },
   {
-    id: 'dark_4', name: 'Myeongbu', nameKo: '명부왕',
+    id: 'dark_2', name: 'Jeoseungsaja', nameKo: '저승사자',
+    category: 'character', rarity: 'rare', element: 'dark',
+    description: '망자를 저승으로 안내하는 저승사자. 무표정하지만 길 잃은 혼은 절대 버리지 않는다.',
+  },
+  {
+    id: 'dark_3', name: 'Yeomra', nameKo: '염라대왕',
+    category: 'character', rarity: 'epic', element: 'dark',
+    description: '지옥을 다스리는 염라대왕. 선한 자에게는 관대하고 악한 자에게는 엄격하다. 모든 죽은 자의 업보를 심판한다.',
+  },
+  {
+    id: 'dark_4', name: 'Myeongwang', nameKo: '명부왕',
     category: 'character', rarity: 'mythic', element: 'dark',
-    description: '이승과 저승의 경계를 관장하는 신. 그 앞에서는 시간도 멈춘다.',
+    description: '삶과 죽음의 경계를 관장하는 신. 운명의 책을 쥐고 시간과 생사를 주관하며 이승과 저승 사이를 오간다.',
+  },
+
+  // ── 선녀 (빛) ──────────────────────────────────────────────────────────────
+  {
+    id: 'light_1', name: 'Seonnyeo', nameKo: '선녀',
+    category: 'character', rarity: 'common', element: 'light',
+    description: '하늘나라에서 내려온 아기 선녀. 날개옷이 바람에 날릴 때마다 꽃비가 내리고, 웃음소리가 종소리처럼 울린다.',
   },
   {
-    id: 'light_4', name: 'Taeyangsin', nameKo: '태양신',
+    id: 'light_2', name: 'Dalnim', nameKo: '달님',
+    category: 'character', rarity: 'rare', element: 'light',
+    description: '달을 지키는 달신. 보름이면 환하게 빛나고, 그믐이면 별빛 사이에 숨어 조용히 세상을 내려다본다.',
+  },
+  {
+    id: 'light_3', name: 'Haemosu', nameKo: '해모수',
+    category: 'character', rarity: 'legendary', element: 'light',
+    description: '태양 마차를 타고 내려온 천제의 아들 해모수. 주몽의 아버지이며, 오룡거를 타고 오우를 부린다.',
+  },
+  {
+    id: 'light_4', name: 'Hwanim', nameKo: '환인',
     category: 'character', rarity: 'mythic', element: 'light',
-    description: '모든 빛의 근원. 우주 탄생의 순간 생겨난 첫 번째 신성이다.',
+    description: '하늘의 최고신 환인. 아들 환웅에게 천부인 세 개를 주어 땅으로 내려 보내 인간 세상을 다스리게 했다.',
   },
 
   // ── 한국 신화 — 구미호 (fire) ─────────────────────────────────────────────

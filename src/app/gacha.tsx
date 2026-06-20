@@ -446,7 +446,7 @@ export default function GachaScreen() {
   async function handleAdReward() {
     if (spinning || adsLeft <= 0) return;
     setSpinning(true);
-    const result = await showRewardedAd();
+    const result = await showRewardedAd('gacha_free_pull');
     if (result === 'earned') {
       const today = getTodayDateString();
       const newBalance = await recordAdReward(today);

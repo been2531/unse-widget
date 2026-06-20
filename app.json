@@ -18,7 +18,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
-      "package": "com.anonymous.unsewidget"
+      "package": "com.jhahn.unse"
     },
     "web": {
       "output": "static",
@@ -29,7 +29,7 @@
       [
         "react-native-google-mobile-ads",
         {
-          "androidAppId": "ca-app-pub-3940256099942544~3347511713"
+          "androidAppId": "ca-app-pub-4631230760372985~8096968087"
         }
       ],
       [

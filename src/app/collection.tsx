@@ -1,13 +1,15 @@
 import {
-  BlurMask, Canvas, Circle, LinearGradient, Rect, RoundedRect, vec,
+  BlurMask, Canvas, Circle, Group, Image as SkiaImage,
+  LinearGradient, Rect, RoundedRect, Skia, vec, useImage,
 } from '@shopify/react-native-skia';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
-  FlatList, Image, Modal, Pressable, ScrollView,
+  FlatList, Modal, Pressable, ScrollView,
   StyleSheet, Text, View, useWindowDimensions,
 } from 'react-native';
 
+import { F } from '@/shared/fonts';
 import { cardImageFor } from '@/gacha/cardAssets';
 import {
   CARD_POOL, CATEGORY_LABEL, RARITY_COLOR, RARITY_LABEL,
@@ -57,63 +59,149 @@ const ELEM_FILTERS: { key: ElemFilter; label: string }[] = [
   { key: 'light',     label: '✨ 빛' },
 ];
 
+// ─── 그리드 카드 아이템 ────────────────────────────────────────────────────────
+type AnyCardItem = {
+  id: string; uid: string; element: string;
+  category: string; rarity: string; name: string;
+  nameKo: string; description: string; pulledAt: string;
+  owned?: boolean;
+};
+
+function CardItem({ item, CARD_W, CARD_H, onPress }: {
+  item: AnyCardItem;
+  CARD_W: number;
+  CARD_H: number;
+  onPress: (item: AnyCardItem) => void;
+}) {
+  const owned = item.owned !== false;
+  const elemColor = ELEM_COLOR[item.element] ?? '#888';
+  const imgSrc = (item.category === 'character' || item.category === 'skin')
+    ? cardImageFor(item.element, item.rarity)
+    : null;
+  const skiaImg = useImage(imgSrc);
+  const CW = CARD_W - 8;
+  const CH = CARD_H - 8;
+  const IMG_H = Math.floor(CH * 0.66);
+
+  return (
+    <Pressable style={{ width: CARD_W, height: CARD_H, padding: 4 }} onPress={() => onPress(item)}>
+      <View style={{
+        flex: 1, borderRadius: 10, overflow: 'hidden',
+        opacity: owned ? 1 : 0.25,
+        borderWidth: 1,
+        borderColor: owned ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.06)',
+      }}>
+        <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
+          <Rect x={0} y={0} width={CW} height={CH}>
+            <LinearGradient start={vec(0, 0)} end={vec(CW, CH)} colors={['#111326', '#080B1A']} />
+          </Rect>
+          {owned && (
+            <Circle cx={CW / 2} cy={IMG_H / 2} r={CW * 0.24} color={`${elemColor}18`}>
+              <BlurMask blur={16} style="normal" />
+            </Circle>
+          )}
+          {skiaImg && (
+            <Group clip={Skia.RRectXY(Skia.XYWHRect(0, 0, CW, IMG_H), 8, 8)}>
+              <SkiaImage image={skiaImg} x={0} y={0} width={CW} height={IMG_H} fit="cover" />
+              {/* 하단 페이드 — 아트와 텍스트 영역 자연스럽게 분리 */}
+              <Rect x={0} y={IMG_H * 0.6} width={CW} height={IMG_H * 0.4}>
+                <LinearGradient
+                  start={vec(0, IMG_H * 0.6)} end={vec(0, IMG_H)}
+                  colors={['rgba(8,11,26,0)', 'rgba(8,11,26,0.92)']}
+                />
+              </Rect>
+            </Group>
+          )}
+        </Canvas>
+        {!imgSrc && (
+          <View style={{ height: IMG_H, alignItems: 'center', justifyContent: 'center' }}>
+            <Text style={{ fontSize: CARD_W * 0.26 }}>{cardEmoji(item as any)}</Text>
+          </View>
+        )}
+        <View style={{
+          position: 'absolute', bottom: 0, left: 0, right: 0,
+          height: CH - IMG_H,
+          alignItems: 'center', justifyContent: 'center',
+          gap: 2, paddingHorizontal: 4,
+        }}>
+          <Text style={{ fontFamily: F.b, color: '#fff', fontSize: 9, textAlign: 'center' }} numberOfLines={1}>
+            {item.nameKo}
+          </Text>
+          <Text style={{ fontFamily: F.sb, color: RARITY_COLOR[item.rarity], fontSize: 8 }}>
+            {RARITY_LABEL[item.rarity]}
+          </Text>
+          {!owned && (
+            <Text style={{ fontFamily: F.r, color: 'rgba(255,255,255,0.28)', fontSize: 7 }}>미수집</Text>
+          )}
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
 // ─── 카드 상세 모달 ────────────────────────────────────────────────────────────
 type ModalItem = (CardDef & { owned: boolean }) | PulledCard;
 
 function CardDetailModal({ item, onClose }: { item: ModalItem; onClose: () => void }) {
   const elemColor = ELEM_COLOR[item.element] ?? '#888';
   const [bgTop, bgBot] = ELEM_BG[item.element] ?? ['#12103a', '#0c1e3e'];
-  const img = (item.category === 'character' || item.category === 'skin')
+  const imgSrc = (item.category === 'character' || item.category === 'skin')
     ? cardImageFor(item.element, item.rarity)
     : null;
   const owned = 'owned' in item ? item.owned : true;
+  const skiaImg = useImage(imgSrc);
 
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onClose}>
       <Pressable style={modalStyles.overlay} onPress={onClose}>
         <Pressable style={modalStyles.container} onPress={e => e.stopPropagation()}>
           {/* 카드 */}
-          <View style={[modalStyles.card, { borderColor: `${elemColor}88` }]}>
+          <View style={[modalStyles.card, { borderColor: 'rgba(255,255,255,0.12)' }]}>
             <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
               <Rect x={0} y={0} width={220} height={312}>
                 <LinearGradient start={vec(0, 0)} end={vec(220, 312)} colors={[bgTop, bgBot]} />
               </Rect>
-              <Circle cx={110} cy={125} r={70} color={`${elemColor}25`}>
-                <BlurMask blur={20} style="normal" />
+              <Circle cx={110} cy={100} r={80} color={`${elemColor}22`}>
+                <BlurMask blur={28} style="normal" />
               </Circle>
+              {skiaImg && (
+                <Group clip={Skia.RRectXY(Skia.XYWHRect(10, 8, 200, 185), 10, 10)}>
+                  <SkiaImage image={skiaImg} x={10} y={8} width={200} height={185} fit="cover" />
+                </Group>
+              )}
               <RoundedRect x={0} y={0} width={220} height={312} r={14}
-                color={`${elemColor}99`} style="stroke" strokeWidth={2} />
+                color="rgba(255,255,255,0.10)" style="stroke" strokeWidth={1} />
             </Canvas>
 
-            <View style={{ position: 'absolute', top: 10, left: 0, right: 0, alignItems: 'center', height: 180, justifyContent: 'center' }}>
-              {img
-                ? <Image source={img} style={{ width: 160, height: 170 }} resizeMode="contain" />
-                : <Text style={{ fontSize: 72 }}>{cardEmoji(item)}</Text>
-              }
-            </View>
+            {!imgSrc && (
+              <View style={{ position: 'absolute', top: 10, left: 0, right: 0, alignItems: 'center', height: 185, justifyContent: 'center' }}>
+                <Text style={{ fontSize: 72 }}>{cardEmoji(item as any)}</Text>
+              </View>
+            )}
 
             <View style={{ position: 'absolute', bottom: 12, left: 0, right: 0, alignItems: 'center', gap: 4 }}>
-              <Text style={{ color: elemColor, fontSize: 16, fontWeight: '800' }}>
-                {ELEM_LABEL[item.element]} {item.nameKo}
+              <Text style={{ fontFamily: F.eb, color: '#fff', fontSize: 16 }}>
+                {item.nameKo}
               </Text>
-              <Text style={{ color: '#888', fontSize: 11, letterSpacing: 0.5 }}>{item.name}</Text>
+              <Text style={{ fontFamily: F.r, color: 'rgba(255,255,255,0.4)', fontSize: 11, letterSpacing: 0.5 }}>{item.name}</Text>
               <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center' }}>
-                <Text style={{ color: RARITY_COLOR[item.rarity], fontSize: 11, fontWeight: '700' }}>
+                <Text style={{ fontFamily: F.b, color: RARITY_COLOR[item.rarity], fontSize: 11 }}>
                   {RARITY_LABEL[item.rarity]}
                 </Text>
-                <Text style={{ color: 'rgba(255,255,255,0.3)', fontSize: 10 }}>·</Text>
-                <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 10 }}>
+                <Text style={{ fontFamily: F.r, color: 'rgba(255,255,255,0.2)', fontSize: 10 }}>·</Text>
+                <Text style={{ fontFamily: F.r, color: 'rgba(255,255,255,0.45)', fontSize: 10 }}>
                   {CATEGORY_LABEL[item.category]}
                 </Text>
               </View>
               {!owned && (
-                <Text style={{ color: 'rgba(255,255,255,0.25)', fontSize: 10 }}>미수집</Text>
+                <Text style={{ fontFamily: F.r, color: 'rgba(255,255,255,0.25)', fontSize: 10 }}>미수집</Text>
               )}
             </View>
           </View>
 
           {/* 설명 */}
-          <View style={modalStyles.descBox}>
+          <View style={[modalStyles.descBox, { borderColor: 'rgba(255,255,255,0.10)' }]}>
+            <Text style={[modalStyles.descLabel, { color: elemColor }]}>{item.nameKo}</Text>
             <Text style={modalStyles.desc}>{item.description}</Text>
           </View>
 
@@ -159,60 +247,7 @@ export default function CollectionScreen() {
   const CARD_W = (screenW - 48) / COLS;
   const CARD_H = CARD_W * 1.42;
 
-  type Item = (typeof characterItems)[number] | PulledCard;
-
-  function renderCard({ item }: { item: Item }) {
-    const owned = 'owned' in item ? item.owned : true;
-    const elemColor = ELEM_COLOR[item.element] ?? '#888';
-    const img = (item.category === 'character' || item.category === 'skin')
-      ? cardImageFor(item.element, item.rarity)
-      : null;
-
-    return (
-      <Pressable
-        style={{ width: CARD_W, height: CARD_H, padding: 4 }}
-        onPress={() => setSelectedCard(item)}
-      >
-        <View style={{
-          flex: 1, borderRadius: 10, overflow: 'hidden',
-          opacity: owned ? 1 : 0.28,
-          borderWidth: owned ? 1.5 : 1,
-          borderColor: owned ? `${elemColor}88` : 'rgba(255,255,255,0.12)',
-        }}>
-          <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
-            <Rect x={0} y={0} width={CARD_W - 8} height={CARD_H - 8}>
-              <LinearGradient start={vec(0, 0)} end={vec(CARD_W, CARD_H)} colors={['#0E0B22', '#080B1A']} />
-            </Rect>
-            {owned && (
-              <Circle cx={(CARD_W - 8) / 2} cy={(CARD_H - 8) * 0.4} r={(CARD_W - 8) * 0.22}
-                color={`${elemColor}20`}>
-                <BlurMask blur={12} style="normal" />
-              </Circle>
-            )}
-          </Canvas>
-
-          <View style={{ position: 'absolute', top: 4, left: 4, right: 4, height: (CARD_H - 8) * 0.58, alignItems: 'center', justifyContent: 'center' }}>
-            {img
-              ? <Image source={img} style={{ width: CARD_W - 20, height: (CARD_H - 8) * 0.55 }} resizeMode="contain" />
-              : <Text style={{ fontSize: CARD_W * 0.28 }}>{cardEmoji(item)}</Text>
-            }
-          </View>
-
-          <View style={{ position: 'absolute', bottom: 6, left: 0, right: 0, alignItems: 'center', gap: 2 }}>
-            <Text style={{ color: elemColor, fontSize: 9, fontWeight: '700', textAlign: 'center', paddingHorizontal: 4 }} numberOfLines={1}>
-              {ELEM_LABEL[item.element]} {item.nameKo}
-            </Text>
-            <Text style={{ color: RARITY_COLOR[item.rarity], fontSize: 8, fontWeight: '600' }}>
-              {RARITY_LABEL[item.rarity]}
-            </Text>
-            {!owned && <Text style={{ color: 'rgba(255,255,255,0.3)', fontSize: 7 }}>미수집</Text>}
-          </View>
-        </View>
-      </Pressable>
-    );
-  }
-
-  const data: Item[] = filter === 'character' ? filteredCharItems
+  const data = filter === 'character' ? filteredCharItems
     : filter === 'fortune' ? fortuneItems
     : filter === 'skin' ? skinItems
     : allItems;
@@ -300,13 +335,21 @@ export default function CollectionScreen() {
       )}
 
       <FlatList
-        data={data}
-        keyExtractor={item => ('owned' in item ? item.id + '_' + item.uid : item.uid)}
-        renderItem={renderCard}
+        data={data as AnyCardItem[]}
+        keyExtractor={item => item.uid}
+        renderItem={({ item }) => (
+          <CardItem
+            item={item}
+            CARD_W={CARD_W}
+            CARD_H={CARD_H}
+            onPress={item => setSelectedCard(item as any)}
+          />
+        )}
         numColumns={COLS}
         key={filter}
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40, paddingTop: 8 }}
         showsVerticalScrollIndicator={false}
+        overScrollMode="always"
       />
 
       {selectedCard && (
@@ -327,10 +370,10 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 12,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
   },
-  backIcon: { color: '#fff', fontSize: 28, lineHeight: 32, marginTop: -2 },
-  title: { fontSize: 18, fontWeight: '800', color: '#FFF', letterSpacing: 1 },
-  countBadge: { color: 'rgba(255,255,255,0.45)', fontSize: 13, fontWeight: '600' },
-  tabsContainer: { paddingHorizontal: 16, paddingBottom: 8, gap: 8 },
+  backIcon: { fontFamily: F.r, color: '#fff', fontSize: 28, lineHeight: 32, marginTop: -2 },
+  title: { fontFamily: F.eb, fontSize: 18, color: '#FFF', letterSpacing: 1 },
+  countBadge: { fontFamily: F.sb, color: 'rgba(255,255,255,0.45)', fontSize: 13 },
+  tabsContainer: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8, gap: 8 },
   tab: {
     paddingVertical: 8, paddingHorizontal: 16, borderRadius: 20,
     backgroundColor: 'rgba(255,255,255,0.05)',
@@ -340,14 +383,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.15)',
     borderColor: 'rgba(255,255,255,0.30)',
   },
-  tabText: { color: 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: '600' },
-  tabTextActive: { color: '#FFF' },
+  tabText: { fontFamily: F.sb, color: 'rgba(255,255,255,0.78)', fontSize: 13 },
+  tabTextActive: { fontFamily: F.sb, color: '#FFF' },
   progressWrap: {
     marginHorizontal: 20, marginBottom: 4, gap: 6,
   },
   progressRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  progressLabel: { color: 'rgba(255,255,255,0.40)', fontSize: 11, fontWeight: '600' },
-  progressCount: { color: 'rgba(255,255,255,0.60)', fontSize: 11, fontWeight: '700' },
+  progressLabel: { fontFamily: F.sb, color: 'rgba(255,255,255,0.40)', fontSize: 11 },
+  progressCount: { fontFamily: F.b, color: 'rgba(255,255,255,0.60)', fontSize: 11 },
   progressTrack: {
     height: 4, backgroundColor: 'rgba(255,255,255,0.08)',
     borderRadius: 2, overflow: 'hidden',
@@ -361,7 +404,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.04)',
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
   },
-  elemTabText: { color: 'rgba(255,255,255,0.35)', fontSize: 12, fontWeight: '600' },
+  elemTabText: { fontFamily: F.sb, color: 'rgba(255,255,255,0.35)', fontSize: 12 },
 });
 
 const modalStyles = StyleSheet.create({
@@ -378,15 +421,16 @@ const modalStyles = StyleSheet.create({
     borderWidth: 2,
   },
   descBox: {
-    width: 260, backgroundColor: 'rgba(255,255,255,0.06)',
-    borderRadius: 14, padding: 16,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)',
+    width: 280, backgroundColor: 'rgba(4,3,16,0.88)',
+    borderRadius: 14, padding: 18,
+    borderWidth: 1, gap: 8,
   },
-  desc: { color: 'rgba(255,255,255,0.75)', fontSize: 14, lineHeight: 22, textAlign: 'center' },
+  descLabel: { fontFamily: F.b, color: 'rgba(255,255,255,0.42)', fontSize: 11, letterSpacing: 1.2, textAlign: 'center', textTransform: 'uppercase' },
+  desc: { fontFamily: F.r, color: '#FFFFFF', fontSize: 14, lineHeight: 22, textAlign: 'center' },
   closeBtn: {
     width: 160, paddingVertical: 13, borderRadius: 14,
     borderWidth: 1.5, alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.06)',
   },
-  closeBtnText: { fontSize: 15, fontWeight: '700' },
+  closeBtnText: { fontFamily: F.b, fontSize: 15 },
 });

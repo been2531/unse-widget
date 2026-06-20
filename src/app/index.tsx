@@ -1,11 +1,11 @@
 import {
-  BlurMask, Canvas, Circle, Group, LinearGradient,
-  Path, RadialGradient, Rect, RoundedRect, Skia, vec,
+  BlurMask, Canvas, Circle, Group, Image as SkiaImage, LinearGradient,
+  Path, RadialGradient, Rect, RoundedRect, Skia, vec, useImage,
 } from '@shopify/react-native-skia';
 import { Redirect, router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
 import {
-  ActivityIndicator, Image, Pressable, ScrollView, StyleSheet, Text, View,
+  ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View,
   useWindowDimensions, StatusBar,
 } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
@@ -14,6 +14,7 @@ import Animated, {
   withRepeat, withSequence, withSpring, withTiming,
 } from 'react-native-reanimated';
 
+import { F } from '@/shared/fonts';
 import { cardImageFor } from '@/gacha/cardAssets';
 import { deriveMood } from '@/character/mood';
 import { type Mood } from '@/character/types';
@@ -61,8 +62,8 @@ const ELEM_NAME: Record<ElementType, string> = {
 // 띠 → 원소 매핑 (12간지 × 6원소)
 const DII_ELEMENT: Record<DiiSign, ElementType> = {
   '호랑이': 'fire',  '말': 'fire',
-  '쥐':    'water', '돼지': 'water',
-  '용':    'lightning', '원숭이': 'lightning',
+  '용':    'water', '돼지': 'water',   // 용 → 용녀(물) 캐릭터와 일치
+  '쥐':    'lightning', '원숭이': 'lightning',
   '소':    'nature', '개': 'nature',
   '뱀':    'dark',  '닭': 'dark',
   '토끼':  'light', '양': 'light',
@@ -181,12 +182,25 @@ const RARITY: Record<Rarity, {
   mythic:    { label: 'Mythic',    stars: '★★★★★',  starColor: '#FFD700', borderW: 4.5, foilOpacity: 0.95, foilShift: 240, specOpacity: 0.85, sparkles: true  },
 };
 
-// 홀로그램 조밀한 무지개 (포켓몬 카드 벤치마크)
+// 홀로그램 A — 대각 방향 (↘)
 const HOLO = [
-  'rgba(255,0,100,0.85)', 'rgba(255,80,0,0.80)', 'rgba(255,210,0,0.80)',
-  'rgba(60,255,80,0.80)', 'rgba(0,210,255,0.80)', 'rgba(20,60,255,0.80)',
-  'rgba(160,0,255,0.80)', 'rgba(255,0,100,0.85)', 'rgba(255,80,0,0.80)',
-  'rgba(255,210,0,0.80)', 'rgba(60,255,80,0.80)', 'rgba(0,210,255,0.80)',
+  'rgba(255,255,255,0.02)',
+  'rgba(240,160,255,0.52)', 'rgba(160,200,255,0.48)',
+  'rgba(140,255,220,0.44)', 'rgba(255,240,140,0.50)',
+  'rgba(255,170,200,0.46)', 'rgba(190,160,255,0.52)',
+  'rgba(255,255,255,0.08)',
+  'rgba(160,235,255,0.44)', 'rgba(255,195,220,0.46)',
+  'rgba(210,255,200,0.42)', 'rgba(255,255,255,0.02)',
+];
+// 홀로그램 B — 교차 방향 (↗) — 드래그 각도에 따라 다른 무지개 띠 생성
+const HOLO2 = [
+  'rgba(255,255,255,0.01)',
+  'rgba(255,200,140,0.46)', 'rgba(200,255,160,0.42)',
+  'rgba(140,220,255,0.44)', 'rgba(255,140,200,0.42)',
+  'rgba(255,255,255,0.06)',
+  'rgba(200,140,255,0.44)', 'rgba(255,220,140,0.40)',
+  'rgba(140,255,210,0.42)', 'rgba(210,140,255,0.44)',
+  'rgba(255,255,255,0.01)',
 ];
 
 function makeSparkles(n: number, w: number, h: number) {
@@ -197,13 +211,14 @@ function makeSparkles(n: number, w: number, h: number) {
   }));
 }
 
+const TOTAL_CHAR_CARDS = CARD_POOL.filter(c => c.category === 'character').length;
+
 // ─── 컴포넌트 ──────────────────────────────────────────────────────────────
 export default function HomeScreen() {
   const { width: screenW, height: screenH } = useWindowDimensions();
   const CARD_W = Math.min(screenW * 0.84, 310);
-  const CARD_H = CARD_W * 1.42;
-  const CHAR_H = CARD_H * 0.58;
-  const CHAR_BLEED = Math.round(CHAR_H * 0.14); // 캐릭터가 아트워크 창 아래로 돌출되는 픽셀
+  const CARD_H = CARD_W * 1.38;
+  const CHAR_H = CARD_H * 0.63;
   const CORNER = 16;
   const FOIL_W = CARD_W * 3;
   const FOIL_H = CARD_H * 3;
@@ -219,6 +234,7 @@ export default function HomeScreen() {
   const [streak, setStreak]       = useState<StreakState>({ currentStreak: 0, lastDate: '', longestStreak: 0 });
   const [luckyInfo, setLuckyInfo] = useState<LuckyInfo | null>(null);
   const [isNewDay, setIsNewDay]   = useState(false);
+  const [collectedCount, setCollectedCount] = useState(0);
 
   // 카드 도착 연출 애니메이션
   const cardRevealA = useSharedValue(0);
@@ -231,7 +247,6 @@ export default function HomeScreen() {
   const glowR    = useSharedValue(CARD_W * 0.18);
   const sparkleA = useSharedValue(0);
   const bgPulse  = useSharedValue(0.55);
-  const floatY   = useSharedValue(0);
 
   const R    = RARITY[rarity];
   const E    = ELEM[element];
@@ -241,6 +256,7 @@ export default function HomeScreen() {
   const charCard = CARD_POOL.find(c => c.id === `${element}_${charStage}`);
   const charNameKo = charCard?.nameKo ?? E.label;
   const cardImg = cardImageFor(element, rarity);
+  const charSkiaImg = useImage(cardImg ?? null);
 
   // 원소별 이펙트 경로 (메모이제이션)
   const effectPaths = useMemo(() => {
@@ -256,6 +272,22 @@ export default function HomeScreen() {
 
   const sparkles = useMemo(() => makeSparkles(24, CARD_W - 20, CHAR_H - 20), [CARD_W, CHAR_H]);
 
+  // 전경 파티클 — 원소별 분포 특성 다름
+  const fgParticles = useMemo(() => {
+    const W = CARD_W - 16, H = CHAR_H - 6;
+    return Array.from({ length: 10 }, (_, i) => {
+      const base = { r: 1.5 + (i % 4) * 0.9, blur: i % 3 === 0 ? 3 : 1.2 };
+      switch (element) {
+        case 'fire':      return { ...base, x: (i * 61 + 20) % W, y: H * (0.1 + (i % 4) * 0.12) }; // 상단 불씨
+        case 'water':     return { ...base, x: (i * 71 + 10) % W, y: (i * 83 + 30) % H };           // 전체 분산 거품
+        case 'lightning': return { ...base, r: 1.0 + (i % 3) * 0.5, x: (i * 97 + 15) % W, y: (i * 53 + 20) % H }; // 스파크
+        case 'nature':    return { ...base, x: (i * 67 + 25) % W, y: H * (0.3 + (i % 5) * 0.12) }; // 중간 떠다니는 잎
+        case 'dark':      return { ...base, r: 2.5 + (i % 3) * 1.2, blur: 6, x: (i * 89 + 8) % W, y: (i * 61 + 15) % H }; // 그림자
+        case 'light':     return { ...base, x: (i * 73 + 18) % W, y: (i * 59 + 12) % H };           // 빛 별
+      }
+    });
+  }, [element, CARD_W, CHAR_H]);
+
   const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
   const weekDays = useMemo(() => {
     const today = getTodayDateString();
@@ -267,7 +299,7 @@ export default function HomeScreen() {
     });
   }, []);
 
-  const bgStars = useMemo(() => Array.from({ length: 60 }, (_, i) => ({
+  const bgStars = useMemo(() => Array.from({ length: 22 }, (_, i) => ({
     x: (i * 137 + 29) % screenW,
     y: (i * 211 + 71) % screenH,
     r: 0.4 + (i % 6) * 0.28,
@@ -308,21 +340,15 @@ export default function HomeScreen() {
 
       const todayBuff = await getTodayFortuneBuff(today);
       if (todayBuff) setActiveBuff(getActiveBuff(todayBuff.cardId));
+
+      const coll = await getCollection();
+      const charIdSet = new Set(CARD_POOL.filter(c => c.category === 'character').map(c => c.id));
+      setCollectedCount(new Set(coll.filter(c => charIdSet.has(c.id)).map(c => c.id)).size);
+
       setLoading(false);
     })();
   }, []);
 
-  // ── 캐릭터 부유 애니메이션 ────────────────────────────────────────────────
-  useEffect(() => {
-    const FLOAT = { joyful: { amplitude: 8, duration: 800 }, neutral: { amplitude: 5, duration: 2200 }, lonely: { amplitude: 2, duration: 4500 } };
-    const { amplitude, duration } = FLOAT[mood];
-    floatY.value = withRepeat(
-      withSequence(
-        withTiming(-amplitude, { duration, easing: Easing.inOut(Easing.sin) }),
-        withTiming(0, { duration, easing: Easing.inOut(Easing.sin) }),
-      ), -1, false,
-    );
-  }, [mood]);
 
   // ── 이펙트 애니메이션 ────────────────────────────────────────────────────
   useEffect(() => {
@@ -389,23 +415,41 @@ export default function HomeScreen() {
     };
   });
 
-  // 홀로그램 foil — 크게 이동 (포켓몬 카드 효과)
-  const foilStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: tiltX.value * R.foilShift },
-      { translateY: tiltY.value * (R.foilShift * 0.65) },
-    ],
-    opacity: R.foilOpacity,
-  }));
+  // 홀로그램 A — 대각↘ 이동 / 틸트 크기에 따라 opacity 증가 (포켓몬 TCG 효과)
+  const foilStyle = useAnimatedStyle(() => {
+    const mag = Math.min(Math.sqrt(tiltX.value ** 2 + tiltY.value ** 2), 1);
+    return {
+      transform: [
+        { translateX: tiltX.value * R.foilShift },
+        { translateY: tiltY.value * (R.foilShift * 0.55) },
+      ],
+      opacity: R.foilOpacity * (0.12 + mag * 0.88),
+    };
+  });
 
-  // 스페큘러 하이라이트 — 반대 방향 (거울 반사)
-  const specStyle = useAnimatedStyle(() => ({
-    transform: [
-      { translateX: -tiltX.value * 85 },
-      { translateY: -tiltY.value * 60 },
-    ],
-    opacity: R.specOpacity,
-  }));
+  // 홀로그램 B — 교차↗ 이동 (X↔Y 교환) — 두 레이어가 엇갈려 포켓몬 TCG 무지개 생성
+  const foil2Style = useAnimatedStyle(() => {
+    const mag = Math.min(Math.sqrt(tiltX.value ** 2 + tiltY.value ** 2), 1);
+    return {
+      transform: [
+        { translateX: tiltY.value * R.foilShift * 0.9 },
+        { translateY: tiltX.value * (R.foilShift * 0.55) },
+      ],
+      opacity: R.foilOpacity * 0.55 * mag,
+    };
+  });
+
+  // 스페큘러 하이라이트 — 반대 방향 (거울 반사), 틸트 시 더 선명
+  const specStyle = useAnimatedStyle(() => {
+    const mag = Math.min(Math.sqrt(tiltX.value ** 2 + tiltY.value ** 2), 1);
+    return {
+      transform: [
+        { translateX: -tiltX.value * 100 },
+        { translateY: -tiltY.value * 72 },
+      ],
+      opacity: R.specOpacity * (0.15 + mag * 0.85),
+    };
+  });
 
   // 카드 뒤 배경 글로우
   const bgGlowStyle = useAnimatedStyle(() => ({ opacity: bgPulse.value }));
@@ -420,16 +464,23 @@ export default function HomeScreen() {
     transform: [{ translateY: (1 - arrivalBannerA.value) * -12 }],
   }));
 
-  // 캐릭터 부유
-  const charFloatStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: floatY.value }],
-  }));
+  // 캐릭터 parallax — 배경(정지) < 캐릭터 < 전경파티클 < 홀로 순 깊이 분리
+  const charParallaxStyle = useAnimatedStyle(() => {
+    const mag = Math.sqrt(tiltX.value ** 2 + tiltY.value ** 2);
+    return {
+      transform: [
+        { translateX: tiltX.value * 32 },
+        { translateY: tiltY.value * 20 },
+        { scale: 1 + mag * 0.038 }, // 틸트 시 미세 확대 → 튀어나오는 느낌
+      ],
+    };
+  });
 
-  // 캐릭터 parallax — 틸트 시 배경보다 더 많이 이동해 Z-depth 생성
-  const charParallaxStyle = useAnimatedStyle(() => ({
+  // 전경 파티클 parallax — 캐릭터보다 빠름 (앞 레이어)
+  const fxParallaxStyle = useAnimatedStyle(() => ({
     transform: [
-      { translateX: tiltX.value * 14 },
-      { translateY: tiltY.value * 8 },
+      { translateX: tiltX.value * 54 },
+      { translateY: tiltY.value * 34 },
     ],
   }));
 
@@ -438,7 +489,11 @@ export default function HomeScreen() {
   if (!profile) return <Redirect href="/onboarding" />;
   if (!fortune) return <View style={styles.center}><StatusBar barStyle="light-content" backgroundColor="#080B18" /><ActivityIndicator color="#FFE500" /></View>;
 
-  const borderColor = rarity === 'legendary' ? `${E.color}EE` : RARITY[rarity].starColor === '#AAA' ? 'rgba(180,180,180,0.5)' : `${E.color}CC`;
+  const cardBorderColor = rarity === 'mythic' ? `${E.color}50`
+    : rarity === 'legendary' ? `${E.color}3A`
+    : rarity === 'epic' ? 'rgba(255,255,255,0.16)'
+    : 'rgba(255,255,255,0.10)';
+  const cardBorderWidth = rarity === 'mythic' ? 2.5 : rarity === 'legendary' ? 2 : 1.5;
 
   return (
     <View style={styles.screen}>
@@ -497,12 +552,12 @@ export default function HomeScreen() {
       {/* 스크롤 가능한 본문 */}
       <ScrollView
         style={{ flex: 1, width: '100%' }}
-        contentContainerStyle={{ alignItems: 'center', paddingBottom: 32, gap: 16 }}
+        contentContainerStyle={{ alignItems: 'center', paddingBottom: 20, gap: 14 }}
         showsVerticalScrollIndicator={false}
+        overScrollMode="never"
       >
-      {/* 날짜 + 카드 도착 배너 */}
+      {/* 카드 도착 배너 */}
       <View style={{ alignItems: 'center', gap: 6 }}>
-        <Text style={styles.dateLabel}>{fortune.date}</Text>
         {isNewDay && (
           <Animated.View style={[styles.arrivalBanner, arrivalBannerStyle]}>
             <Text style={styles.arrivalText}>
@@ -539,15 +594,22 @@ export default function HomeScreen() {
 
               {/* 카드 전체 베이스: 매우 어두운 솔리드 */}
               <Rect x={0} y={0} width={CARD_W} height={CARD_H} color={E.bgBot} />
+              {/* 카드 내부 대각 원소 그라디언트 — 깊이감 */}
+              <RoundedRect x={0} y={0} width={CARD_W} height={CARD_H} r={CORNER}>
+                <LinearGradient
+                  start={vec(0, 0)} end={vec(CARD_W, CARD_H)}
+                  colors={[`${E.color}1C`, 'rgba(0,0,0,0)', `${E.color}0E`]}
+                />
+              </RoundedRect>
 
               {/* ── 아트워크 창 내부 배경 (내부 프레임 안에만 국한) ── */}
-              <Group clip={Skia.RRectXY(Skia.XYWHRect(8, 8, CARD_W - 16, CHAR_H - 6), 10, 10)}>
-                {/* 아트워크 창 원소 그라디언트 */}
+              <Group clip={Skia.RRectXY(Skia.XYWHRect(8, 8, CARD_W - 16, CHAR_H - 6), 14, 14)}>
+                {/* 아트워크 창 배경: 상단 원소 톤 → 하단 완전 검정 */}
                 <Rect x={8} y={8} width={CARD_W - 16} height={CHAR_H - 6}>
                   <LinearGradient
-                    start={vec(CARD_W * 0.2, 8)}
-                    end={vec(CARD_W * 0.8, CHAR_H)}
-                    colors={[E.bgTop, E.bgBot]}
+                    start={vec(CARD_W / 2, 8)}
+                    end={vec(CARD_W / 2, CHAR_H - 6)}
+                    colors={[E.bgTop, '#010104']}
                   />
                 </Rect>
 
@@ -572,14 +634,30 @@ export default function HomeScreen() {
                     <BlurMask blur={20} style="normal" />
                   </Circle>
                 </>}
+
+                {/* 아트 창 주변 비네트 — 중앙 집중 조명 */}
+                <Rect x={8} y={8} width={CARD_W - 16} height={CHAR_H - 6}>
+                  <RadialGradient
+                    c={vec(CARD_W * 0.5, CHAR_H * 0.38)}
+                    r={CARD_W * 0.70}
+                    colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.40)']}
+                    positions={[0, 0.48, 1]}
+                  />
+                </Rect>
               </Group>
 
               {/* ── 이펙트: Rare 이상부터, 카드 전체 영역에 표출 ── */}
               {rarity !== 'common' && <>
 
-                {/* 원소 발광 — 카드 전반 */}
-                <Circle cx={CARD_W / 2} cy={CARD_H * 0.35} r={glowR} color={E.glow}>
-                  <BlurMask blur={55} style="normal" />
+                {/* 원소 발광 — 3레이어 글로우 (넓은 앰비언트 + 중간 + 집중 핵심) */}
+                <Circle cx={CARD_W / 2} cy={CHAR_H * 0.52} r={glowR * 2.0} color={`${E.color}07`}>
+                  <BlurMask blur={90} style="normal" />
+                </Circle>
+                <Circle cx={CARD_W / 2} cy={CHAR_H * 0.55} r={glowR} color={E.glow}>
+                  <BlurMask blur={42} style="normal" />
+                </Circle>
+                <Circle cx={CARD_W / 2} cy={CHAR_H * 0.60} r={glowR * 0.40} color={`${E.color}2A`}>
+                  <BlurMask blur={14} style="normal" />
                 </Circle>
 
                 {/* 원소별 파티클 이펙트 */}
@@ -626,30 +704,47 @@ export default function HomeScreen() {
                   </>
                 )}
 
-                {/* Legendary/Mythic: 스파클 — 카드 전반 */}
+                {/* Legendary/Mythic: 별 방사 스파클 */}
                 {R.sparkles && (
                   <Group opacity={sparkleA}>
-                    {sparkles.map((s, i) => (
-                      <Circle key={i} cx={s.x + 10} cy={s.y + 10} r={s.r}
-                        color={`rgba(255,255,255,${0.45 + (i % 4) * 0.13})`} />
-                    ))}
+                    {sparkles.map((s, i) => {
+                      const cx = s.x + 10; const cy = s.y + 10;
+                      const streak = s.r * (i % 5 === 0 ? 5.5 : 3.0);
+                      return (
+                        <Group key={i}>
+                          {/* 핵심 빛점 */}
+                          <Circle cx={cx} cy={cy} r={s.r * 1.3}
+                            color={`rgba(255,255,255,${0.80 + (i % 3) * 0.07})`}>
+                            <BlurMask blur={1.2} style="normal" />
+                          </Circle>
+                          {/* 수평 + 수직 방사선 (별 모양) */}
+                          {i % 3 === 0 && <>
+                            <Rect x={cx - streak} y={cy - 0.4} width={streak * 2} height={0.8}
+                              color={`rgba(255,255,255,0.38)`}>
+                              <BlurMask blur={0.7} style="normal" />
+                            </Rect>
+                            <Rect x={cx - 0.4} y={cy - streak} width={0.8} height={streak * 2}
+                              color={`rgba(255,255,255,0.38)`}>
+                              <BlurMask blur={0.7} style="normal" />
+                            </Rect>
+                          </>}
+                        </Group>
+                      );
+                    })}
                   </Group>
                 )}
               </>}
 
-              {/* 아트워크 창 내부 프레임 — 원소 컬러로 선명하게 */}
+              {/* 아트워크 창 내부 프레임 — 4면 모두 동일한 원소 컬러 */}
               <RoundedRect x={8} y={8} width={CARD_W - 16} height={CHAR_H - 6} r={10}
                 color={E.color} style="stroke" strokeWidth={2} />
-              {/* 창 상단 하이라이트 */}
-              <RoundedRect x={9} y={9} width={CARD_W - 18} height={CHAR_H - 8} r={9}
-                color="rgba(255,255,255,0.20)" style="stroke" strokeWidth={0.8} />
 
-              {/* 캐릭터 팝아웃 그림자 */}
-              <Rect x={CARD_W * 0.08} y={CHAR_H - 28} width={CARD_W * 0.84} height={36}>
+              {/* 캐릭터 발 아래 어두운 그림자 — 원소 컬러 제거로 하단 일관성 유지 */}
+              <Rect x={0} y={CHAR_H - 50} width={CARD_W} height={56}>
                 <LinearGradient
-                  start={vec(CARD_W / 2, CHAR_H - 28)}
-                  end={vec(CARD_W / 2, CHAR_H + 8)}
-                  colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.70)']}
+                  start={vec(CARD_W / 2, CHAR_H - 50)}
+                  end={vec(CARD_W / 2, CHAR_H + 6)}
+                  colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0.80)']}
                 />
               </Rect>
 
@@ -659,7 +754,63 @@ export default function HomeScreen() {
 
             </Canvas>
 
-            {/* Layer 2: 홀로그램 foil — 3배 캔버스, 틸트로 이동 */}
+            {/* Layer 4: 캐릭터 — Skia Image + RRectXY clip으로 모서리 정확히 클리핑 */}
+            <Animated.View
+              style={[charParallaxStyle, {
+                position: 'absolute',
+                top: 8, left: 8,
+                width: CARD_W - 16, height: CHAR_H - 6,
+              }]}
+              pointerEvents="none"
+            >
+              <Canvas style={{ width: CARD_W - 16, height: CHAR_H - 6 }}>
+                <Group clip={Skia.RRectXY(Skia.XYWHRect(0, 0, CARD_W - 16, CHAR_H - 6), 14, 14)}>
+                  {charSkiaImg && (
+                    <SkiaImage
+                      image={charSkiaImg}
+                      x={0} y={0}
+                      width={CARD_W - 16} height={CHAR_H - 6}
+                      fit="cover"
+                    />
+                  )}
+                </Group>
+              </Canvas>
+            </Animated.View>
+
+            {/* Layer 4b: 전경 원소 파티클 — 캐릭터(32/20)보다 빠른 시차(54/34) → 앞 레이어 입체감 */}
+            <Animated.View
+              style={[fxParallaxStyle, {
+                position: 'absolute', top: 8, left: 8, right: 8,
+                height: CHAR_H - 6, borderRadius: 10, overflow: 'hidden',
+              }]}
+              pointerEvents="none"
+            >
+              <Canvas style={{ width: CARD_W - 16, height: CHAR_H - 6 }} pointerEvents="none">
+                <Group opacity={rarity === 'common' ? 0.5 : 0.85}>
+                  {fgParticles.map((p, i) => (
+                    <Group key={i}>
+                      <Circle cx={p.x} cy={p.y} r={p.r}
+                        color={element === 'dark'
+                          ? `rgba(0,0,0,${0.55 + (i % 3) * 0.12})`
+                          : `${E.color}${i % 2 === 0 ? 'CC' : '88'}`}>
+                        <BlurMask blur={p.blur} style="normal" />
+                      </Circle>
+                      {/* light/lightning: 별 방사선 */}
+                      {(element === 'light' || element === 'lightning') && i % 3 === 0 && (
+                        <>
+                          <Rect x={p.x - p.r * 3} y={p.y - 0.3} width={p.r * 6} height={0.6}
+                            color={`${E.color}55`} />
+                          <Rect x={p.x - 0.3} y={p.y - p.r * 3} width={0.6} height={p.r * 6}
+                            color={`${E.color}55`} />
+                        </>
+                      )}
+                    </Group>
+                  ))}
+                </Group>
+              </Canvas>
+            </Animated.View>
+
+            {/* Layer 2: 홀로그램 A — 대각↘, 틸트 크기에 비례해 나타남 */}
             <Animated.View style={[StyleSheet.absoluteFill, foilStyle]} pointerEvents="none">
               <Canvas style={{ width: FOIL_W, height: FOIL_H, marginLeft: -CARD_W, marginTop: -CARD_H }}>
                 <Rect x={0} y={0} width={FOIL_W} height={FOIL_H}>
@@ -671,7 +822,19 @@ export default function HomeScreen() {
               </Canvas>
             </Animated.View>
 
-            {/* Layer 3: 스페큘러 하이라이트 — 반대 방향 */}
+            {/* Layer 2b: 홀로그램 B — 교차↗ (X↔Y 교환) — 두 레이어가 엇갈려 포켓몬 TCG 무지개 생성 */}
+            <Animated.View style={[StyleSheet.absoluteFill, foil2Style]} pointerEvents="none">
+              <Canvas style={{ width: FOIL_W, height: FOIL_H, marginLeft: -CARD_W, marginTop: -CARD_H }}>
+                <Rect x={0} y={0} width={FOIL_W} height={FOIL_H}>
+                  <LinearGradient
+                    start={vec(0, FOIL_H)} end={vec(FOIL_W, 0)}
+                    colors={HOLO2}
+                  />
+                </Rect>
+              </Canvas>
+            </Animated.View>
+
+            {/* Layer 3: 스페큘러 하이라이트 — 반대 방향, 틸트 시 선명 */}
             <Animated.View style={[StyleSheet.absoluteFill, specStyle]} pointerEvents="none">
               <Canvas style={{ width: CARD_W * 2, height: CARD_H * 2, marginLeft: -CARD_W / 2, marginTop: -CARD_H * 0.3 }}>
                 <Circle cx={CARD_W} cy={CARD_H * 0.5} r={CARD_W * 0.42} color="rgba(255,255,255,1)">
@@ -689,37 +852,25 @@ export default function HomeScreen() {
                 <Rect x={0} y={6} width={CARD_W - 24} height={0.8} color={`${E.color}55`} />
               </Canvas>
 
-              {/* 이름 + 원소 뱃지 행 */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                <View style={{ flex: 1, gap: 1 }}>
-                  {/* 캐릭터명 (원소+등급 기반) */}
-                  <Text style={{ color: E.color, fontSize: 15, fontWeight: '900', letterSpacing: 0.4, textShadowColor: `${E.glow}`, textShadowRadius: 8 }} numberOfLines={1}>
-                    {charNameKo}
-                  </Text>
-                  {/* 원소 타입 */}
-                  <Text style={{ color: E.color2, fontSize: 9, letterSpacing: 1.0, fontWeight: '600', opacity: 0.75 }}>
-                    {E.label} · UNSE CARD
-                  </Text>
-                </View>
-                {/* 원소 뱃지 */}
-                <View style={{
-                  backgroundColor: `${E.color}28`, borderRadius: 8,
-                  borderWidth: 1, borderColor: `${E.color}77`,
-                  paddingHorizontal: 7, paddingVertical: 3,
-                }}>
-                  <Text style={{ color: E.color, fontSize: 10, fontWeight: '800', textShadowColor: E.glow, textShadowRadius: 6 }}>{E.label}</Text>
-                </View>
+              {/* 이름 행 */}
+              <View style={{ marginBottom: 4, gap: 1 }}>
+                <Text style={{ fontFamily: F.bk, color: E.color, fontSize: 15, letterSpacing: 0.4, textShadowColor: `${E.glow}`, textShadowRadius: 8 }} numberOfLines={1}>
+                  {charNameKo}
+                </Text>
+                <Text style={{ fontFamily: F.sb, color: E.color2, fontSize: 9, letterSpacing: 1.0, opacity: 0.75 }}>
+                  {E.label} · UNSE CARD
+                </Text>
               </View>
 
               {/* 오늘의 운세 텍스트 */}
               <Text style={{
-                color: 'rgba(255,255,255,0.88)', fontSize: 11, lineHeight: 16,
-                fontStyle: 'italic', letterSpacing: 0.1,
-              }} numberOfLines={3}>{fortune.general.text}</Text>
+                fontFamily: F.r, color: 'rgba(255,255,255,0.88)', fontSize: 11, lineHeight: 17,
+                letterSpacing: 0.1,
+              }} numberOfLines={4}>{fortune.general.text}</Text>
 
               {/* 하단 행: 희귀도 + 버프 */}
-              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' as any, paddingBottom: 10, paddingTop: 4 }}>
-                <Text style={{ color: R.starColor, fontSize: 12, fontWeight: '700', letterSpacing: 1, textShadowColor: R.starColor, textShadowRadius: 6 }}>{R.stars}</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 6, paddingBottom: 6, paddingTop: 3 }}>
+                <Text style={{ fontFamily: F.b, color: R.starColor, fontSize: 12, letterSpacing: 1, textShadowColor: R.starColor, textShadowRadius: 6 }}>{R.stars}</Text>
                 {activeBuff && (
                   <View style={{
                     flexDirection: 'row', alignItems: 'center', gap: 3,
@@ -727,7 +878,7 @@ export default function HomeScreen() {
                     borderWidth: 1, borderColor: `${activeBuff.color}60`,
                     paddingHorizontal: 6, paddingVertical: 2,
                   }}>
-                    <Text style={{ fontSize: 8, color: activeBuff.color, fontWeight: '800' }}>
+                    <Text style={{ fontFamily: F.eb, fontSize: 8, color: activeBuff.color }}>
                       {activeBuff.emoji} BUFF
                     </Text>
                   </View>
@@ -737,44 +888,14 @@ export default function HomeScreen() {
 
           </View>{/* end overflow:hidden */}
 
-          {/* Layer 4: 캐릭터 — overflow:hidden 밖, 내부 프레임 위아래 팝아웃 + parallax
-              top:0 → 카드 경계 안에서 시작, 내부 프레임(y=8)보다 위로 자연스럽게 겹침 */}
-          {cardImg && (
-            <Animated.View
-              style={[charFloatStyle, charParallaxStyle, {
-                position: 'absolute',
-                top: 0,
-                left: 0, right: 0,
-                height: CHAR_H + CHAR_BLEED,
-                alignItems: 'center',
-                justifyContent: 'center',
-                zIndex: 10,
-              }]}
-              pointerEvents="none"
-            >
-              <Image source={cardImg}
-                style={{ width: CARD_W - 8, height: CHAR_H + CHAR_BLEED - 4 }}
-                resizeMode="contain"
-              />
-            </Animated.View>
-          )}
-
           {/* Layer 6: 외부 테두리 — 캐릭터 위에 렌더링, 카드가 캐릭터를 담는 느낌 */}
           <Canvas style={[StyleSheet.absoluteFill, { zIndex: 15 }]} pointerEvents="none">
             <RoundedRect x={0} y={0} width={CARD_W} height={CARD_H} r={CORNER}
-              color={borderColor} style="stroke" strokeWidth={R.borderW + 0.5} />
+              color={cardBorderColor} style="stroke" strokeWidth={cardBorderWidth} />
           </Canvas>
         </Animated.View>
       </GestureDetector>
       </Animated.View>
-
-      {/* 오늘의 카드 등급 — 카드 바로 아래 얇은 한 줄 */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
-        <Text style={{ color: 'rgba(255,255,255,0.28)', fontSize: 11 }}>오늘의 카드</Text>
-        <Text style={{ color: R.starColor, fontSize: 11, fontWeight: '800' }}>{R.stars} {R.label}</Text>
-        <Text style={{ color: 'rgba(255,255,255,0.20)', fontSize: 11 }}>·</Text>
-        <Text style={{ color: E.color, fontSize: 11, fontWeight: '700' }}>{E.label}</Text>
-      </View>
 
       {/* 오늘의 행운 정보 — 색상/숫자/방향 */}
       {luckyInfo && (
@@ -799,10 +920,12 @@ export default function HomeScreen() {
                 <Text style={[styles.weekDayLabel, isToday && { color: '#FFFFFF', fontWeight: '700' }]}>{dayLabel}</Text>
                 <View style={[
                   styles.weekDot,
-                  { backgroundColor: isToday ? dotColor : `${dotColor}55`, borderColor: dotColor },
-                  isToday && styles.weekDotToday,
+                  {
+                    backgroundColor: isToday ? dotColor : `${dotColor}33`,
+                    borderColor: isToday ? dotColor : `${dotColor}55`,
+                    borderWidth: isToday ? 2 : 1,
+                  },
                 ]} />
-                {isToday && <View style={[styles.weekDotGlow, { backgroundColor: dotColor }]} />}
               </View>
             );
           })}
@@ -811,7 +934,7 @@ export default function HomeScreen() {
 
       {/* 주요 액션 — 운세 보기 (1순위) */}
       <Pressable
-        style={[styles.primaryBtn, { borderColor: `${E.color}88`, shadowColor: E.color }]}
+        style={[styles.primaryBtn, { borderColor: `${E.color}44` }]}
         onPress={() => router.push('/fortune')}
       >
         <Text style={[styles.primaryBtnText, { color: E.color }]}>✦ 오늘의 운세 보기</Text>
@@ -822,6 +945,9 @@ export default function HomeScreen() {
         <Pressable style={styles.secondaryBtn} onPress={() => router.push('/collection')}>
           <Text style={styles.secondaryBtnIcon}>📚</Text>
           <Text style={styles.secondaryBtnText}>컬렉션</Text>
+          <Text style={{ fontFamily: F.sb, color: 'rgba(255,255,255,0.38)', fontSize: 10 }}>
+            {collectedCount}/{TOTAL_CHAR_CARDS}
+          </Text>
         </Pressable>
         <Pressable style={styles.secondaryBtn} onPress={() => router.push('/gacha')}>
           <Text style={styles.secondaryBtnIcon}>✦</Text>
@@ -829,7 +955,6 @@ export default function HomeScreen() {
         </Pressable>
       </View>
 
-      <Text style={styles.hintText}>카드를 드래그하면 홀로그램이 빛납니다</Text>
       </ScrollView>
     </View>
   );
@@ -839,79 +964,71 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#080B18', alignItems: 'center', paddingTop: 0, paddingBottom: 24, gap: 18 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#080B18' },
   topBar: { width: '100%', paddingTop: 52, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  appTitle: { fontSize: 22, fontWeight: '900', color: '#FFFFFF', letterSpacing: 3.5 },
-  dateLabel: { color: 'rgba(255,255,255,0.35)', fontSize: 12, letterSpacing: 0.5 },
+  appTitle: { fontFamily: F.bk, fontSize: 22, color: '#FFFFFF', letterSpacing: 3.5 },
   coinBadge: {
     backgroundColor: 'rgba(255,220,0,0.12)', borderWidth: 1, borderColor: 'rgba(255,220,0,0.30)',
     paddingVertical: 5, paddingHorizontal: 10, borderRadius: 12,
   },
-  coinText: { color: '#FFE500', fontWeight: '700', fontSize: 12 },
+  coinText: { fontFamily: F.b, color: '#FFE500', fontSize: 12 },
   gachaBtn: {
     backgroundColor: '#FFE500', borderRadius: 16,
     paddingVertical: 7, paddingHorizontal: 14,
     shadowColor: '#FFE500', shadowOpacity: 0.4, shadowOffset: { width: 0, height: 2 }, shadowRadius: 8, elevation: 5,
   },
-  gachaBtnText: { color: '#111', fontWeight: '900', fontSize: 12 },
+  gachaBtnText: { fontFamily: F.bk, color: '#111', fontSize: 12 },
   nameRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  cardName: { fontSize: 17, fontWeight: '800', letterSpacing: 0.3 },
-  cardType: { fontSize: 12, fontWeight: '600', opacity: 0.85 },
-  cardFortune: { color: 'rgba(255,255,255,0.70)', fontSize: 12, lineHeight: 18 },
-  rarityText: { fontSize: 13, fontWeight: '700', letterSpacing: 0.8 },
+  cardName: { fontFamily: F.eb, fontSize: 17, letterSpacing: 0.3 },
+  cardType: { fontFamily: F.sb, fontSize: 12, opacity: 0.85 },
+  cardFortune: { fontFamily: F.r, color: 'rgba(255,255,255,0.70)', fontSize: 12, lineHeight: 18 },
+  rarityText: { fontFamily: F.b, fontSize: 13, letterSpacing: 0.8 },
   primaryBtn: {
     alignSelf: 'stretch', marginHorizontal: 20,
-    backgroundColor: 'rgba(255,255,255,0.07)',
-    borderWidth: 1.5, borderRadius: 28,
-    paddingVertical: 16, alignItems: 'center',
-    shadowOpacity: 0.25, shadowOffset: { width: 0, height: 3 }, shadowRadius: 12, elevation: 6,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderWidth: 1, borderRadius: 24,
+    paddingVertical: 12, alignItems: 'center',
   },
-  primaryBtnText: { fontWeight: '900', fontSize: 16, letterSpacing: 0.4 },
+  primaryBtnText: { fontFamily: F.bk, fontSize: 16, letterSpacing: 0.4 },
   secondaryBtn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
     backgroundColor: 'rgba(255,255,255,0.05)',
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
-    borderRadius: 18, paddingVertical: 12,
+    borderRadius: 14, paddingVertical: 8,
   },
   secondaryBtnIcon: { fontSize: 15 },
-  secondaryBtnText: { color: 'rgba(255,255,255,0.65)', fontWeight: '700', fontSize: 14 },
-  hintText: { color: 'rgba(255,255,255,0.18)', fontSize: 11 },
+  secondaryBtnText: { fontFamily: F.b, color: 'rgba(255,255,255,0.65)', fontSize: 14 },
   streakBadge: {
     backgroundColor: 'rgba(255,120,0,0.18)', borderRadius: 10,
     borderWidth: 1, borderColor: 'rgba(255,120,0,0.40)',
     paddingVertical: 3, paddingHorizontal: 8,
   },
-  streakText: { color: '#FF8800', fontWeight: '700', fontSize: 12 },
+  streakText: { fontFamily: F.b, color: '#FF8800', fontSize: 12 },
   arrivalBanner: {
     backgroundColor: 'rgba(255,220,0,0.10)', borderRadius: 12,
     borderWidth: 1, borderColor: 'rgba(255,220,0,0.25)',
     paddingVertical: 6, paddingHorizontal: 14,
   },
-  arrivalText: { color: '#FFE500', fontWeight: '700', fontSize: 12, letterSpacing: 0.3 },
+  arrivalText: { fontFamily: F.b, color: '#FFE500', fontSize: 12, letterSpacing: 0.3 },
   luckyRow: {
     flexDirection: 'row', alignItems: 'center', gap: 6,
     backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: 14, paddingVertical: 8, paddingHorizontal: 14,
+    borderRadius: 12, paddingVertical: 5, paddingHorizontal: 12,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
   },
   luckyColorDot: { width: 10, height: 10, borderRadius: 5, marginRight: 2 },
-  luckyItem: { color: 'rgba(255,255,255,0.40)', fontSize: 11 },
-  luckyVal: { color: 'rgba(255,255,255,0.80)', fontWeight: '700' },
-  luckySep: { color: 'rgba(255,255,255,0.18)', fontSize: 11 },
+  luckyItem: { fontFamily: F.r, color: 'rgba(255,255,255,0.40)', fontSize: 11 },
+  luckyVal: { fontFamily: F.b, color: 'rgba(255,255,255,0.80)' },
+  luckySep: { fontFamily: F.r, color: 'rgba(255,255,255,0.18)', fontSize: 11 },
   weekStrip: {
     flexDirection: 'row', alignSelf: 'stretch',
     marginHorizontal: 20,
     backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: 16, paddingVertical: 10, paddingHorizontal: 8,
+    borderRadius: 12, paddingVertical: 6, paddingHorizontal: 8,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)',
     justifyContent: 'space-between',
   },
   weekCell: { alignItems: 'center', gap: 6, flex: 1 },
-  weekDayLabel: { color: 'rgba(255,255,255,0.28)', fontSize: 10, fontWeight: '600' },
+  weekDayLabel: { fontFamily: F.sb, color: 'rgba(255,255,255,0.28)', fontSize: 10 },
   weekDot: {
-    width: 10, height: 10, borderRadius: 5,
-    borderWidth: 1,
-  },
-  weekDotToday: { width: 14, height: 14, borderRadius: 7, borderWidth: 2 },
-  weekDotGlow: {
-    position: 'absolute', bottom: -2, width: 14, height: 4, borderRadius: 3, opacity: 0.4,
+    width: 12, height: 12, borderRadius: 6,
   },
 });
