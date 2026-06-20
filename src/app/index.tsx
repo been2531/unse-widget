@@ -943,7 +943,7 @@ export default function HomeScreen() {
       {/* 보조 액션 — 컬렉션 | 뽑기 */}
       <View style={{ flexDirection: 'row', gap: 10, width: '100%', paddingHorizontal: 20 }}>
         <Pressable style={styles.secondaryBtn} onPress={() => router.push('/collection')}>
-          <Text style={styles.secondaryBtnIcon}>📚</Text>
+          <Text style={styles.secondaryBtnIcon}>✦</Text>
           <Text style={styles.secondaryBtnText}>컬렉션</Text>
           <Text style={{ fontFamily: F.sb, color: 'rgba(255,255,255,0.38)', fontSize: 10 }}>
             {collectedCount}/{TOTAL_CHAR_CARDS}

@@ -81,7 +81,7 @@ function CardItem({ item, CARD_W, CARD_H, onPress }: {
   const skiaImg = useImage(imgSrc);
   const CW = CARD_W - 8;
   const CH = CARD_H - 8;
-  const IMG_H = Math.floor(CH * 0.66);
+  const LABEL_H = CH * 0.38; // 텍스트 오버레이 영역 (하단 38%)
 
   return (
     <Pressable style={{ width: CARD_W, height: CARD_H, padding: 4 }} onPress={() => onPress(item)}>
@@ -92,46 +92,60 @@ function CardItem({ item, CARD_W, CARD_H, onPress }: {
         borderColor: owned ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.06)',
       }}>
         <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
+          {/* 배경 */}
           <Rect x={0} y={0} width={CW} height={CH}>
             <LinearGradient start={vec(0, 0)} end={vec(CW, CH)} colors={['#111326', '#080B1A']} />
           </Rect>
+          {/* 원소 글로우 */}
           {owned && (
-            <Circle cx={CW / 2} cy={IMG_H / 2} r={CW * 0.24} color={`${elemColor}18`}>
-              <BlurMask blur={16} style="normal" />
+            <Circle cx={CW / 2} cy={CH * 0.40} r={CW * 0.28} color={`${elemColor}18`}>
+              <BlurMask blur={18} style="normal" />
             </Circle>
           )}
+          {/* 캐릭터 아트 — 카드 전체 높이 */}
           {skiaImg && (
-            <Group clip={Skia.RRectXY(Skia.XYWHRect(0, 0, CW, IMG_H), 8, 8)}>
-              <SkiaImage image={skiaImg} x={0} y={0} width={CW} height={IMG_H} fit="cover" />
-              {/* 하단 페이드 — 아트와 텍스트 영역 자연스럽게 분리 */}
-              <Rect x={0} y={IMG_H * 0.6} width={CW} height={IMG_H * 0.4}>
+            <Group clip={Skia.RRectXY(Skia.XYWHRect(0, 0, CW, CH), 8, 8)}>
+              <SkiaImage image={skiaImg} x={0} y={0} width={CW} height={CH} fit="cover" />
+              {/* 하단 그라디언트 — 텍스트 가독성 */}
+              <Rect x={0} y={CH - LABEL_H} width={CW} height={LABEL_H}>
                 <LinearGradient
-                  start={vec(0, IMG_H * 0.6)} end={vec(0, IMG_H)}
-                  colors={['rgba(8,11,26,0)', 'rgba(8,11,26,0.92)']}
+                  start={vec(0, CH - LABEL_H)} end={vec(0, CH)}
+                  colors={['rgba(6,8,20,0)', 'rgba(6,8,20,0.97)']}
                 />
               </Rect>
             </Group>
           )}
+          {/* 이미지 없는 카드(운세 등): 하단 페이드만 */}
+          {!imgSrc && (
+            <Rect x={0} y={CH - LABEL_H} width={CW} height={LABEL_H}>
+              <LinearGradient
+                start={vec(0, CH - LABEL_H)} end={vec(0, CH)}
+                colors={['rgba(6,8,20,0)', 'rgba(6,8,20,0.85)']}
+              />
+            </Rect>
+          )}
         </Canvas>
+        {/* 이미지 없을 때 이모지 중앙 */}
         {!imgSrc && (
-          <View style={{ height: IMG_H, alignItems: 'center', justifyContent: 'center' }}>
+          <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: LABEL_H, alignItems: 'center', justifyContent: 'center' }}>
             <Text style={{ fontSize: CARD_W * 0.26 }}>{cardEmoji(item as any)}</Text>
           </View>
         )}
+        {/* 텍스트 오버레이 — 카드 하단 고정 */}
         <View style={{
           position: 'absolute', bottom: 0, left: 0, right: 0,
-          height: CH - IMG_H,
-          alignItems: 'center', justifyContent: 'center',
-          gap: 2, paddingHorizontal: 4,
+          height: LABEL_H,
+          alignItems: 'center', justifyContent: 'flex-end',
+          paddingBottom: 8, paddingHorizontal: 4, gap: 2,
         }}>
-          <Text style={{ fontFamily: F.b, color: '#fff', fontSize: 9, textAlign: 'center' }} numberOfLines={1}>
+          <Text style={{ fontFamily: F.b, color: '#fff', fontSize: 9, textAlign: 'center', lineHeight: 13 }} numberOfLines={1}>
             {item.nameKo}
           </Text>
-          <Text style={{ fontFamily: F.sb, color: RARITY_COLOR[item.rarity], fontSize: 8 }}>
+          <Text style={{ fontFamily: F.sb, color: RARITY_COLOR[item.rarity], fontSize: 8, lineHeight: 12 }}>
             {RARITY_LABEL[item.rarity]}
           </Text>
           {!owned && (
-            <Text style={{ fontFamily: F.r, color: 'rgba(255,255,255,0.28)', fontSize: 7 }}>미수집</Text>
+            <Text style={{ fontFamily: F.r, color: 'rgba(255,255,255,0.35)', fontSize: 7, lineHeight: 11 }}>미수집</Text>
           )}
         </View>
       </View>
@@ -383,7 +397,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.15)',
     borderColor: 'rgba(255,255,255,0.30)',
   },
-  tabText: { fontFamily: F.sb, color: 'rgba(255,255,255,0.78)', fontSize: 13 },
+  tabText: { fontFamily: F.sb, color: 'rgba(255,255,255,0.78)', fontSize: 13, lineHeight: 18 },
   tabTextActive: { fontFamily: F.sb, color: '#FFF' },
   progressWrap: {
     marginHorizontal: 20, marginBottom: 4, gap: 6,
@@ -404,7 +418,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.04)',
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
   },
-  elemTabText: { fontFamily: F.sb, color: 'rgba(255,255,255,0.35)', fontSize: 12 },
+  elemTabText: { fontFamily: F.sb, color: 'rgba(255,255,255,0.35)', fontSize: 12, lineHeight: 17 },
 });
 
 const modalStyles = StyleSheet.create({
