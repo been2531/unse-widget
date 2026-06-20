@@ -42,9 +42,20 @@ function cardEmoji(card: CardDef): string {
 }
 
 type Filter = 'character' | 'fortune' | 'skin' | 'all';
+type ElemFilter = 'all' | 'fire' | 'water' | 'lightning' | 'nature' | 'dark' | 'light';
 
 const ALL_CHARS = CARD_POOL.filter(c => c.category === 'character');
 const ALL_SKINS = CARD_POOL.filter(c => c.category === 'skin');
+
+const ELEM_FILTERS: { key: ElemFilter; label: string }[] = [
+  { key: 'all',       label: '전체' },
+  { key: 'fire',      label: '🔥 화염' },
+  { key: 'water',     label: '💧 물' },
+  { key: 'lightning', label: '⚡ 번개' },
+  { key: 'nature',    label: '🌿 자연' },
+  { key: 'dark',      label: '🌑 암흑' },
+  { key: 'light',     label: '✨ 빛' },
+];
 
 // ─── 카드 상세 모달 ────────────────────────────────────────────────────────────
 type ModalItem = (CardDef & { owned: boolean }) | PulledCard;
@@ -119,6 +130,7 @@ function CardDetailModal({ item, onClose }: { item: ModalItem; onClose: () => vo
 export default function CollectionScreen() {
   const { width: screenW } = useWindowDimensions();
   const [filter, setFilter] = useState<Filter>('character');
+  const [elemFilter, setElemFilter] = useState<ElemFilter>('all');
   const [collected, setCollected] = useState<PulledCard[]>([]);
   const [selectedCard, setSelectedCard] = useState<ModalItem | null>(null);
 
@@ -138,6 +150,10 @@ export default function CollectionScreen() {
     .filter(c => c.category === 'fortune')
     .sort((a, b) => RARITY_ORDER[a.rarity] - RARITY_ORDER[b.rarity]);
   const allItems = [...collected].sort((a, b) => RARITY_ORDER[a.rarity] - RARITY_ORDER[b.rarity]);
+
+  const filteredCharItems = elemFilter === 'all'
+    ? characterItems
+    : characterItems.filter(c => c.element === elemFilter);
 
   const COLS = 3;
   const CARD_W = (screenW - 48) / COLS;
@@ -196,17 +212,22 @@ export default function CollectionScreen() {
     );
   }
 
-  const data: Item[] = filter === 'character' ? characterItems
+  const data: Item[] = filter === 'character' ? filteredCharItems
     : filter === 'fortune' ? fortuneItems
     : filter === 'skin' ? skinItems
     : allItems;
 
-  const ownedCount = filter === 'character' ? characterItems.filter(c => c.owned).length
+  const ownedCount = filter === 'character' ? filteredCharItems.filter(c => c.owned).length
     : filter === 'skin' ? skinItems.filter(c => c.owned).length
     : data.length;
-  const totalCount = filter === 'character' ? ALL_CHARS.length
+  const totalCount = filter === 'character' ? filteredCharItems.length
     : filter === 'skin' ? ALL_SKINS.length
     : null;
+
+  // 전체 캐릭터 수집률 (원소 필터 무관)
+  const totalCharOwned = characterItems.filter(c => c.owned).length;
+  const totalCharAll = ALL_CHARS.length;
+  const completionPct = totalCharAll > 0 ? totalCharOwned / totalCharAll : 0;
 
   const FILTERS: { key: Filter; label: string }[] = [
     { key: 'character', label: '캐릭터' },
@@ -226,8 +247,7 @@ export default function CollectionScreen() {
       {/* 헤더 */}
       <View style={styles.header}>
         <Pressable style={styles.backBtn} onPress={() => router.back()}>
-          {/* 쉐브론 아이콘 — View 기반 크로스플랫폼 */}
-          <View style={styles.chevron} />
+          <Text style={styles.backIcon}>‹</Text>
         </Pressable>
         <Text style={styles.title}>내 컬렉션</Text>
         <Text style={styles.countBadge}>
@@ -235,19 +255,49 @@ export default function CollectionScreen() {
         </Text>
       </View>
 
-      {/* 필터 탭 — 스크롤 가능 */}
+      {/* 수집률 진행 바 */}
+      <View style={styles.progressWrap}>
+        <View style={styles.progressRow}>
+          <Text style={styles.progressLabel}>캐릭터 수집률</Text>
+          <Text style={styles.progressCount}>{totalCharOwned} / {totalCharAll}</Text>
+        </View>
+        <View style={styles.progressTrack}>
+          <View style={[styles.progressFill, { width: `${Math.round(completionPct * 100)}%` as any }]} />
+        </View>
+      </View>
+
+      {/* 카테고리 필터 탭 */}
       <ScrollView horizontal showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.tabsContainer} style={{ flexGrow: 0 }}>
         {FILTERS.map(({ key, label }) => (
           <Pressable key={key}
             style={[styles.tab, filter === key && styles.tabActive]}
-            onPress={() => setFilter(key)}>
+            onPress={() => { setFilter(key); setElemFilter('all'); }}>
             <Text style={[styles.tabText, filter === key && styles.tabTextActive]}>
               {label}
             </Text>
           </Pressable>
         ))}
       </ScrollView>
+
+      {/* 원소 필터 — 캐릭터 탭에서만 */}
+      {filter === 'character' && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}
+          contentContainerStyle={[styles.tabsContainer, { paddingTop: 0, paddingBottom: 6 }]} style={{ flexGrow: 0 }}>
+          {ELEM_FILTERS.map(({ key, label }) => {
+            const color = key !== 'all' ? (ELEM_COLOR[key] ?? '#888') : undefined;
+            return (
+              <Pressable key={key}
+                style={[styles.elemTab, elemFilter === key && { borderColor: `${color ?? '#FFF'}88`, backgroundColor: `${color ?? '#FFF'}18` }]}
+                onPress={() => setElemFilter(key)}>
+                <Text style={[styles.elemTabText, elemFilter === key && { color: color ?? '#FFF' }]}>
+                  {label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      )}
 
       <FlatList
         data={data}
@@ -277,12 +327,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 12,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
   },
-  chevron: {
-    width: 10, height: 10,
-    borderLeftWidth: 2, borderBottomWidth: 2,
-    borderColor: '#FFF',
-    transform: [{ rotate: '45deg' }, { translateX: 2 }],
-  },
+  backIcon: { color: '#fff', fontSize: 28, lineHeight: 32, marginTop: -2 },
   title: { fontSize: 18, fontWeight: '800', color: '#FFF', letterSpacing: 1 },
   countBadge: { color: 'rgba(255,255,255,0.45)', fontSize: 13, fontWeight: '600' },
   tabsContainer: { paddingHorizontal: 16, paddingBottom: 8, gap: 8 },
@@ -297,6 +342,26 @@ const styles = StyleSheet.create({
   },
   tabText: { color: 'rgba(255,255,255,0.4)', fontSize: 13, fontWeight: '600' },
   tabTextActive: { color: '#FFF' },
+  progressWrap: {
+    marginHorizontal: 20, marginBottom: 4, gap: 6,
+  },
+  progressRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  progressLabel: { color: 'rgba(255,255,255,0.40)', fontSize: 11, fontWeight: '600' },
+  progressCount: { color: 'rgba(255,255,255,0.60)', fontSize: 11, fontWeight: '700' },
+  progressTrack: {
+    height: 4, backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 2, overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%', borderRadius: 2,
+    backgroundColor: '#FFD700',
+  },
+  elemTab: {
+    paddingVertical: 6, paddingHorizontal: 12, borderRadius: 14,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+  },
+  elemTabText: { color: 'rgba(255,255,255,0.35)', fontSize: 12, fontWeight: '600' },
 });
 
 const modalStyles = StyleSheet.create({

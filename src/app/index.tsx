@@ -16,19 +16,39 @@ import Animated, {
 
 import { cardImageFor } from '@/gacha/cardAssets';
 import { deriveMood } from '@/character/mood';
-import { STAGE_LABELS_KO, type Mood } from '@/character/types';
-import { deriveValence } from '@/fortune/deriveValence';
+import { type Mood } from '@/character/types';
+import { deriveValence, type FortuneValence } from '@/fortune/deriveValence';
 import { getActiveBuff, type FortuneBuff } from '@/fortune/fortuneCardBuff';
+import { fnv1aHash } from '@/fortune/hash';
+import { deriveLuckyInfo, type LuckyInfo } from '@/fortune/luckyInfo';
 import { selectDailyFortune } from '@/fortune/selectFortune';
 import type { DailyFortune, DiiSign, UserProfile } from '@/fortune/types';
 import { CARD_POOL, type ElementType } from '@/gacha/types';
 import { getTodayDateString } from '@/shared/dateUtils';
 import { loadCharacterState } from '@/storage/characterState';
 import { claimDaily, getBalance } from '@/storage/coins';
-import { getCardCustom, saveCardCustom } from '@/storage/cardCustomization';
 import { getCollection } from '@/storage/collection';
+import { checkInStreak, streakRarityBoost, type StreakState } from '@/storage/streak';
 import { getTodayFortuneBuff } from '@/storage/todayFortuneCard';
 import { loadUserProfile } from '@/storage/userProfile';
+
+function deriveRarity(date: string, diiSign: DiiSign, valence: FortuneValence): Rarity {
+  const roll = fnv1aHash(`${date}:${diiSign}:rarity`) % 100;
+  if (valence === 'good') {
+    if (roll < 5)  return 'mythic';
+    if (roll < 25) return 'legendary';
+    if (roll < 55) return 'epic';
+    return 'rare';
+  }
+  if (valence === 'neutral') {
+    if (roll < 5)  return 'epic';
+    if (roll < 30) return 'rare';
+    return 'common';
+  }
+  // bad
+  if (roll < 10) return 'rare';
+  return 'common';
+}
 
 // ─── 원소 타입 ─────────────────────────────────────────────────────────────
 
@@ -37,14 +57,6 @@ const ELEM_NAME: Record<ElementType, string> = {
   fire: '화염', water: '물', lightning: '번개',
   nature: '자연', dark: '암흑', light: '빛',
 };
-
-// 원소별 선택 이모지
-const ELEM_EMOJI: Record<ElementType, string> = {
-  fire: '🔥', water: '💧', lightning: '⚡',
-  nature: '🌿', dark: '🌑', light: '✨',
-};
-
-const ALL_ELEMENTS: ElementType[] = ['fire', 'water', 'lightning', 'nature', 'dark', 'light'];
 
 // 띠 → 원소 매핑 (12간지 × 6원소)
 const DII_ELEMENT: Record<DiiSign, ElementType> = {
@@ -196,16 +208,21 @@ export default function HomeScreen() {
   const FOIL_W = CARD_W * 3;
   const FOIL_H = CARD_H * 3;
 
-  const [loading, setLoading]   = useState(true);
-  const [profile, setProfile]   = useState<UserProfile | null>(null);
-  const [fortune, setFortune]   = useState<DailyFortune | null>(null);
-  const [stage, setStage]       = useState<string>('egg');
-  const [mood, setMood]         = useState<Mood>('neutral');
-  const [element, setElement]   = useState<ElementType>('lightning');
-  const [rarity, setRarity]     = useState<Rarity>('legendary');
-  const [balance, setBalance]   = useState(0);
+  const [loading, setLoading]     = useState(true);
+  const [profile, setProfile]     = useState<UserProfile | null>(null);
+  const [fortune, setFortune]     = useState<DailyFortune | null>(null);
+  const [mood, setMood]           = useState<Mood>('neutral');
+  const [element, setElement]     = useState<ElementType>('lightning');
+  const [rarity, setRarity]       = useState<Rarity>('common');
+  const [balance, setBalance]     = useState(0);
   const [activeBuff, setActiveBuff] = useState<FortuneBuff | null>(null);
-  const [ownedIds, setOwnedIds] = useState<Set<string>>(new Set());
+  const [streak, setStreak]       = useState<StreakState>({ currentStreak: 0, lastDate: '', longestStreak: 0 });
+  const [luckyInfo, setLuckyInfo] = useState<LuckyInfo | null>(null);
+  const [isNewDay, setIsNewDay]   = useState(false);
+
+  // 카드 도착 연출 애니메이션
+  const cardRevealA = useSharedValue(0);
+  const arrivalBannerA = useSharedValue(0);
 
   const tiltX    = useSharedValue(0);
   const tiltY    = useSharedValue(0);
@@ -225,13 +242,6 @@ export default function HomeScreen() {
   const charNameKo = charCard?.nameKo ?? E.label;
   const cardImg = cardImageFor(element, rarity);
 
-  // 해당 원소+등급 카드를 가챠 컬렉션에서 소유하고 있는지 확인
-  const isCharOwned = (el: ElementType, rar: Rarity) => {
-    const st = rar === 'mythic' ? 4 : (rar === 'legendary' || rar === 'epic') ? 3 : rar === 'rare' ? 2 : 1;
-    return ownedIds.has(`${el}_${st}`);
-  };
-  const currentOwned = isCharOwned(element, rarity);
-
   // 원소별 이펙트 경로 (메모이제이션)
   const effectPaths = useMemo(() => {
     switch (element) {
@@ -246,6 +256,17 @@ export default function HomeScreen() {
 
   const sparkles = useMemo(() => makeSparkles(24, CARD_W - 20, CHAR_H - 20), [CARD_W, CHAR_H]);
 
+  const DAY_NAMES = ['일', '월', '화', '수', '목', '금', '토'];
+  const weekDays = useMemo(() => {
+    const today = getTodayDateString();
+    return Array.from({ length: 7 }, (_, i) => {
+      const d = new Date(today);
+      d.setDate(d.getDate() - (6 - i));
+      const dateStr = d.toISOString().slice(0, 10);
+      return { date: dateStr, dayLabel: DAY_NAMES[d.getDay()], isToday: dateStr === today };
+    });
+  }, []);
+
   const bgStars = useMemo(() => Array.from({ length: 60 }, (_, i) => ({
     x: (i * 137 + 29) % screenW,
     y: (i * 211 + 71) % screenH,
@@ -259,22 +280,34 @@ export default function HomeScreen() {
       const p = await loadUserProfile();
       if (!p) { setLoading(false); return; }
       const today = getTodayDateString();
-      const c = await loadCharacterState();
-      if (c) setStage(c.stage);
+      await loadCharacterState();
       const valence = deriveValence(today, p.diiSign, p.starSign);
       setMood(deriveMood({ affection: 100, neglectDays: 0, fortuneValence: valence }));
-      const zodiacElem = DII_ELEMENT[p.diiSign] ?? 'lightning';
-      const custom = await getCardCustom();
-      setElement(custom.element ?? zodiacElem);
-      if (custom.rarity) setRarity(custom.rarity as Rarity);
+      setElement(DII_ELEMENT[p.diiSign] ?? 'lightning');
+
+      const streakState = await checkInStreak(today);
+      setStreak(streakState);
+      const baseRarity = deriveRarity(today, p.diiSign, valence);
+      setRarity(streakRarityBoost(baseRarity, streakState.currentStreak) as Rarity);
+
       setFortune(selectDailyFortune(today, p.diiSign, p.starSign));
+      setLuckyInfo(deriveLuckyInfo(today, p.diiSign, p.starSign));
       setProfile(p);
-      const { balance: b } = await claimDaily(today);
+
+      const { balance: b, claimed } = await claimDaily(today);
       setBalance(b);
+      if (claimed) {
+        setIsNewDay(true);
+        cardRevealA.value = withTiming(1, { duration: 900, easing: Easing.out(Easing.back(1.2)) });
+        arrivalBannerA.value = withSequence(
+          withTiming(1, { duration: 400 }),
+          withTiming(1, { duration: 1800 }),
+          withTiming(0, { duration: 400 }),
+        );
+      }
+
       const todayBuff = await getTodayFortuneBuff(today);
       if (todayBuff) setActiveBuff(getActiveBuff(todayBuff.cardId));
-      const col = await getCollection();
-      setOwnedIds(new Set(col.map(c => c.id)));
       setLoading(false);
     })();
   }, []);
@@ -377,6 +410,16 @@ export default function HomeScreen() {
   // 카드 뒤 배경 글로우
   const bgGlowStyle = useAnimatedStyle(() => ({ opacity: bgPulse.value }));
 
+  // 카드 도착 연출
+  const cardRevealStyle = useAnimatedStyle(() => ({
+    opacity: isNewDay ? cardRevealA.value : 1,
+    transform: [{ scale: isNewDay ? (0.88 + cardRevealA.value * 0.12) : 1 }],
+  }));
+  const arrivalBannerStyle = useAnimatedStyle(() => ({
+    opacity: arrivalBannerA.value,
+    transform: [{ translateY: (1 - arrivalBannerA.value) * -12 }],
+  }));
+
   // 캐릭터 부유
   const charFloatStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: floatY.value }],
@@ -433,7 +476,14 @@ export default function HomeScreen() {
 
       {/* 상단 바 — 고정 */}
       <View style={styles.topBar}>
-        <Text style={styles.appTitle}>UNSE</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <Text style={styles.appTitle}>UNSE</Text>
+          {streak.currentStreak >= 2 && (
+            <View style={styles.streakBadge}>
+              <Text style={styles.streakText}>🔥 {streak.currentStreak}일째</Text>
+            </View>
+          )}
+        </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           <Pressable style={styles.coinBadge} onPress={() => router.push('/gacha')}>
             <Text style={styles.coinText}>💰 {balance.toLocaleString()}</Text>
@@ -450,10 +500,21 @@ export default function HomeScreen() {
         contentContainerStyle={{ alignItems: 'center', paddingBottom: 32, gap: 16 }}
         showsVerticalScrollIndicator={false}
       >
-      <Text style={styles.dateLabel}>{fortune.date}</Text>
+      {/* 날짜 + 카드 도착 배너 */}
+      <View style={{ alignItems: 'center', gap: 6 }}>
+        <Text style={styles.dateLabel}>{fortune.date}</Text>
+        {isNewDay && (
+          <Animated.View style={[styles.arrivalBanner, arrivalBannerStyle]}>
+            <Text style={styles.arrivalText}>
+              {streak.currentStreak >= 7 ? '🔥 ' : ''}오늘의 운명 카드가 도착했습니다
+              {streak.currentStreak >= 7 ? ` — ${streak.currentStreak}일 연속 등급 UP!` : ''}
+            </Text>
+          </Animated.View>
+        )}
+      </View>
 
       {/* 카드 + 배경 글로우 (래퍼) */}
-      <View style={{ alignItems: 'center' }}>
+      <Animated.View style={[{ alignItems: 'center' }, cardRevealStyle]}>
 
         {/* 카드 뒤 원소 글로우 — overflow:hidden 밖에 위치 */}
         <Animated.View
@@ -705,91 +766,66 @@ export default function HomeScreen() {
           </Canvas>
         </Animated.View>
       </GestureDetector>
+      </Animated.View>
+
+      {/* 오늘의 카드 등급 — 카드 바로 아래 얇은 한 줄 */}
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+        <Text style={{ color: 'rgba(255,255,255,0.28)', fontSize: 11 }}>오늘의 카드</Text>
+        <Text style={{ color: R.starColor, fontSize: 11, fontWeight: '800' }}>{R.stars} {R.label}</Text>
+        <Text style={{ color: 'rgba(255,255,255,0.20)', fontSize: 11 }}>·</Text>
+        <Text style={{ color: E.color, fontSize: 11, fontWeight: '700' }}>{E.label}</Text>
       </View>
 
-      {/* 카드 커스터마이즈 패널 */}
-      <View style={{ width: '100%', paddingHorizontal: 20, gap: 8 }}>
-
-        {/* 원소 선택 */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Text style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, letterSpacing: 0.6, width: 36 }}>원소</Text>
-          <View style={{ flexDirection: 'row', gap: 6, flex: 1 }}>
-            {ALL_ELEMENTS.map(el => {
-              const isActive = el === element;
-              const hasAny = (['common','rare','epic','legendary','mythic'] as Rarity[]).some(r => isCharOwned(el, r));
-              return (
-                <Pressable key={el}
-                  onPress={() => {
-                    setElement(el);
-                    // 소유한 최고 등급으로 자동 전환
-                    const order: Rarity[] = ['mythic','legendary','epic','rare','common'];
-                    const best = order.find(r => isCharOwned(el, r)) ?? 'common';
-                    setRarity(best);
-                    saveCardCustom({ element: el, rarity: best });
-                  }}
-                  style={{
-                    flex: 1, height: 34, borderRadius: 8,
-                    backgroundColor: isActive ? `${ELEM[el].color}44` : `${ELEM[el].color}14`,
-                    borderWidth: isActive ? 1.5 : 1,
-                    borderColor: isActive ? ELEM[el].color : `${ELEM[el].color}33`,
-                    alignItems: 'center', justifyContent: 'center',
-                    opacity: hasAny ? 1 : 0.30,
-                  }}>
-                  <Text style={{ fontSize: 15 }}>{hasAny ? ELEM_EMOJI[el] : '🔒'}</Text>
-                </Pressable>
-              );
-            })}
-          </View>
+      {/* 오늘의 행운 정보 — 색상/숫자/방향 */}
+      {luckyInfo && (
+        <View style={styles.luckyRow}>
+          <View style={[styles.luckyColorDot, { backgroundColor: luckyInfo.color.hex }]} />
+          <Text style={styles.luckyItem}>행운의 색 <Text style={styles.luckyVal}>{luckyInfo.color.name}</Text></Text>
+          <Text style={styles.luckySep}>·</Text>
+          <Text style={styles.luckyItem}>숫자 <Text style={styles.luckyVal}>{luckyInfo.number}</Text></Text>
+          <Text style={styles.luckySep}>·</Text>
+          <Text style={styles.luckyItem}>방향 <Text style={styles.luckyVal}>{luckyInfo.direction}</Text></Text>
         </View>
+      )}
 
-        {/* 등급 선택 */}
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Text style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, letterSpacing: 0.6, width: 36 }}>등급</Text>
-          <View style={{ flexDirection: 'row', gap: 6, flex: 1 }}>
-            {(['common','rare','epic','legendary','mythic'] as Rarity[]).map(r => {
-              const isActive = r === rarity;
-              const owned = isCharOwned(element, r);
-              const rc = RARITY[r];
-              return (
-                <Pressable key={r}
-                  onPress={() => {
-                    if (!owned) return; // 미보유 등급 선택 불가
-                    setRarity(r);
-                    saveCardCustom({ rarity: r });
-                  }}
-                  style={{
-                    flex: 1, height: 34, borderRadius: 8,
-                    backgroundColor: isActive ? `${rc.starColor}22` : 'rgba(255,255,255,0.04)',
-                    borderWidth: isActive ? 1.5 : 1,
-                    borderColor: isActive ? rc.starColor : owned ? `${rc.starColor}33` : 'rgba(255,255,255,0.08)',
-                    alignItems: 'center', justifyContent: 'center', gap: 1,
-                    opacity: owned ? 1 : 0.35,
-                  }}>
-                  <Text style={{ color: owned ? rc.starColor : '#555', fontSize: 8, fontWeight: '800', letterSpacing: 0.3 }}>
-                    {owned ? rc.stars : '🔒'}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </View>
+      {/* 이번 주 운세 흐름 캘린더 */}
+      {profile && weekDays && (
+        <View style={styles.weekStrip}>
+          {weekDays.map(({ date: d, dayLabel, isToday }) => {
+            const v = deriveValence(d, profile.diiSign, profile.starSign);
+            const dotColor = v === 'good' ? '#FFD700' : v === 'neutral' ? '#88AAFF' : '#FF6B9D';
+            return (
+              <View key={d} style={styles.weekCell}>
+                <Text style={[styles.weekDayLabel, isToday && { color: '#FFFFFF', fontWeight: '700' }]}>{dayLabel}</Text>
+                <View style={[
+                  styles.weekDot,
+                  { backgroundColor: isToday ? dotColor : `${dotColor}55`, borderColor: dotColor },
+                  isToday && styles.weekDotToday,
+                ]} />
+                {isToday && <View style={[styles.weekDotGlow, { backgroundColor: dotColor }]} />}
+              </View>
+            );
+          })}
         </View>
+      )}
 
-      </View>
+      {/* 주요 액션 — 운세 보기 (1순위) */}
+      <Pressable
+        style={[styles.primaryBtn, { borderColor: `${E.color}88`, shadowColor: E.color }]}
+        onPress={() => router.push('/fortune')}
+      >
+        <Text style={[styles.primaryBtnText, { color: E.color }]}>✦ 오늘의 운세 보기</Text>
+      </Pressable>
 
-      {/* 버튼 행 */}
+      {/* 보조 액션 — 컬렉션 | 뽑기 */}
       <View style={{ flexDirection: 'row', gap: 10, width: '100%', paddingHorizontal: 20 }}>
-        <Pressable style={[styles.fortuneBtn, { flex: 1, borderColor: `${E.color}55` }]}
-          onPress={() => router.push('/fortune')}>
-          <Text style={[styles.fortuneBtnText, { color: E.color }]}>✦ 운세 보기</Text>
+        <Pressable style={styles.secondaryBtn} onPress={() => router.push('/collection')}>
+          <Text style={styles.secondaryBtnIcon}>📚</Text>
+          <Text style={styles.secondaryBtnText}>컬렉션</Text>
         </Pressable>
-        <Pressable style={[styles.fortuneBtn, { flex: 1, borderColor: 'rgba(255,255,255,0.15)' }]}
-          onPress={() => router.push('/collection')}>
-          <Text style={[styles.fortuneBtnText, { color: 'rgba(255,255,255,0.6)' }]}>
-            📚 컬렉션
-          </Text>
-          <Text style={{ color: 'rgba(255,255,255,0.35)', fontSize: 10, marginTop: 2 }}>
-            {ownedIds.size}/{CARD_POOL.length} 수집
-          </Text>
+        <Pressable style={styles.secondaryBtn} onPress={() => router.push('/gacha')}>
+          <Text style={styles.secondaryBtnIcon}>✦</Text>
+          <Text style={styles.secondaryBtnText}>카드 뽑기</Text>
         </Pressable>
       </View>
 
@@ -821,11 +857,61 @@ const styles = StyleSheet.create({
   cardType: { fontSize: 12, fontWeight: '600', opacity: 0.85 },
   cardFortune: { color: 'rgba(255,255,255,0.70)', fontSize: 12, lineHeight: 18 },
   rarityText: { fontSize: 13, fontWeight: '700', letterSpacing: 0.8 },
-  fortuneBtn: {
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderWidth: 1.5,
-    paddingVertical: 13, paddingHorizontal: 38, borderRadius: 26,
+  primaryBtn: {
+    alignSelf: 'stretch', marginHorizontal: 20,
+    backgroundColor: 'rgba(255,255,255,0.07)',
+    borderWidth: 1.5, borderRadius: 28,
+    paddingVertical: 16, alignItems: 'center',
+    shadowOpacity: 0.25, shadowOffset: { width: 0, height: 3 }, shadowRadius: 12, elevation: 6,
   },
-  fortuneBtnText: { fontWeight: '700', fontSize: 15 },
-  hintText: { color: 'rgba(255,255,255,0.22)', fontSize: 11 },
+  primaryBtnText: { fontWeight: '900', fontSize: 16, letterSpacing: 0.4 },
+  secondaryBtn: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
+    borderRadius: 18, paddingVertical: 12,
+  },
+  secondaryBtnIcon: { fontSize: 15 },
+  secondaryBtnText: { color: 'rgba(255,255,255,0.65)', fontWeight: '700', fontSize: 14 },
+  hintText: { color: 'rgba(255,255,255,0.18)', fontSize: 11 },
+  streakBadge: {
+    backgroundColor: 'rgba(255,120,0,0.18)', borderRadius: 10,
+    borderWidth: 1, borderColor: 'rgba(255,120,0,0.40)',
+    paddingVertical: 3, paddingHorizontal: 8,
+  },
+  streakText: { color: '#FF8800', fontWeight: '700', fontSize: 12 },
+  arrivalBanner: {
+    backgroundColor: 'rgba(255,220,0,0.10)', borderRadius: 12,
+    borderWidth: 1, borderColor: 'rgba(255,220,0,0.25)',
+    paddingVertical: 6, paddingHorizontal: 14,
+  },
+  arrivalText: { color: '#FFE500', fontWeight: '700', fontSize: 12, letterSpacing: 0.3 },
+  luckyRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 14, paddingVertical: 8, paddingHorizontal: 14,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+  },
+  luckyColorDot: { width: 10, height: 10, borderRadius: 5, marginRight: 2 },
+  luckyItem: { color: 'rgba(255,255,255,0.40)', fontSize: 11 },
+  luckyVal: { color: 'rgba(255,255,255,0.80)', fontWeight: '700' },
+  luckySep: { color: 'rgba(255,255,255,0.18)', fontSize: 11 },
+  weekStrip: {
+    flexDirection: 'row', alignSelf: 'stretch',
+    marginHorizontal: 20,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderRadius: 16, paddingVertical: 10, paddingHorizontal: 8,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.07)',
+    justifyContent: 'space-between',
+  },
+  weekCell: { alignItems: 'center', gap: 6, flex: 1 },
+  weekDayLabel: { color: 'rgba(255,255,255,0.28)', fontSize: 10, fontWeight: '600' },
+  weekDot: {
+    width: 10, height: 10, borderRadius: 5,
+    borderWidth: 1,
+  },
+  weekDotToday: { width: 14, height: 14, borderRadius: 7, borderWidth: 2 },
+  weekDotGlow: {
+    position: 'absolute', bottom: -2, width: 14, height: 4, borderRadius: 3, opacity: 0.4,
+  },
 });

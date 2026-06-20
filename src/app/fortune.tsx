@@ -1,11 +1,14 @@
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator, Animated, Modal, Pressable,
-  ScrollView, StyleSheet, Text, View,
+  ActivityIndicator, Animated, Pressable,
+  ScrollView, StatusBar, StyleSheet, Text, View,
 } from 'react-native';
 
-import type { DailyFortune } from '@/fortune/types';
+import { showRewardedAd } from '@/ads/admob';
+import { fnv1aHash } from '@/fortune/hash';
+import { deriveLuckyInfo, type LuckyInfo } from '@/fortune/luckyInfo';
+import type { DailyFortune, DiiSign, StarSign } from '@/fortune/types';
 import { selectDailyFortune } from '@/fortune/selectFortune';
 import { getActiveBuff, type FortuneBuff } from '@/fortune/fortuneCardBuff';
 import { getTodayDateString } from '@/shared/dateUtils';
@@ -22,24 +25,88 @@ const CATEGORIES: { key: CategoryKey; label: string; emoji: string; color: strin
   { key: 'work',   label: '직장운', emoji: '💼',  color: '#88AAFF' },
 ];
 
-const AD_SECONDS = 5;
+function deriveScore(date: string, diiSign: DiiSign, starSign: StarSign, category: string): number {
+  return 30 + (fnv1aHash(`${date}:${diiSign}:${starSign}:score:${category}`) % 61);
+}
+
+function scoreLabel(score: number): string {
+  if (score >= 80) return '최고';
+  if (score >= 65) return '좋음';
+  if (score >= 50) return '보통';
+  if (score >= 35) return '주의';
+  return '힘듦';
+}
+
+function ScoreBar({ score, color, label, emoji, delay }: {
+  score: number; color: string; label: string; emoji: string; delay: number;
+}) {
+  const anim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.timing(anim, {
+      toValue: score / 100,
+      duration: 900,
+      delay,
+      useNativeDriver: false,
+    }).start();
+  }, [score]);
+
+  return (
+    <View style={barStyles.row}>
+      <Text style={barStyles.emoji}>{emoji}</Text>
+      <Text style={barStyles.label}>{label}</Text>
+      <View style={barStyles.track}>
+        <Animated.View style={[
+          barStyles.fill,
+          {
+            backgroundColor: color,
+            width: anim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }),
+          },
+        ]} />
+      </View>
+      <Text style={[barStyles.num, { color }]}>{score}</Text>
+      <Text style={barStyles.tag}>{scoreLabel(score)}</Text>
+    </View>
+  );
+}
+
+const barStyles = StyleSheet.create({
+  row:   { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  emoji: { fontSize: 15, width: 20 },
+  label: { color: 'rgba(255,255,255,0.55)', fontSize: 11, fontWeight: '600', width: 36 },
+  track: { flex: 1, height: 5, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 3, overflow: 'hidden' },
+  fill:  { height: '100%', borderRadius: 3 },
+  num:   { fontSize: 13, fontWeight: '900', width: 28, textAlign: 'right' },
+  tag:   { color: 'rgba(255,255,255,0.30)', fontSize: 10, width: 26 },
+});
 
 export default function FortuneScreen() {
-  const [loading, setLoading] = useState(true);
-  const [fortune, setFortune] = useState<DailyFortune | null>(null);
-  const [unlocked, setUnlocked] = useState<string[]>([]);
-  const [adTarget, setAdTarget] = useState<CategoryKey | null>(null);
-  const [countdown, setCountdown] = useState(AD_SECONDS);
+  const [loading, setLoading]       = useState(true);
+  const [fortune, setFortune]       = useState<DailyFortune | null>(null);
+  const [unlocked, setUnlocked]     = useState<string[]>([]);
+  const [adLoading, setAdLoading]   = useState<CategoryKey | null>(null);
   const [activeBuff, setActiveBuff] = useState<FortuneBuff | null>(null);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const adProgress = useRef(new Animated.Value(0)).current;
+  const [luckyInfo, setLuckyInfo]   = useState<LuckyInfo | null>(null);
+  const [scores, setScores]         = useState<Record<CategoryKey, number> | null>(null);
+  const [overall, setOverall]       = useState(0);
 
   useEffect(() => {
     (async () => {
       const p = await loadUserProfile();
       if (!p) { setLoading(false); return; }
       const today = getTodayDateString();
+
       setFortune(selectDailyFortune(today, p.diiSign, p.starSign));
+      setLuckyInfo(deriveLuckyInfo(today, p.diiSign, p.starSign));
+
+      const s: Record<CategoryKey, number> = {
+        wealth: deriveScore(today, p.diiSign, p.starSign, 'wealth'),
+        love:   deriveScore(today, p.diiSign, p.starSign, 'love'),
+        health: deriveScore(today, p.diiSign, p.starSign, 'health'),
+        work:   deriveScore(today, p.diiSign, p.starSign, 'work'),
+      };
+      setScores(s);
+      setOverall(Math.round((s.wealth + s.love + s.health + s.work) / 4));
+
       setUnlocked(await getTodayUnlocked(today));
       const todayBuff = await getTodayFortuneBuff(today);
       if (todayBuff) setActiveBuff(getActiveBuff(todayBuff.cardId));
@@ -47,52 +114,97 @@ export default function FortuneScreen() {
     })();
   }, []);
 
-  function startAd(key: CategoryKey) {
-    setAdTarget(key);
-    setCountdown(AD_SECONDS);
-    adProgress.setValue(0);
-    Animated.timing(adProgress, {
-      toValue: 1,
-      duration: AD_SECONDS * 1000,
-      useNativeDriver: false,
-    }).start();
-    let n = AD_SECONDS;
-    timerRef.current = setInterval(async () => {
-      n -= 1;
-      setCountdown(n);
-      if (n <= 0) {
-        clearInterval(timerRef.current!);
-        const today = getTodayDateString();
-        const next = await unlockCategory(today, key);
-        setUnlocked(next);
-        setAdTarget(null);
-      }
-    }, 1000);
+  async function watchAdForCategory(key: CategoryKey) {
+    if (adLoading) return;
+    setAdLoading(key);
+    const result = await showRewardedAd();
+    if (result === 'earned') {
+      const today = getTodayDateString();
+      setUnlocked(await unlockCategory(today, key));
+    }
+    setAdLoading(null);
   }
 
-  function skipAd() {
-    clearInterval(timerRef.current!);
-    setAdTarget(null);
-  }
+  if (loading) return (
+    <View style={styles.center}>
+      <StatusBar barStyle="light-content" backgroundColor="#080B18" />
+      <ActivityIndicator color="#FFE500" />
+    </View>
+  );
+  if (!fortune) return (
+    <View style={styles.center}>
+      <StatusBar barStyle="light-content" backgroundColor="#080B18" />
+      <Text style={styles.err}>운세를 불러올 수 없어요</Text>
+    </View>
+  );
 
-  useEffect(() => () => { clearInterval(timerRef.current!); }, []);
-
-  if (loading) return <View style={styles.center}><ActivityIndicator color="#FFE500" /></View>;
-  if (!fortune)  return <View style={styles.center}><Text style={styles.err}>운세를 불러올 수 없어요</Text></View>;
+  const overallColor = overall >= 70 ? '#FFD700' : overall >= 50 ? '#88AAFF' : '#FF6B9D';
 
   return (
     <View style={styles.screen}>
+      <StatusBar barStyle="light-content" backgroundColor="#080B18" />
+
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} style={styles.backBtn}>
-          <View style={styles.chevron} />
+          <Text style={styles.backIcon}>‹</Text>
         </Pressable>
         <Text style={styles.title}>오늘의 운세</Text>
         <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={styles.scroll}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* 종합 점수 */}
+        <View style={styles.overallCard}>
+          <View style={styles.overallLeft}>
+            <Text style={styles.overallDate}>{fortune.date}</Text>
+            <Text style={[styles.overallScore, { color: overallColor }]}>{overall}</Text>
+            <Text style={[styles.overallGrade, { color: overallColor }]}>{scoreLabel(overall)}</Text>
+            <Text style={styles.overallLabel}>종합 운세</Text>
+          </View>
+          <View style={styles.overallRight}>
+            {scores && CATEGORIES.map(({ key, emoji, label, color }, i) => (
+              <ScoreBar key={key} score={scores[key]} color={color} label={label} emoji={emoji} delay={i * 130} />
+            ))}
+          </View>
+        </View>
 
-        {/* 운세 카드 버프 배너 */}
+        {/* 행운 정보 */}
+        {luckyInfo && (
+          <View style={styles.luckyCard}>
+            <Text style={styles.sectionTitle}>오늘의 행운</Text>
+            <View style={styles.luckyGrid}>
+              <View style={styles.luckyCell}>
+                <View style={[styles.luckyDot, { backgroundColor: luckyInfo.color.hex }]} />
+                <Text style={styles.luckyCellLabel}>행운색</Text>
+                <Text style={styles.luckyCellVal}>{luckyInfo.color.name}</Text>
+              </View>
+              <View style={styles.luckyDivider} />
+              <View style={styles.luckyCell}>
+                <Text style={styles.luckyCellIcon}>🔢</Text>
+                <Text style={styles.luckyCellLabel}>행운 숫자</Text>
+                <Text style={styles.luckyCellVal}>{luckyInfo.number}</Text>
+              </View>
+              <View style={styles.luckyDivider} />
+              <View style={styles.luckyCell}>
+                <Text style={styles.luckyCellIcon}>🧭</Text>
+                <Text style={styles.luckyCellLabel}>행운 방향</Text>
+                <Text style={styles.luckyCellVal}>{luckyInfo.direction}</Text>
+              </View>
+              <View style={styles.luckyDivider} />
+              <View style={styles.luckyCell}>
+                <Text style={styles.luckyCellIcon}>🕐</Text>
+                <Text style={styles.luckyCellLabel}>행운 시간</Text>
+                <Text style={styles.luckyCellVal}>{luckyInfo.hour.split('(')[0]}</Text>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* 카드 버프 배너 */}
         {activeBuff && (
           <View style={[styles.buffBanner, { borderColor: `${activeBuff.color}55`, backgroundColor: `${activeBuff.color}12` }]}>
             <Text style={styles.buffEmoji}>{activeBuff.emoji}</Text>
@@ -104,13 +216,11 @@ export default function FortuneScreen() {
         )}
 
         {/* 총운 — 항상 무료 */}
-        <View style={[styles.card, styles.generalCard]}>
+        <View style={styles.card}>
           <View style={styles.cardHeader}>
             <Text style={styles.cardEmoji}>✨</Text>
             <Text style={styles.cardLabel}>총운</Text>
-            <View style={[styles.badge, { backgroundColor: 'rgba(255,220,60,0.15)', borderColor: 'rgba(255,220,60,0.4)' }]}>
-              <Text style={[styles.badgeText, { color: '#FFE500' }]}>무료</Text>
-            </View>
+            <View style={styles.freeBadge}><Text style={styles.freeBadgeText}>무료</Text></View>
           </View>
           <Text style={styles.cardText}>{fortune.general.text}</Text>
         </View>
@@ -118,29 +228,30 @@ export default function FortuneScreen() {
         {/* 유료 카테고리 */}
         {CATEGORIES.map(({ key, label, emoji, color }) => {
           const isUnlocked = unlocked.includes(key);
-          const isBoosted = activeBuff && (activeBuff.affectedCategory === key || activeBuff.affectedCategory === 'all');
+          const isBoosted = activeBuff &&
+            (activeBuff.affectedCategory === key || activeBuff.affectedCategory === 'all');
           return (
             <View key={key} style={[
               styles.card,
-              !isUnlocked && styles.lockedCard,
-              isBoosted && { borderWidth: 1.5, borderColor: `${activeBuff!.color}66` },
+              isBoosted && { borderColor: `${activeBuff!.color}44` },
             ]}>
               <View style={styles.cardHeader}>
                 <Text style={styles.cardEmoji}>{emoji}</Text>
                 <Text style={styles.cardLabel}>{label}</Text>
+                {scores && (
+                  <Text style={[styles.inlineScore, { color }]}>{scores[key]}점</Text>
+                )}
                 {isBoosted && (
-                  <View style={[styles.badge, { backgroundColor: `${activeBuff!.color}20`, borderColor: `${activeBuff!.color}55`, marginRight: 4 }]}>
+                  <View style={[styles.badge, { backgroundColor: `${activeBuff!.color}20`, borderColor: `${activeBuff!.color}55` }]}>
                     <Text style={[styles.badgeText, { color: activeBuff!.color }]}>{activeBuff!.emoji} 버프</Text>
                   </View>
                 )}
                 {isUnlocked ? (
-                  <View style={[styles.badge, { backgroundColor: `${color}22`, borderColor: `${color}55` }]}>
-                    <Text style={[styles.badgeText, { color }]}>해금됨</Text>
+                  <View style={[styles.badge, { backgroundColor: `${color}22`, borderColor: `${color}44` }]}>
+                    <Text style={[styles.badgeText, { color }]}>해금</Text>
                   </View>
                 ) : (
-                  <View style={[styles.badge, { backgroundColor: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.15)' }]}>
-                    <Text style={[styles.badgeText, { color: '#aaa' }]}>광고 시청</Text>
-                  </View>
+                  <Text style={styles.lockIcon}>🔒</Text>
                 )}
               </View>
 
@@ -149,103 +260,109 @@ export default function FortuneScreen() {
                   <Text style={styles.cardText}>{fortune[key].text}</Text>
                   {isBoosted && (
                     <View style={[styles.buffInline, { backgroundColor: `${activeBuff!.color}10`, borderColor: `${activeBuff!.color}30` }]}>
-                      <Text style={[styles.buffInlineText, { color: activeBuff!.color }]}>{activeBuff!.emoji} {activeBuff!.bonusText}</Text>
+                      <Text style={[styles.buffInlineText, { color: activeBuff!.color }]}>
+                        {activeBuff!.emoji} {activeBuff!.bonusText}
+                      </Text>
                     </View>
                   )}
                 </>
               ) : (
                 <Pressable
-                  style={[styles.watchAdBtn, { borderColor: `${color}55` }]}
-                  onPress={() => startAd(key)}
+                  style={[styles.watchAdBtn, { borderColor: `${color}44`, opacity: adLoading === key ? 0.5 : 1 }]}
+                  onPress={() => watchAdForCategory(key)}
+                  disabled={adLoading !== null}
                 >
-                  <Text style={[styles.watchAdText, { color }]}>📺  광고 보고 {label} 보기</Text>
+                  {adLoading === key
+                    ? <ActivityIndicator color={color} size="small" />
+                    : <Text style={[styles.watchAdText, { color }]}>📺  광고 보고 {label} 보기</Text>
+                  }
                 </Pressable>
               )}
             </View>
           );
         })}
 
-        <Text style={styles.footNote}>광고 시청은 하루에 카테고리당 1회, 자정에 초기화됩니다.</Text>
+        <Text style={styles.footNote}>광고 시청은 카테고리당 1회, 자정에 초기화됩니다.</Text>
       </ScrollView>
-
-      {/* 광고 모달 */}
-      <Modal visible={adTarget !== null} transparent animationType="fade">
-        <View style={styles.modalBg}>
-          <View style={styles.modalBox}>
-            <Text style={styles.modalTitle}>광고 재생 중</Text>
-            <Text style={styles.modalSub}>잠시 후 {adTarget && CATEGORIES.find(c => c.key === adTarget)?.label}이 열려요</Text>
-
-            {/* 진행 바 */}
-            <View style={styles.progressBg}>
-              <Animated.View
-                style={[styles.progressBar, {
-                  width: adProgress.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }),
-                }]}
-              />
-            </View>
-
-            <Text style={styles.countdown}>{countdown}</Text>
-            <Pressable style={styles.skipBtn} onPress={skipAd}>
-              <Text style={styles.skipText}>취소</Text>
-            </Pressable>
-          </View>
-        </View>
-      </Modal>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#F5F5F7' },
-  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#F5F5F7' },
-  err: { color: '#666' },
+  screen: { flex: 1, backgroundColor: '#080B18' },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#080B18' },
+  err: { color: 'rgba(255,255,255,0.5)' },
 
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingTop: 52, paddingHorizontal: 20, paddingBottom: 12,
+    paddingTop: 52, paddingHorizontal: 20, paddingBottom: 16,
   },
   backBtn: {
     width: 40, height: 40, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: 'rgba(0,0,0,0.06)', borderRadius: 12,
-    borderWidth: 1, borderColor: 'rgba(0,0,0,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.07)', borderRadius: 12,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)',
   },
-  chevron: {
-    width: 10, height: 10,
-    borderLeftWidth: 2, borderBottomWidth: 2,
-    borderColor: '#333',
-    transform: [{ rotate: '45deg' }, { translateX: 2 }],
-  },
-  title: { fontSize: 18, fontWeight: '700', color: '#111' },
+  backIcon: { color: '#fff', fontSize: 28, lineHeight: 32, marginTop: -2 },
+  title: { fontSize: 18, fontWeight: '700', color: '#FFFFFF' },
 
-  scroll: { paddingHorizontal: 20, paddingBottom: 40, gap: 12 },
+  scroll: { paddingHorizontal: 16, paddingBottom: 40, gap: 12 },
+
+  overallCard: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 20, padding: 20,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+    flexDirection: 'row', gap: 16, alignItems: 'center',
+  },
+  overallLeft: { alignItems: 'center', justifyContent: 'center', width: 68 },
+  overallDate: { color: 'rgba(255,255,255,0.28)', fontSize: 9, letterSpacing: 0.3, marginBottom: 2 },
+  overallScore: { fontSize: 46, fontWeight: '900', lineHeight: 50 },
+  overallGrade: { fontSize: 13, fontWeight: '800', marginTop: 2 },
+  overallLabel: { color: 'rgba(255,255,255,0.30)', fontSize: 10, marginTop: 4 },
+  overallRight: { flex: 1, gap: 10 },
+
+  luckyCard: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 20, padding: 16,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+    gap: 12,
+  },
+  sectionTitle: { color: 'rgba(255,255,255,0.40)', fontSize: 11, fontWeight: '700', letterSpacing: 0.8 },
+  luckyGrid: { flexDirection: 'row', alignItems: 'center' },
+  luckyCell: { flex: 1, alignItems: 'center', gap: 4 },
+  luckyDot: { width: 20, height: 20, borderRadius: 10, marginBottom: 2, borderWidth: 1, borderColor: 'rgba(255,255,255,0.20)' },
+  luckyCellIcon: { fontSize: 18, marginBottom: 2 },
+  luckyCellLabel: { color: 'rgba(255,255,255,0.30)', fontSize: 9, fontWeight: '600' },
+  luckyCellVal: { color: '#FFFFFF', fontSize: 13, fontWeight: '800' },
+  luckyDivider: { width: 1, height: 44, backgroundColor: 'rgba(255,255,255,0.07)' },
 
   card: {
-    backgroundColor: 'white',
-    borderRadius: 18, padding: 18,
-    shadowColor: '#000', shadowOpacity: 0.06,
-    shadowOffset: { width: 0, height: 2 }, shadowRadius: 8,
-    elevation: 2, gap: 10,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 18, padding: 16,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+    gap: 10,
   },
-  generalCard: { borderWidth: 1.5, borderColor: 'rgba(255,220,60,0.35)' },
-  lockedCard: { opacity: 0.85 },
-
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  cardEmoji: { fontSize: 20 },
-  cardLabel: { fontSize: 16, fontWeight: '700', color: '#111', flex: 1 },
-  badge: {
-    paddingHorizontal: 8, paddingVertical: 3,
-    borderRadius: 10, borderWidth: 1,
+  cardEmoji: { fontSize: 18 },
+  cardLabel: { fontSize: 15, fontWeight: '700', color: '#FFFFFF', flex: 1 },
+  inlineScore: { fontSize: 13, fontWeight: '900' },
+  badge: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8, borderWidth: 1 },
+  badgeText: { fontSize: 10, fontWeight: '700' },
+  freeBadge: {
+    paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8,
+    backgroundColor: 'rgba(255,220,0,0.12)', borderWidth: 1, borderColor: 'rgba(255,220,0,0.35)',
   },
-  badgeText: { fontSize: 11, fontWeight: '600' },
-  cardText: { fontSize: 14, color: '#333', lineHeight: 22 },
+  freeBadgeText: { fontSize: 10, fontWeight: '700', color: '#FFE500' },
+  lockIcon: { fontSize: 14 },
+  cardText: { fontSize: 14, color: 'rgba(255,255,255,0.72)', lineHeight: 22 },
 
   watchAdBtn: {
     borderWidth: 1, borderRadius: 12,
     paddingVertical: 12, alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.03)',
   },
   watchAdText: { fontSize: 14, fontWeight: '600' },
 
-  footNote: { fontSize: 11, color: '#aaa', textAlign: 'center', marginTop: 4 },
+  footNote: { fontSize: 11, color: 'rgba(255,255,255,0.18)', textAlign: 'center', marginTop: 4 },
 
   buffBanner: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 10,
@@ -253,23 +370,7 @@ const styles = StyleSheet.create({
   },
   buffEmoji: { fontSize: 22, marginTop: 1 },
   buffTitle: { fontSize: 12, fontWeight: '700', marginBottom: 2 },
-  buffDesc: { fontSize: 12, color: '#555', lineHeight: 17 },
-  buffInline: {
-    borderWidth: 1, borderRadius: 10, padding: 8, marginTop: 4,
-  },
+  buffDesc: { fontSize: 12, color: 'rgba(255,255,255,0.50)', lineHeight: 17 },
+  buffInline: { borderWidth: 1, borderRadius: 10, padding: 8, marginTop: 4 },
   buffInlineText: { fontSize: 12, lineHeight: 18 },
-
-  // 광고 모달
-  modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.65)', alignItems: 'center', justifyContent: 'center' },
-  modalBox: {
-    backgroundColor: 'white', borderRadius: 24,
-    padding: 28, width: '80%', alignItems: 'center', gap: 14,
-  },
-  modalTitle: { fontSize: 18, fontWeight: '800', color: '#111' },
-  modalSub: { fontSize: 14, color: '#666' },
-  progressBg: { width: '100%', height: 6, backgroundColor: '#eee', borderRadius: 3, overflow: 'hidden' },
-  progressBar: { height: '100%', backgroundColor: '#FFE500', borderRadius: 3 },
-  countdown: { fontSize: 36, fontWeight: '900', color: '#111' },
-  skipBtn: { paddingVertical: 8, paddingHorizontal: 20 },
-  skipText: { color: '#aaa', fontSize: 14 },
 });

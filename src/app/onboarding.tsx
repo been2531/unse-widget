@@ -1,16 +1,58 @@
 import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import {
+  Animated, Keyboard, KeyboardAvoidingView, Platform,
+  Pressable, StatusBar, StyleSheet, Text, TextInput, View,
+} from 'react-native';
 
 import { saveUserProfile } from '@/storage/userProfile';
 import { refreshFortuneWidget } from '@/widgets/scheduleDailyRefresh';
 
+const SLIDES = [
+  {
+    icon: '✦',
+    title: '매일 운명이\n카드로 도착합니다',
+    body: '당신의 별자리와 띠를 기반으로\n오늘의 운세가 TCG 카드로 펼쳐집니다',
+    accentColor: '#FFD700',
+  },
+  {
+    icon: '📚',
+    title: '수집하고\n나만의 덱을 완성하세요',
+    body: '재물·연애·건강·직장 운세를 해금하고\n한국 신화 캐릭터 카드를 모아보세요',
+    accentColor: '#88AAFF',
+  },
+  {
+    icon: '🎁',
+    title: '생년월일을\n알려주세요',
+    body: '정확한 운세를 위해 생년월일이 필요합니다\n개인 정보는 기기 내에만 저장됩니다',
+    accentColor: '#44DD88',
+  },
+];
+
 export default function OnboardingScreen() {
   const router = useRouter();
+  const [step, setStep] = useState(0);
+  const fadeA = useRef(new Animated.Value(1)).current;
+  const slideA = useRef(new Animated.Value(0)).current;
+
   const [year, setYear] = useState('');
   const [month, setMonth] = useState('');
   const [day, setDay] = useState('');
   const [error, setError] = useState('');
+
+  function transitionTo(next: number) {
+    Animated.parallel([
+      Animated.timing(fadeA,  { toValue: 0, duration: 180, useNativeDriver: true }),
+      Animated.timing(slideA, { toValue: -30, duration: 180, useNativeDriver: true }),
+    ]).start(() => {
+      setStep(next);
+      slideA.setValue(30);
+      Animated.parallel([
+        Animated.timing(fadeA,  { toValue: 1, duration: 220, useNativeDriver: true }),
+        Animated.timing(slideA, { toValue: 0, duration: 220, useNativeDriver: true }),
+      ]).start();
+    });
+  }
 
   function isValid(y: number, m: number, d: number): boolean {
     if (!y || !m || !d) return false;
@@ -21,76 +63,169 @@ export default function OnboardingScreen() {
   }
 
   async function handleSubmit() {
-    const y = Number(year);
-    const m = Number(month);
-    const d = Number(day);
+    const y = Number(year), m = Number(month), d = Number(day);
     if (!isValid(y, m, d)) {
       setError('생년월일을 다시 확인해주세요.');
       return;
     }
+    Keyboard.dismiss();
     const birthdate = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
     await saveUserProfile(birthdate);
     await refreshFortuneWidget();
     router.replace('/');
   }
 
-  return (
-    <View style={styles.container}>
-      <Text style={styles.title}>생년월일을 알려주세요</Text>
-      <Text style={styles.subtitle}>오늘의 운세와 캐릭터를 준비할게요</Text>
+  const slide = SLIDES[step];
 
-      <View style={styles.inputRow}>
-        <TextInput
-          style={styles.input}
-          placeholder="YYYY"
-          keyboardType="number-pad"
-          maxLength={4}
-          value={year}
-          onChangeText={setYear}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="MM"
-          keyboardType="number-pad"
-          maxLength={2}
-          value={month}
-          onChangeText={setMonth}
-        />
-        <TextInput
-          style={styles.input}
-          placeholder="DD"
-          keyboardType="number-pad"
-          maxLength={2}
-          value={day}
-          onChangeText={setDay}
-        />
+  return (
+    <KeyboardAvoidingView
+      style={styles.screen}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    >
+      <StatusBar barStyle="light-content" backgroundColor="#080B18" />
+
+      {/* 별 필드 장식 */}
+      <View style={StyleSheet.absoluteFill} pointerEvents="none">
+        {STAR_POS.map((s, i) => (
+          <View key={i} style={[styles.star, { left: s.x, top: s.y, width: s.r * 2, height: s.r * 2, opacity: s.a }]} />
+        ))}
       </View>
 
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {/* 슬라이드 콘텐츠 */}
+      <Animated.View style={[styles.content, { opacity: fadeA, transform: [{ translateY: slideA }] }]}>
+        {/* 아이콘 */}
+        <View style={[styles.iconCircle, { borderColor: `${slide.accentColor}44`, backgroundColor: `${slide.accentColor}14` }]}>
+          <Text style={styles.iconText}>{slide.icon}</Text>
+        </View>
 
-      <Pressable style={styles.submitButton} onPress={handleSubmit}>
-        <Text style={styles.submitButtonText}>시작하기</Text>
-      </Pressable>
-    </View>
+        {/* 텍스트 */}
+        <Text style={[styles.title, { color: slide.accentColor }]}>{slide.title}</Text>
+        <Text style={styles.body}>{slide.body}</Text>
+
+        {/* 생년월일 입력 — 마지막 단계만 */}
+        {step === 2 && (
+          <View style={styles.inputArea}>
+            <View style={styles.inputRow}>
+              <TextInput
+                style={styles.input}
+                placeholder="YYYY"
+                placeholderTextColor="rgba(255,255,255,0.25)"
+                keyboardType="number-pad"
+                maxLength={4}
+                value={year}
+                onChangeText={t => { setYear(t); setError(''); }}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="MM"
+                placeholderTextColor="rgba(255,255,255,0.25)"
+                keyboardType="number-pad"
+                maxLength={2}
+                value={month}
+                onChangeText={t => { setMonth(t); setError(''); }}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="DD"
+                placeholderTextColor="rgba(255,255,255,0.25)"
+                keyboardType="number-pad"
+                maxLength={2}
+                value={day}
+                onChangeText={t => { setDay(t); setError(''); }}
+              />
+            </View>
+            {error ? <Text style={styles.errorText}>{error}</Text> : null}
+          </View>
+        )}
+      </Animated.View>
+
+      {/* 점 내비게이션 */}
+      <View style={styles.dots}>
+        {SLIDES.map((_, i) => (
+          <View key={i} style={[styles.dot, i === step && styles.dotActive, i === step && { backgroundColor: slide.accentColor }]} />
+        ))}
+      </View>
+
+      {/* 액션 버튼 */}
+      <View style={styles.btnArea}>
+        {step < 2 ? (
+          <Pressable style={[styles.nextBtn, { borderColor: `${slide.accentColor}66`, shadowColor: slide.accentColor }]}
+            onPress={() => transitionTo(step + 1)}>
+            <Text style={[styles.nextBtnText, { color: slide.accentColor }]}>다음 →</Text>
+          </Pressable>
+        ) : (
+          <Pressable style={[styles.submitBtn, { borderColor: `${slide.accentColor}88`, shadowColor: slide.accentColor }]}
+            onPress={handleSubmit}>
+            <Text style={[styles.submitBtnText, { color: slide.accentColor }]}>✦ 시작하기</Text>
+          </Pressable>
+        )}
+        {step > 0 && (
+          <Pressable onPress={() => transitionTo(step - 1)} style={styles.backLink}>
+            <Text style={styles.backLinkText}>← 이전</Text>
+          </Pressable>
+        )}
+      </View>
+    </KeyboardAvoidingView>
   );
 }
 
+// 정적 별 위치 (매 렌더마다 변하지 않도록)
+const STAR_POS = Array.from({ length: 55 }, (_, i) => ({
+  x: (i * 137 + 29) % 390,
+  y: (i * 211 + 71) % 844,
+  r: 0.8 + (i % 4) * 0.5,
+  a: 0.08 + (i % 6) * 0.05,
+}));
+
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 24, gap: 16 },
-  title: { fontSize: 20, fontWeight: '700' },
-  subtitle: { fontSize: 14, color: '#888', marginBottom: 8 },
-  inputRow: { flexDirection: 'row', gap: 10 },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ddd',
-    borderRadius: 10,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    fontSize: 16,
-    width: 80,
-    textAlign: 'center',
+  screen: {
+    flex: 1, backgroundColor: '#080B18',
+    alignItems: 'center', justifyContent: 'center',
+    paddingHorizontal: 32,
   },
-  error: { color: '#e0524d', fontSize: 13 },
-  submitButton: { backgroundColor: '#4f8ef7', paddingVertical: 12, paddingHorizontal: 32, borderRadius: 24, marginTop: 8 },
-  submitButtonText: { color: '#fff', fontWeight: '700', fontSize: 16 },
+  star: { position: 'absolute', borderRadius: 99, backgroundColor: '#FFFFFF' },
+  content: { alignItems: 'center', gap: 20, width: '100%' },
+  iconCircle: {
+    width: 88, height: 88, borderRadius: 44,
+    borderWidth: 1.5, alignItems: 'center', justifyContent: 'center',
+    marginBottom: 8,
+  },
+  iconText: { fontSize: 38 },
+  title: {
+    fontSize: 26, fontWeight: '900', textAlign: 'center',
+    lineHeight: 34, letterSpacing: 0.3,
+  },
+  body: {
+    fontSize: 15, color: 'rgba(255,255,255,0.55)',
+    textAlign: 'center', lineHeight: 24,
+  },
+  inputArea: { width: '100%', gap: 10, marginTop: 8 },
+  inputRow: { flexDirection: 'row', gap: 10, justifyContent: 'center' },
+  input: {
+    borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.15)',
+    borderRadius: 14, paddingVertical: 12, paddingHorizontal: 10,
+    fontSize: 16, color: '#FFFFFF', textAlign: 'center', width: 82,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+  },
+  errorText: { color: '#FF6B9D', fontSize: 13, textAlign: 'center' },
+  dots: { flexDirection: 'row', gap: 8, marginTop: 40 },
+  dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.15)' },
+  dotActive: { width: 20, height: 6, borderRadius: 3 },
+  btnArea: { width: '100%', marginTop: 24, alignItems: 'center', gap: 14 },
+  nextBtn: {
+    width: '100%', paddingVertical: 16, borderRadius: 28,
+    borderWidth: 1.5, alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    shadowOpacity: 0.3, shadowOffset: { width: 0, height: 4 }, shadowRadius: 12, elevation: 6,
+  },
+  nextBtnText: { fontSize: 16, fontWeight: '800', letterSpacing: 0.4 },
+  submitBtn: {
+    width: '100%', paddingVertical: 16, borderRadius: 28,
+    borderWidth: 1.5, alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    shadowOpacity: 0.3, shadowOffset: { width: 0, height: 4 }, shadowRadius: 12, elevation: 6,
+  },
+  submitBtnText: { fontSize: 16, fontWeight: '800', letterSpacing: 0.4 },
+  backLink: { paddingVertical: 4 },
+  backLinkText: { color: 'rgba(255,255,255,0.30)', fontSize: 14 },
 });

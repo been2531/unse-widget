@@ -14,6 +14,7 @@ import Animated, {
   Extrapolation,
 } from 'react-native-reanimated';
 
+import { showRewardedAd } from '@/ads/admob';
 import { makeElementEffects } from '@/character/elementEffects';
 import { cardImageFor } from '@/gacha/cardAssets';
 import {
@@ -28,7 +29,7 @@ import {
 } from '@/gacha/synthesis';
 import { claimDaily, getBalance, spend } from '@/storage/coins';
 import { addToCollection, getCollection, removeCards } from '@/storage/collection';
-import { getAdsRemaining } from '@/storage/adRewards';
+import { getAdsRemaining, recordAdReward, COINS_PER_AD, MAX_ADS_PER_DAY } from '@/storage/adRewards';
 import { getFreePullsRemaining, consumeFreePull } from '@/storage/freePulls';
 import { getTodayDateString } from '@/shared/dateUtils';
 import { saveFortuneCardBuff } from '@/storage/todayFortuneCard';
@@ -442,6 +443,19 @@ export default function GachaScreen() {
     setSynthPhase('idle');
   }
 
+  async function handleAdReward() {
+    if (spinning || adsLeft <= 0) return;
+    setSpinning(true);
+    const result = await showRewardedAd();
+    if (result === 'earned') {
+      const today = getTodayDateString();
+      const newBalance = await recordAdReward(today);
+      setBalance(newBalance);
+      setAdsLeft(prev => Math.max(0, prev - 1));
+    }
+    setSpinning(false);
+  }
+
   async function handleFreePull() {
     if (spinning || freePulls <= 0) return;
     setSpinning(true);
@@ -635,13 +649,19 @@ export default function GachaScreen() {
           {/* 광고 보기 버튼 */}
           <Pressable
             style={[styles.adBtn, adsLeft <= 0 && styles.pullBtnDisabled]}
-            onPress={() => router.push('/coin-shop')}
-            disabled={adsLeft <= 0}
+            onPress={handleAdReward}
+            disabled={spinning || adsLeft <= 0}
           >
-            <Text style={styles.adBtnText}>
-              {adsLeft > 0 ? `📺 광고 보기 → +30코인` : '오늘 광고 모두 시청 완료'}
-            </Text>
-            <Text style={styles.adBtnSub}>{adsLeft}/5 남음 · 코인샵에서 시청</Text>
+            {spinning ? (
+              <ActivityIndicator color="#aaa" size="small" />
+            ) : (
+              <>
+                <Text style={styles.adBtnText}>
+                  {adsLeft > 0 ? `📺 광고 보기 → +${COINS_PER_AD}코인` : '오늘 광고 모두 시청 완료'}
+                </Text>
+                <Text style={styles.adBtnSub}>{adsLeft}/{MAX_ADS_PER_DAY} 남음</Text>
+              </>
+            )}
           </Pressable>
 
           <Text style={styles.footNote}>매일 앱 실행 시 100코인 자동 지급 · 10회 뽑기 시 Rare 이상 1장 보장</Text>
