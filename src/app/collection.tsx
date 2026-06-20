@@ -332,7 +332,7 @@ export default function CollectionScreen() {
       {/* 원소 필터 — 캐릭터 탭에서만 */}
       {filter === 'character' && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false}
-          contentContainerStyle={[styles.tabsContainer, { paddingTop: 0, paddingBottom: 6 }]} style={{ flexGrow: 0 }}>
+          contentContainerStyle={[styles.tabsContainer, { paddingTop: 4, paddingBottom: 12 }]} style={{ flexGrow: 0 }}>
           {ELEM_FILTERS.map(({ key, label }) => {
             const color = key !== 'all' ? (ELEM_COLOR[key] ?? '#888') : undefined;
             return (
@@ -387,10 +387,10 @@ const styles = StyleSheet.create({
   backIcon: { fontFamily: F.r, color: '#fff', fontSize: 28, lineHeight: 32, marginTop: -2 },
   title: { fontFamily: F.eb, fontSize: 18, color: '#FFF', letterSpacing: 1 },
   countBadge: { fontFamily: F.sb, color: 'rgba(255,255,255,0.45)', fontSize: 13 },
-  tabsContainer: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 10, gap: 8 },
+  tabsContainer: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 12, gap: 10 },
   tab: {
     height: 44,
-    paddingHorizontal: 20, borderRadius: 22,
+    paddingHorizontal: 22, borderRadius: 22,
     backgroundColor: 'rgba(255,255,255,0.05)',
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
   },
@@ -404,7 +404,7 @@ const styles = StyleSheet.create({
   },
   tabTextActive: { fontFamily: F.sb, color: '#FFF' },
   progressWrap: {
-    marginHorizontal: 20, marginBottom: 4, gap: 6,
+    marginHorizontal: 20, marginBottom: 10, gap: 6,
   },
   progressRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   progressLabel: { fontFamily: F.sb, color: 'rgba(255,255,255,0.40)', fontSize: 11 },
@@ -419,7 +419,7 @@ const styles = StyleSheet.create({
   },
   elemTab: {
     height: 38,
-    paddingHorizontal: 14, borderRadius: 16,
+    paddingHorizontal: 16, borderRadius: 16,
     backgroundColor: 'rgba(255,255,255,0.04)',
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
   },
