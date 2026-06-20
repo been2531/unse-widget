@@ -389,7 +389,8 @@ const styles = StyleSheet.create({
   countBadge: { fontFamily: F.sb, color: 'rgba(255,255,255,0.45)', fontSize: 13 },
   tabsContainer: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 10, gap: 8 },
   tab: {
-    paddingVertical: 11, paddingHorizontal: 20, borderRadius: 22,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    paddingVertical: 10, paddingHorizontal: 20, borderRadius: 22,
     backgroundColor: 'rgba(255,255,255,0.05)',
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
   },
@@ -397,7 +398,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.15)',
     borderColor: 'rgba(255,255,255,0.30)',
   },
-  tabText: { fontFamily: F.sb, color: 'rgba(255,255,255,0.78)', fontSize: 14, marginTop: -2 },
+  tabText: { fontFamily: F.sb, color: 'rgba(255,255,255,0.78)', fontSize: 14 },
   tabTextActive: { fontFamily: F.sb, color: '#FFF' },
   progressWrap: {
     marginHorizontal: 20, marginBottom: 4, gap: 6,
@@ -414,11 +415,12 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFD700',
   },
   elemTab: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     paddingVertical: 9, paddingHorizontal: 14, borderRadius: 16,
     backgroundColor: 'rgba(255,255,255,0.04)',
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
   },
-  elemTabText: { fontFamily: F.sb, color: 'rgba(255,255,255,0.35)', fontSize: 13, marginTop: -2 },
+  elemTabText: { fontFamily: F.sb, color: 'rgba(255,255,255,0.35)', fontSize: 13 },
 });
 
 const modalStyles = StyleSheet.create({
