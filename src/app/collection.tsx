@@ -387,9 +387,9 @@ const styles = StyleSheet.create({
   backIcon: { fontFamily: F.r, color: '#fff', fontSize: 28, lineHeight: 32, marginTop: -2 },
   title: { fontFamily: F.eb, fontSize: 18, color: '#FFF', letterSpacing: 1 },
   countBadge: { fontFamily: F.sb, color: 'rgba(255,255,255,0.45)', fontSize: 13 },
-  tabsContainer: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8, gap: 8 },
+  tabsContainer: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 10, gap: 8 },
   tab: {
-    paddingVertical: 8, paddingHorizontal: 16, borderRadius: 20,
+    paddingVertical: 11, paddingHorizontal: 20, borderRadius: 22,
     backgroundColor: 'rgba(255,255,255,0.05)',
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
   },
@@ -397,7 +397,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.15)',
     borderColor: 'rgba(255,255,255,0.30)',
   },
-  tabText: { fontFamily: F.sb, color: 'rgba(255,255,255,0.78)', fontSize: 13, lineHeight: 18 },
+  tabText: { fontFamily: F.sb, color: 'rgba(255,255,255,0.78)', fontSize: 14, marginTop: -2 },
   tabTextActive: { fontFamily: F.sb, color: '#FFF' },
   progressWrap: {
     marginHorizontal: 20, marginBottom: 4, gap: 6,
@@ -414,11 +414,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFD700',
   },
   elemTab: {
-    paddingVertical: 6, paddingHorizontal: 12, borderRadius: 14,
+    paddingVertical: 9, paddingHorizontal: 14, borderRadius: 16,
     backgroundColor: 'rgba(255,255,255,0.04)',
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
   },
-  elemTabText: { fontFamily: F.sb, color: 'rgba(255,255,255,0.35)', fontSize: 12, lineHeight: 17 },
+  elemTabText: { fontFamily: F.sb, color: 'rgba(255,255,255,0.35)', fontSize: 13, marginTop: -2 },
 });
 
 const modalStyles = StyleSheet.create({
