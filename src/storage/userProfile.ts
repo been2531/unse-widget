@@ -6,9 +6,13 @@ import type { UserProfile } from '../fortune/types';
 const STORAGE_KEY = 'unse:userProfile';
 
 export async function loadUserProfile(): Promise<UserProfile | null> {
-  const raw = await AsyncStorage.getItem(STORAGE_KEY);
-  if (!raw) return null;
-  return JSON.parse(raw) as UserProfile;
+  try {
+    const raw = await AsyncStorage.getItem(STORAGE_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw) as UserProfile;
+  } catch {
+    return null;
+  }
 }
 
 export async function saveUserProfile(birthdate: string): Promise<UserProfile> {
