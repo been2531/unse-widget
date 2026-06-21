@@ -6,7 +6,7 @@ import { router } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator, Alert, FlatList, Image, Pressable, ScrollView,
-  StyleSheet, Text, View, useWindowDimensions,
+  StatusBar, StyleSheet, Text, View, useWindowDimensions,
 } from 'react-native';
 import Animated, {
   Easing, interpolate, useAnimatedStyle, useSharedValue,
@@ -18,7 +18,7 @@ import { showRewardedAd } from '@/ads/admob';
 import { makeElementEffects } from '@/character/elementEffects';
 import { cardImageFor } from '@/gacha/cardAssets';
 import {
-  CARD_POOL, CATEGORY_LABEL, MULTI_PULL_COST, PULL_COST,
+  CARD_POOL, CATEGORY_LABEL, DAILY_COINS, MULTI_PULL_COST, PULL_COST,
   RARITY_COLOR, RARITY_LABEL,
   type PulledCard, type Rarity,
 } from '@/gacha/types';
@@ -519,6 +519,7 @@ export default function GachaScreen() {
 
   if (loading) return (
     <View style={styles.screen}>
+      <StatusBar barStyle="light-content" backgroundColor="#080B18" />
       <View style={{ paddingTop: 52, paddingHorizontal: 20, paddingBottom: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
         <SkeletonBox style={{ width: 60, height: 20 }} />
         <SkeletonBox style={{ width: 80, height: 28, borderRadius: 14 }} />
@@ -533,6 +534,7 @@ export default function GachaScreen() {
 
   return (
     <View style={styles.screen}>
+      <StatusBar barStyle="light-content" backgroundColor="#080B18" />
       {/* 배경 */}
       <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
         <Rect x={0} y={0} width={screenW} height={screenH}>
@@ -569,7 +571,7 @@ export default function GachaScreen() {
         <ScrollView contentContainerStyle={styles.lobby} showsVerticalScrollIndicator={false}>
           {dailyClaimed && (
             <View style={styles.bonusBanner}>
-              <Text style={styles.bonusText}>🎁 오늘의 코인 +{100} 지급됨!</Text>
+              <Text style={styles.bonusText}>🎁 오늘의 코인 +{DAILY_COINS} 지급됨!</Text>
             </View>
           )}
 

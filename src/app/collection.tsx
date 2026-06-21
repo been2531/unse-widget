@@ -6,7 +6,7 @@ import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   FlatList, Modal, Pressable, ScrollView, Share,
-  StyleSheet, Text, View, useWindowDimensions,
+  StatusBar, StyleSheet, Text, View, useWindowDimensions,
 } from 'react-native';
 
 import { F } from '@/shared/fonts';
@@ -307,6 +307,7 @@ export default function CollectionScreen() {
 
   return (
     <View style={styles.screen}>
+      <StatusBar barStyle="light-content" backgroundColor="#080B18" />
       <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
         <Rect x={0} y={0} width={screenW} height={9999}>
           <LinearGradient start={vec(0, 0)} end={vec(0, 400)} colors={['#0E0B22', '#080B18']} />

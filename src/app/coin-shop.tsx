@@ -5,7 +5,7 @@ import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
   ActivityIndicator, Alert, Pressable, ScrollView,
-  StyleSheet, Text, View, useWindowDimensions,
+  StatusBar, StyleSheet, Text, View, useWindowDimensions,
 } from 'react-native';
 
 import { F } from '@/shared/fonts';
@@ -159,6 +159,7 @@ export default function CoinShopScreen() {
 
   return (
     <View style={styles.screen}>
+      <StatusBar barStyle="light-content" backgroundColor="#080B18" />
       {/* 배경 */}
       <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
         <Rect x={0} y={0} width={screenW} height={9999}>

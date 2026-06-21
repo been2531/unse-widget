@@ -204,7 +204,9 @@ export default function FortuneScreen() {
         {/* 종합 점수 */}
         <View style={[styles.overallCard, { borderColor: `${overallColor}30` }]}>
           <View style={styles.overallLeft}>
-            <Text style={styles.overallDate}>{fortune.date}</Text>
+            <Text style={styles.overallDate}>
+              {new Date(fortune.date + 'T00:00:00').toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}
+            </Text>
             <Text style={[styles.overallScore, { color: overallColor }]}>{overall}</Text>
             <Text style={[styles.overallGrade, { color: overallColor }]}>{scoreLabel(overall)}</Text>
             <Text style={styles.overallLabel}>종합 운세</Text>
