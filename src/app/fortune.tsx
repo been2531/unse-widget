@@ -14,6 +14,7 @@ import type { DailyFortune, DiiSign, StarSign } from '@/fortune/types';
 import { selectDailyFortune } from '@/fortune/selectFortune';
 import { getActiveBuff, type FortuneBuff } from '@/fortune/fortuneCardBuff';
 import { getTodayDateString } from '@/shared/dateUtils';
+import { SkeletonBox } from '@/shared/Skeleton';
 import { getTodayUnlocked, unlockCategory } from '@/storage/fortuneUnlock';
 import { getTodayFortuneBuff } from '@/storage/todayFortuneCard';
 import { loadUserProfile } from '@/storage/userProfile';
@@ -152,9 +153,17 @@ export default function FortuneScreen() {
   }
 
   if (loading) return (
-    <View style={styles.center}>
+    <View style={styles.screen}>
       <StatusBar barStyle="light-content" backgroundColor="#080B18" />
-      <ActivityIndicator color="#FFE500" />
+      <View style={{ paddingTop: 52, paddingHorizontal: 20, paddingBottom: 16, flexDirection: 'row', alignItems: 'center', gap: 12 }}>
+        <SkeletonBox style={{ width: 40, height: 40, borderRadius: 12 }} />
+        <SkeletonBox style={{ flex: 1, height: 20 }} />
+      </View>
+      <View style={{ flex: 1, paddingHorizontal: 16, gap: 12 }}>
+        <SkeletonBox style={{ height: 140, borderRadius: 20 }} />
+        <SkeletonBox style={{ height: 80, borderRadius: 20 }} />
+        {[0,1,2,3].map(i => <SkeletonBox key={i} style={{ height: 80, borderRadius: 18 }} />)}
+      </View>
     </View>
   );
   if (!fortune) return (

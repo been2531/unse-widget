@@ -33,6 +33,7 @@ import { getAdsRemaining, recordAdReward, COINS_PER_AD, MAX_ADS_PER_DAY } from '
 import { getFreePullsRemaining, consumeFreePull } from '@/storage/freePulls';
 import { getTodayDateString } from '@/shared/dateUtils';
 import { saveFortuneCardBuff } from '@/storage/todayFortuneCard';
+import { SkeletonBox } from '@/shared/Skeleton';
 
 // 원소 컬러 (gacha 화면용)
 const ELEM_COLOR: Record<string, string> = {
@@ -508,7 +509,19 @@ export default function GachaScreen() {
     setMulti([]);
   }
 
-  if (loading) return <View style={styles.center}><ActivityIndicator color="#FFE500" /></View>;
+  if (loading) return (
+    <View style={styles.screen}>
+      <View style={{ paddingTop: 52, paddingHorizontal: 20, paddingBottom: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <SkeletonBox style={{ width: 60, height: 20 }} />
+        <SkeletonBox style={{ width: 80, height: 28, borderRadius: 14 }} />
+      </View>
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 20, paddingHorizontal: 20 }}>
+        <SkeletonBox style={{ width: 220, height: 300, borderRadius: 22 }} />
+        <SkeletonBox style={{ width: '100%', height: 52, borderRadius: 16 }} />
+        <SkeletonBox style={{ width: '100%', height: 52, borderRadius: 16 }} />
+      </View>
+    </View>
+  );
 
   return (
     <View style={styles.screen}>

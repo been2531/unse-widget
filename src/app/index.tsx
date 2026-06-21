@@ -15,6 +15,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { F } from '@/shared/fonts';
+import { SkeletonBox } from '@/shared/Skeleton';
 import { cardImageFor } from '@/gacha/cardAssets';
 import { deriveMood } from '@/character/mood';
 import { type Mood } from '@/character/types';
@@ -485,9 +486,29 @@ export default function HomeScreen() {
   }));
 
   // ── 렌더 ─────────────────────────────────────────────────────────────────
-  if (loading)  return <View style={styles.center}><StatusBar barStyle="light-content" backgroundColor="#080B18" /><ActivityIndicator color="#FFE500" /></View>;
+  if (loading) return (
+    <View style={styles.screen}>
+      <StatusBar barStyle="light-content" backgroundColor="#080B18" />
+      <View style={skStyles.header}>
+        <SkeletonBox style={{ width: 80, height: 20 }} />
+        <SkeletonBox style={{ width: 60, height: 28 }} />
+      </View>
+      <View style={skStyles.body}>
+        <SkeletonBox style={{ width: '55%', height: 320, borderRadius: 22 }} />
+        <SkeletonBox style={{ width: '90%', height: 52, borderRadius: 14 }} />
+        <SkeletonBox style={{ width: '90%', height: 44, borderRadius: 14 }} />
+      </View>
+    </View>
+  );
   if (!profile) return <Redirect href="/onboarding" />;
-  if (!fortune) return <View style={styles.center}><StatusBar barStyle="light-content" backgroundColor="#080B18" /><ActivityIndicator color="#FFE500" /></View>;
+  if (!fortune) return (
+    <View style={styles.screen}>
+      <StatusBar barStyle="light-content" backgroundColor="#080B18" />
+      <View style={skStyles.body}>
+        <SkeletonBox style={{ width: '55%', height: 320, borderRadius: 22 }} />
+      </View>
+    </View>
+  );
 
   const cardBorderColor = rarity === 'mythic' ? `${E.color}50`
     : rarity === 'legendary' ? `${E.color}3A`
@@ -968,6 +989,11 @@ export default function HomeScreen() {
     </View>
   );
 }
+
+const skStyles = StyleSheet.create({
+  header: { width: '100%', paddingTop: 52, paddingHorizontal: 20, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  body: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16, width: '100%', paddingHorizontal: 20 },
+});
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#080B18', alignItems: 'center', paddingTop: 0, paddingBottom: 24, gap: 6 },
