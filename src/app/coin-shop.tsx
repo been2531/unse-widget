@@ -12,7 +12,7 @@ import { F } from '@/shared/fonts';
 import { CARD_POOL, RARITY_COLOR, RARITY_LABEL } from '@/gacha/types';
 import { COINS_PER_AD, MAX_ADS_PER_DAY, getAdsRemaining, recordAdReward } from '@/storage/adRewards';
 import { getBalance, spend } from '@/storage/coins';
-import { grantRemoveAds, hasRemovedAds } from '@/storage/purchases';
+import { hasRemovedAds } from '@/storage/purchases';
 import { addToCollection, getCollection } from '@/storage/collection';
 import { getTodayDateString } from '@/shared/dateUtils';
 
