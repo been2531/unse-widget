@@ -14,6 +14,7 @@ import Animated, {
   Extrapolation,
 } from 'react-native-reanimated';
 
+import { F } from '@/shared/fonts';
 import { showRewardedAd } from '@/ads/admob';
 import { makeElementEffects } from '@/character/elementEffects';
 import { cardImageFor } from '@/gacha/cardAssets';
@@ -904,7 +905,7 @@ const styles = StyleSheet.create({
     borderColor: '#FFF',
     transform: [{ rotate: '45deg' }, { translateX: 2 }],
   },
-  title: { fontSize: 18, fontWeight: '800', color: '#FFF', letterSpacing: 1 },
+  title: { fontFamily: F.eb, fontSize: 18, color: '#FFF', letterSpacing: 1 },
   collectionBtn: {
     width: 36, height: 36, alignItems: 'center', justifyContent: 'center',
     backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 12,
@@ -914,19 +915,19 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,220,0,0.12)', borderWidth: 1, borderColor: 'rgba(255,220,0,0.35)',
     paddingVertical: 5, paddingHorizontal: 12, borderRadius: 14,
   },
-  coinText: { color: '#FFE500', fontWeight: '700', fontSize: 13 },
+  coinText: { fontFamily: F.b, color: '#FFE500', fontSize: 13 },
   freePullBtn: {
     backgroundColor: 'rgba(0,200,120,0.15)', borderWidth: 1.5, borderColor: 'rgba(0,200,120,0.45)',
     borderRadius: 24, width: '100%', paddingVertical: 14, alignItems: 'center', gap: 2,
   },
-  freePullMain: { color: '#00DD88', fontWeight: '900', fontSize: 16 },
-  freePullSub: { color: 'rgba(0,200,120,0.6)', fontSize: 11 },
+  freePullMain: { fontFamily: F.bk, color: '#00DD88', fontSize: 16 },
+  freePullSub: { fontFamily: F.r, color: 'rgba(0,200,120,0.6)', fontSize: 11 },
   adBtn: {
     backgroundColor: 'rgba(255,255,255,0.04)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
     borderRadius: 16, width: '100%', paddingVertical: 12, alignItems: 'center', gap: 2,
   },
-  adBtnText: { color: 'rgba(255,255,255,0.7)', fontWeight: '700', fontSize: 14 },
-  adBtnSub: { color: 'rgba(255,255,255,0.35)', fontSize: 11 },
+  adBtnText: { fontFamily: F.b, color: 'rgba(255,255,255,0.7)', fontSize: 14 },
+  adBtnSub: { fontFamily: F.r, color: 'rgba(255,255,255,0.35)', fontSize: 11 },
 
   lobby: { paddingHorizontal: 24, paddingBottom: 40, gap: 16, alignItems: 'center' },
 
@@ -934,53 +935,53 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,220,0,0.10)', borderWidth: 1, borderColor: 'rgba(255,220,0,0.3)',
     borderRadius: 12, paddingVertical: 8, paddingHorizontal: 20, width: '100%', alignItems: 'center',
   },
-  bonusText: { color: '#FFE500', fontWeight: '700', fontSize: 13 },
+  bonusText: { fontFamily: F.b, color: '#FFE500', fontSize: 13 },
 
   rateBox: {
     backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)',
     borderRadius: 14, padding: 14, width: '100%', gap: 8,
   },
-  rateTitle: { color: 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: '600', letterSpacing: 0.5 },
+  rateTitle: { fontFamily: F.sb, color: 'rgba(255,255,255,0.5)', fontSize: 11, letterSpacing: 0.5 },
   rateRow: { flexDirection: 'row', justifyContent: 'space-around' },
   rateItem: { alignItems: 'center', gap: 3 },
-  rateLabel: { fontSize: 11, fontWeight: '700' },
-  ratePct: { color: 'rgba(255,255,255,0.6)', fontSize: 13, fontWeight: '600' },
+  rateLabel: { fontFamily: F.b, fontSize: 11 },
+  ratePct: { fontFamily: F.sb, color: 'rgba(255,255,255,0.6)', fontSize: 13 },
 
   pullBtn: {
     backgroundColor: '#FFE500', borderRadius: 24, width: '100%',
     paddingVertical: 16, alignItems: 'center', gap: 2,
     shadowColor: '#FFE500', shadowOpacity: 0.40, shadowOffset: { width: 0, height: 4 }, shadowRadius: 16, elevation: 8,
   },
-  pullBtnMain: { color: '#111', fontWeight: '900', fontSize: 17 },
-  pullBtnSub: { color: '#555', fontSize: 12 },
+  pullBtnMain: { fontFamily: F.bk, color: '#111', fontSize: 17 },
+  pullBtnSub: { fontFamily: F.r, color: '#555', fontSize: 12 },
   pullBtn10: {
     backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1.5, borderColor: 'rgba(255,220,0,0.45)',
     borderRadius: 24, width: '100%', paddingVertical: 16, alignItems: 'center', gap: 4,
   },
-  pullBtn10Main: { color: '#FFE500', fontWeight: '900', fontSize: 17 },
-  pullBtn10Sub: { color: 'rgba(255,255,255,0.5)', fontSize: 12 },
+  pullBtn10Main: { fontFamily: F.bk, color: '#FFE500', fontSize: 17 },
+  pullBtn10Sub: { fontFamily: F.r, color: 'rgba(255,255,255,0.5)', fontSize: 12 },
   pullBtnDisabled: { opacity: 0.38 },
   discountBadge: {
     backgroundColor: 'rgba(0,200,100,0.18)', borderWidth: 1, borderColor: 'rgba(0,200,100,0.4)',
     borderRadius: 8, paddingHorizontal: 7, paddingVertical: 2,
   },
-  discountText: { color: '#00DD77', fontSize: 10, fontWeight: '700' },
-  footNote: { color: 'rgba(255,255,255,0.25)', fontSize: 11, textAlign: 'center' },
+  discountText: { fontFamily: F.b, color: '#00DD77', fontSize: 10 },
+  footNote: { fontFamily: F.r, color: 'rgba(255,255,255,0.25)', fontSize: 11, textAlign: 'center' },
 
   resultContainer: { flex: 1, alignItems: 'center', paddingHorizontal: 24, gap: 16, paddingTop: 8 },
-  getLabel: { color: '#FFF', fontSize: 22, fontWeight: '900', letterSpacing: 1, marginTop: 8 },
-  rarityBig: { fontSize: 15, fontWeight: '700', letterSpacing: 0.6 },
+  getLabel: { fontFamily: F.bk, color: '#FFF', fontSize: 22, letterSpacing: 1, marginTop: 8 },
+  rarityBig: { fontFamily: F.b, fontSize: 15, letterSpacing: 0.6 },
   resultBtns: { flexDirection: 'row', gap: 12, paddingHorizontal: 24 },
   againBtn: {
     flex: 1, backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)',
     borderRadius: 22, paddingVertical: 14, alignItems: 'center',
   },
-  againBtnText: { color: '#FFF', fontWeight: '700', fontSize: 15 },
+  againBtnText: { fontFamily: F.b, color: '#FFF', fontSize: 15 },
   okBtn: {
     flex: 1, backgroundColor: '#FFE500', borderRadius: 22, paddingVertical: 14, alignItems: 'center',
     shadowColor: '#FFE500', shadowOpacity: 0.35, shadowOffset: { width: 0, height: 3 }, shadowRadius: 10, elevation: 6,
   },
-  okBtnText: { color: '#111', fontWeight: '900', fontSize: 15 },
+  okBtnText: { fontFamily: F.bk, color: '#111', fontSize: 15 },
 
   highlightRow: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
@@ -999,7 +1000,7 @@ const styles = StyleSheet.create({
     borderRadius: 24, borderWidth: 1.5,
     padding: 24, gap: 20, alignItems: 'center',
   },
-  synthTitle: { color: '#FFF', fontSize: 20, fontWeight: '900', letterSpacing: 0.5 },
+  synthTitle: { fontFamily: F.bk, color: '#FFF', fontSize: 20, letterSpacing: 0.5 },
   synthCardRow: { flexDirection: 'row', alignItems: 'center', gap: 16, justifyContent: 'center' },
   synthMiniCard: {
     width: 88, height: 110, borderRadius: 12, borderWidth: 1.5,
@@ -1007,18 +1008,18 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center', gap: 4, padding: 6,
   },
   synthInfo: { alignItems: 'center', gap: 6 },
-  synthInfoText: { color: 'rgba(255,255,255,0.65)', fontSize: 13, textAlign: 'center', lineHeight: 20 },
-  synthSuccessText: { fontSize: 17, fontWeight: '900', letterSpacing: 0.5 },
-  synthFailText: { color: 'rgba(255,100,100,0.85)', fontSize: 13, textAlign: 'center' },
+  synthInfoText: { fontFamily: F.r, color: 'rgba(255,255,255,0.65)', fontSize: 13, textAlign: 'center', lineHeight: 20 },
+  synthSuccessText: { fontFamily: F.bk, fontSize: 17, letterSpacing: 0.5 },
+  synthFailText: { fontFamily: F.r, color: 'rgba(255,100,100,0.85)', fontSize: 13, textAlign: 'center' },
   synthBtns: { flexDirection: 'row', gap: 12, width: '100%' },
   synthSkipBtn: {
     flex: 1, borderRadius: 16, paddingVertical: 13, alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.06)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)',
   },
-  synthSkipText: { color: 'rgba(255,255,255,0.55)', fontWeight: '700', fontSize: 14 },
+  synthSkipText: { fontFamily: F.b, color: 'rgba(255,255,255,0.55)', fontSize: 14 },
   synthGoBtn: {
     flex: 1, borderRadius: 16, paddingVertical: 13, alignItems: 'center',
     borderWidth: 1.5, backgroundColor: 'rgba(255,220,0,0.10)', borderColor: '#FFE500',
   },
-  synthGoText: { color: '#FFE500', fontWeight: '900', fontSize: 14 },
+  synthGoText: { fontFamily: F.bk, color: '#FFE500', fontSize: 14 },
 });
