@@ -5,7 +5,7 @@ import {
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
-  FlatList, Modal, Pressable, ScrollView,
+  FlatList, Modal, Pressable, ScrollView, Share,
   StyleSheet, Text, View, useWindowDimensions,
 } from 'react-native';
 
@@ -290,6 +290,14 @@ export default function CollectionScreen() {
   const totalCharAll = ALL_CHARS.length;
   const completionPct = totalCharAll > 0 ? totalCharOwned / totalCharAll : 0;
 
+  async function shareCollection() {
+    const pct = Math.round(completionPct * 100);
+    const msg = pct >= 100
+      ? `[UNSE 카드 수집] 🎉 ${totalCharAll}/${totalCharAll} 전체 수집 완료!\n한국신화 카드 도감을 완성했습니다! ✨`
+      : `[UNSE 카드 수집]\n캐릭터 수집률 ${totalCharOwned}/${totalCharAll} (${pct}%)\n한국신화를 담은 운세 카드 앱 UNSE에서 카드를 모아보세요! ✨`;
+    try { await Share.share({ message: msg }); } catch {}
+  }
+
   const FILTERS: { key: Filter; label: string }[] = [
     { key: 'character', label: '캐릭터' },
     { key: 'fortune',   label: '운세 카드' },
@@ -320,7 +328,12 @@ export default function CollectionScreen() {
       <View style={styles.progressWrap}>
         <View style={styles.progressRow}>
           <Text style={styles.progressLabel}>캐릭터 수집률</Text>
-          <Text style={styles.progressCount}>{totalCharOwned} / {totalCharAll}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <Text style={styles.progressCount}>{totalCharOwned} / {totalCharAll}</Text>
+            <Pressable onPress={shareCollection} style={styles.shareBtn} accessibilityLabel="수집률 공유하기">
+              <Text style={styles.shareBtnText}>↗</Text>
+            </Pressable>
+          </View>
         </View>
         <View style={styles.progressTrack}>
           <View style={[styles.progressFill, { width: `${Math.round(completionPct * 100)}%` as any }]} />
@@ -440,6 +453,12 @@ const styles = StyleSheet.create({
   progressRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   progressLabel: { fontFamily: F.sb, color: 'rgba(255,255,255,0.40)', fontSize: 11 },
   progressCount: { fontFamily: F.b, color: 'rgba(255,255,255,0.60)', fontSize: 11 },
+  shareBtn: {
+    paddingHorizontal: 8, paddingVertical: 3,
+    backgroundColor: 'rgba(255,255,255,0.07)', borderRadius: 8,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
+  },
+  shareBtnText: { fontFamily: F.b, color: 'rgba(255,255,255,0.50)', fontSize: 11 },
   progressTrack: {
     height: 4, backgroundColor: 'rgba(255,255,255,0.08)',
     borderRadius: 2, overflow: 'hidden',
