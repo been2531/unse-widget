@@ -1,7 +1,7 @@
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
-  ActivityIndicator, Animated, Pressable,
+  ActivityIndicator, Alert, Animated, Pressable,
   ScrollView, Share, StatusBar, StyleSheet, Text, View,
 } from 'react-native';
 
@@ -131,7 +131,10 @@ export default function FortuneScreen() {
         await spend(50);
         setUnlocked(await unlockCategory(today, key));
       } catch {
-        // 코인 부족 시 무시 (spend가 throw)
+        Alert.alert('코인 부족', '코인이 부족해요.\n코인샵에서 충전하거나 광고 제거를 해제해 보세요.', [
+          { text: '코인샵 가기', onPress: () => router.push('/coin-shop') },
+          { text: '닫기', style: 'cancel' },
+        ]);
       }
     } else {
       const result = await showRewardedAd();
