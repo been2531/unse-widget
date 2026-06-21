@@ -243,7 +243,7 @@ export default function FortuneScreen() {
         overScrollMode="never"
       >
         {/* 종합 점수 */}
-        <View style={[styles.overallCard, { borderColor: `${overallColor}30` }]}>
+        <View style={[styles.overallCard, { borderColor: `${overallColor}38`, backgroundColor: `${overallColor}07` }]}>
           <View style={styles.overallLeft}>
             <Text style={styles.overallDate}>
               {new Date(fortune.date + 'T00:00:00').toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}
@@ -261,7 +261,7 @@ export default function FortuneScreen() {
 
         {/* 행운 정보 */}
         {luckyInfo && (
-          <View style={styles.luckyCard}>
+          <View style={[styles.luckyCard, { borderColor: `${overallColor}1C` }]}>
             <Text style={styles.sectionTitle}>오늘의 행운</Text>
             <View style={styles.luckyGrid}>
               <View style={styles.luckyCell}>
@@ -303,7 +303,7 @@ export default function FortuneScreen() {
         )}
 
         {/* 총운 — 항상 무료 */}
-        <View style={styles.card}>
+        <View style={[styles.card, { borderColor: `${overallColor}18` }]}>
           <View style={styles.cardHeader}>
             <Text style={styles.cardEmoji}>✨</Text>
             <Text style={styles.cardLabel}>총운</Text>
@@ -313,7 +313,7 @@ export default function FortuneScreen() {
         </View>
 
         {/* 띠별 운세 — 항상 무료 */}
-        <View style={styles.card}>
+        <View style={[styles.card, { borderColor: `${overallColor}18` }]}>
           <View style={styles.cardHeader}>
             <Text style={styles.cardEmoji}>🐾</Text>
             <Text style={styles.cardLabel}>{diiSign} 띠 운세</Text>
@@ -323,7 +323,7 @@ export default function FortuneScreen() {
         </View>
 
         {/* 별자리 운세 — 항상 무료 */}
-        <View style={styles.card}>
+        <View style={[styles.card, { borderColor: `${overallColor}18` }]}>
           <View style={styles.cardHeader}>
             <Text style={styles.cardEmoji}>⭐</Text>
             <Text style={styles.cardLabel}>{starSign} 운세</Text>
