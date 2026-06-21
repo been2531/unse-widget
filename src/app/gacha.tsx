@@ -767,7 +767,15 @@ export default function GachaScreen() {
       {/* 단일 결과 */}
       {phase === 'single_result' && result && synthPhase === 'idle' && (
         <View style={styles.resultContainer}>
-          <Text style={styles.getLabel}>✨ 획득!</Text>
+          <Text style={[
+            styles.getLabel,
+            (result.rarity === 'legendary' || result.rarity === 'mythic') && { color: RARITY_COLOR[result.rarity] },
+          ]}>
+            {result.rarity === 'mythic' ? '🌌 신화 카드 획득!'
+              : result.rarity === 'legendary' ? '⭐ 전설 카드 획득!'
+              : result.rarity === 'epic' ? '🌟 희귀 카드 획득!'
+              : '✨ 획득!'}
+          </Text>
           <ResultCard card={result} cardW={CARD_W} />
           <Text style={[styles.rarityBig, { color: RARITY_COLOR[result.rarity] }]}>
             {CATEGORY_LABEL[result.category]} · {RARITY_LABEL[result.rarity]}
@@ -915,7 +923,12 @@ export default function GachaScreen() {
       {/* 10연차 결과 */}
       {phase === 'multi_result' && multiResult.length > 0 && (
         <View style={{ flex: 1, width: '100%' }}>
-          <Text style={[styles.getLabel, { marginTop: 0 }]}>✨ {multiResult.length}장 획득!</Text>
+          <Text style={[styles.getLabel, { marginTop: 0 }, multiResult.some(c => c.rarity === 'mythic') && { color: RARITY_COLOR['mythic'] }, multiResult.some(c => c.rarity === 'legendary') && !multiResult.some(c => c.rarity === 'mythic') && { color: RARITY_COLOR['legendary'] }]}>
+            {multiResult.some(c => c.rarity === 'mythic') ? `🌌 신화 포함 ${multiResult.length}장 획득!`
+              : multiResult.some(c => c.rarity === 'legendary') ? `⭐ 전설 포함 ${multiResult.length}장 획득!`
+              : multiResult.some(c => c.rarity === 'epic') ? `🌟 ${multiResult.length}장 획득!`
+              : `✨ ${multiResult.length}장 획득!`}
+          </Text>
           <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32, gap: 14 }} overScrollMode="never">
             <MultiResultGrid cards={multiResult} miniW={MINI_W} />
             {/* 하이라이트: Rare 이상 카드 */}
