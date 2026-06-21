@@ -557,16 +557,14 @@ export default function HomeScreen() {
         overScrollMode="never"
       >
       {/* 카드 도착 배너 */}
-      <View style={{ alignItems: 'center', gap: 6 }}>
-        {isNewDay && (
-          <Animated.View style={[styles.arrivalBanner, arrivalBannerStyle]}>
-            <Text style={styles.arrivalText}>
-              {streak.currentStreak >= 7 ? '🔥 ' : ''}오늘의 운명 카드가 도착했습니다
-              {streak.currentStreak >= 7 ? ` — ${streak.currentStreak}일 연속 등급 UP!` : ''}
-            </Text>
-          </Animated.View>
-        )}
-      </View>
+      {isNewDay && (
+        <Animated.View style={[styles.arrivalBanner, arrivalBannerStyle]}>
+          <Text style={styles.arrivalText}>
+            {streak.currentStreak >= 7 ? '🔥 ' : ''}오늘의 운명 카드가 도착했습니다
+            {streak.currentStreak >= 7 ? ` — ${streak.currentStreak}일 연속 등급 UP!` : ''}
+          </Text>
+        </Animated.View>
+      )}
 
       {/* 카드 + 배경 글로우 (래퍼) */}
       <Animated.View style={[{ alignItems: 'center' }, cardRevealStyle]}>
@@ -972,7 +970,7 @@ export default function HomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#080B18', alignItems: 'center', paddingTop: 0, paddingBottom: 24, gap: 18 },
+  screen: { flex: 1, backgroundColor: '#080B18', alignItems: 'center', paddingTop: 0, paddingBottom: 24, gap: 6 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#080B18' },
   topBar: { width: '100%', paddingTop: 52, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   appTitle: { fontFamily: F.bk, fontSize: 22, color: '#FFFFFF', letterSpacing: 3.5 },
