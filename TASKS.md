@@ -18,8 +18,12 @@
 ### 3. 주간 캘린더 스트립 로딩 검증
 - `profile && weekDays` null일 때 weekStrip 미표시 → 로딩 플로우 확인
 
-### 4. 오늘의 운세 공유 기능
-- fortune.tsx에 Share API로 운세 텍스트 공유 버튼 추가 → 바이럴
+### 6. 스트릭 배지 1일차부터 표시
+- `index.tsx` `currentStreak >= 2` 조건 → `>= 1`로 완화 필요
+- 앱 첫 실행 당일부터 🔥 배지 노출해 연속 방문 유도
+
+### ~~7. 운세 결과 공유 기능~~ ✅
+- ~~`fortune.tsx`에 Share API로 오늘의 운세 텍스트 공유 버튼 추가 (바이럴 경로)~~
 
 ---
 
@@ -40,6 +44,13 @@
 - 스크린샷 5장
 - 개인정보처리방침 URL
 - Google Play Console 등록
+
+### ~~8. gacha.tsx 테스트 버튼 제거~~ ✅
+- ~~`[ 테스트: +500코인 ]` 버튼 프로덕션 코드 잔존 → 출시 전 필수~~
+
+### 9. 접근성 라벨 (accessibilityLabel)
+- 전체 화면 주요 `Pressable`에 `accessibilityLabel` 누락
+- 스토어 심사(Google Play 접근성 가이드라인) 영향 가능
 
 ---
 
