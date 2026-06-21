@@ -10,40 +10,51 @@ const path  = require('path');
 const OUT_DIR = path.join(__dirname, 'test-output', 'cards');
 if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, { recursive: true });
 
-const W = 512, H = 512;
+const W = 512, H = 768; // 세로 비율 카드 포맷 (포켓몬 TCG 비율 참고)
 
-// 공통 스타일 베이스 — 배경 유지 (배경 제거하지 않음, 고급스러운 분위기 살림)
-const BASE = 'Korean mythology digital art, CCG card illustration style, ' +
-  'single creature centered, full body visible, ' +
-  'professional mobile card game art, rich atmospheric background, no text, no border, no frame';
+// ── 구도 기준 (포켓몬 TCG V/VMAX 카드 스타일 참고) ──────────────────────────
+// COMMON (Basic급): 3/4 바디 샷 — 전체적인 실루엣 강조, 표정 보임
+// RARE (EX/GX급):  상반신 샷 — 얼굴+몸 균형, 역동적 포즈
+// EPIC+ (V/VMAX급): 흉상~극클로즈업 — 얼굴·눈이 프레임 지배, 배경과 빛 융합
+//
+// 공통: 배경 유지, 캐릭터와 배경이 빛으로 자연스럽게 융합
 
-// 등급별 분위기 차별화
-// COMMON: 어리고 약한 존재, 잔잔한 분위기
+// COMMON: 3/4 바디, 소박한 분위기 (Basic 카드급)
 const STYLE_COMMON =
-  'Korean mythology folk art style, ' +
-  'soft gentle lighting, simple clean light background, ' +
-  'juvenile young creature form, limited nascent magical power, ' +
-  'soft pastel glow, early growth stage, humble modest presence, ' + BASE;
+  'Korean mythology folk art style, Pokemon Basic card composition, ' +
+  '3/4 body shot showing full creature form and face, ' +
+  'soft gentle lighting from above, simple atmospheric background with soft glow, ' +
+  'juvenile young creature form, early growth stage, humble modest presence, ' +
+  'expressive eyes visible, creature centered in frame, ' +
+  'professional CCG card illustration, rich atmospheric background, no text, no border, no frame';
 
-// RARE: 성장 중, 힘이 생기기 시작
+// RARE: 상반신, 역동적 (EX/GX급)
 const STYLE_RARE =
-  'Korean mythology fantasy digital art, ' +
-  'dynamic lighting, developing magical energy, ' +
-  'growing spiritual power, atmospheric mid-tone background, ' +
-  'moderate glowing aura, confident presence, ' + BASE;
+  'Korean mythology fantasy digital art, Pokemon EX card composition, ' +
+  'upper body portrait shot, face clearly prominent, dynamic confident pose, ' +
+  'dynamic lighting from side, developing magical energy radiating outward, ' +
+  'growing spiritual power, rich mid-tone atmospheric background, ' +
+  'creature fills 70% of frame, expressive glowing eyes, ' +
+  'professional CCG card illustration, no text, no border, no frame';
 
-// EPIC+: 강렬하고 웅장, 극적인 연출
+// EPIC+: 흉상~클로즈업, 극적 (V/VMAX급)
 const STYLE_EPIC =
-  'Korean mythology fantasy digital art, detailed CCG card illustration style, ' +
-  'dramatic lighting, ethereal spirit energy, dark atmospheric background, ' +
-  'glowing magical aura, painterly fine art, mystical and powerful presence, ' + BASE;
+  'Korean mythology fantasy digital art, Pokemon VMAX card composition, ' +
+  'dramatic bust shot to face close-up, eyes and face dominate the frame, ' +
+  'creature fills 80% of frame, powerful dramatic gaze directly at viewer, ' +
+  'cinematic lighting with rim light and God rays, ethereal spirit energy erupting, ' +
+  'dark atmospheric background with magical particles, creature and background merge through light, ' +
+  'glowing magical aura, painterly fine art, apex supernatural presence, ' +
+  'professional CCG card illustration, no text, no border, no frame';
 
 const NEGATIVE =
   'chibi, kawaii, cute, cartoon, anime, pixel art, pixelated, ' +
-  'blurry, ugly, deformed, extra limbs, watermark, text, border, ' +
+  'blurry, ugly, deformed, extra limbs, watermark, text, border, frame, ' +
   'western fantasy, european, chinese deity, japanese anime style, ' +
   'multiple characters, reference sheet, collage, grid, panel, ' +
-  'realistic photo, human portrait, childish, adorable';
+  'realistic photo, human portrait, childish, adorable, ' +
+  'full body tiny in frame, creature too small, wide establishing shot, ' +
+  'landscape without creature, empty background';
 
 const CARDS = [
   // ── 교체 필수 ──────────────────────────────────────────────────────────────

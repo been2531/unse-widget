@@ -60,13 +60,10 @@
   - `scripts/generate-card-art.js`: BASE 프롬프트에서 `white background` 제거, `rich atmospheric background` 추가 완료
   - ~~`scripts/apply-card-art.js`: Jimp BFS flood-fill 배경 제거 로직 제거 또는 비활성화 필요~~ → 완료 (단순 fs.copyFileSync로 교체)
   - 전체 카드(24장) 배경 유지 버전으로 재생성 필요
-- [ ] **캐릭터 아트 구도 개선** — 얼굴 클로즈업 강화
-  - 목표: 캐릭터 얼굴이 카드 상단을 꽉 채우는 포트레이트 구도
-  - 현재 프롬프트(`full body visible`)가 전신 위주로 생성 → 카드 안에서 얼굴이 작고 임팩트 없음
-  - `generate-card-art.js` BASE 프롬프트 수정 방향:
-    - `full body visible` 제거
-    - `portrait close-up, face and upper body, dramatic face focus, expressive eyes` 추가
-  - 재생성 후 카드 아트워크 창(CHAR_H 영역)에서 얼굴이 잘 보이는지 확인
+- ~~**캐릭터 아트 구도 개선** — 얼굴 클로즈업 강화~~ → 완료
+  - 포켓몬 TCG V/VMAX 구도 참고: COMMON=3/4바디, RARE=상반신, EPIC+=흉상~클로즈업
+  - 이미지 비율도 512×512 → 512×768 세로형으로 변경 (카드 포맷 맞춤)
+  - 재생성 필요 (`node scripts/generate-card-art.js` → `node scripts/apply-card-art.js`)
 
 ---
 
