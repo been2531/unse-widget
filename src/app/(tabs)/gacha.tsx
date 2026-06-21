@@ -619,19 +619,6 @@ export default function GachaScreen() {
             </View>
           )}
 
-          {/* 무료 뽑기 */}
-          <Pressable
-            style={[styles.freePullBtn, freePulls <= 0 && styles.pullBtnDisabled]}
-            onPress={handleFreePull}
-            disabled={spinning || freePulls <= 0}
-            accessibilityLabel={freePulls > 0 ? '무료 뽑기 1회' : '오늘 무료 뽑기 완료'}
-          >
-            <Text style={styles.freePullMain}>
-              {freePulls > 0 ? '🎁 무료 뽑기 1회' : '✓ 오늘 무료 뽑기 완료'}
-            </Text>
-            <Text style={styles.freePullSub}>매일 1회 무료</Text>
-          </Pressable>
-
           {/* 팩 아트 */}
           <View style={{ alignItems: 'center' }}>
             <Animated.View style={[packGlowStyle, { position: 'absolute', zIndex: 0 }]} pointerEvents="none">
@@ -690,16 +677,25 @@ export default function GachaScreen() {
             </View>
           </View>
 
-          {/* 뽑기 버튼 */}
+          {/* 뽑기 버튼 — 무료 잔여시 초록/무료, 소진 후 노란/코인 */}
           <Pressable
-            style={[styles.pullBtn, balance < PULL_COST && styles.pullBtnDisabled]}
-            onPress={() => handlePull(false)}
-            disabled={spinning || balance < PULL_COST}
-            accessibilityLabel={`1회 뽑기 ${PULL_COST}코인`}
+            style={[
+              freePulls > 0 ? styles.freePullBtn : styles.pullBtn,
+              freePulls > 0
+                ? spinning && styles.pullBtnDisabled
+                : (spinning || balance < PULL_COST) && styles.pullBtnDisabled,
+            ]}
+            onPress={freePulls > 0 ? handleFreePull : () => handlePull(false)}
+            disabled={freePulls > 0 ? spinning : (spinning || balance < PULL_COST)}
+            accessibilityLabel={freePulls > 0 ? '무료 뽑기 1회' : `1회 뽑기 ${PULL_COST}코인`}
           >
-            {spinning ? <ActivityIndicator color="#111" /> : <>
-              <Text style={styles.pullBtnMain}>✦ 1회 뽑기</Text>
-              <Text style={styles.pullBtnSub}>💰 {PULL_COST} 코인</Text>
+            {spinning ? <ActivityIndicator color={freePulls > 0 ? '#00DD88' : '#111'} /> : <>
+              <Text style={freePulls > 0 ? styles.freePullMain : styles.pullBtnMain}>
+                {freePulls > 0 ? '🎁 무료 뽑기' : '✦ 1회 뽑기'}
+              </Text>
+              <Text style={freePulls > 0 ? styles.freePullSub : styles.pullBtnSub}>
+                {freePulls > 0 ? '오늘 1회 무료' : `💰 ${PULL_COST} 코인`}
+              </Text>
             </>}
           </Pressable>
 
@@ -958,10 +954,10 @@ const styles = StyleSheet.create({
   coinText: { fontFamily: F.b, color: '#FFE500', fontSize: 13 },
   freePullBtn: {
     backgroundColor: 'rgba(0,200,120,0.15)', borderWidth: 1.5, borderColor: 'rgba(0,200,120,0.45)',
-    borderRadius: 24, width: '100%', paddingVertical: 14, alignItems: 'center', gap: 2,
+    borderRadius: 24, width: '100%', paddingVertical: 16, alignItems: 'center', gap: 2,
   },
-  freePullMain: { fontFamily: F.bk, color: '#00DD88', fontSize: 16 },
-  freePullSub: { fontFamily: F.r, color: 'rgba(0,200,120,0.6)', fontSize: 11 },
+  freePullMain: { fontFamily: F.bk, color: '#00DD88', fontSize: 17 },
+  freePullSub: { fontFamily: F.r, color: 'rgba(0,200,120,0.65)', fontSize: 12 },
   adBtn: {
     backgroundColor: 'rgba(255,255,255,0.04)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
     borderRadius: 16, width: '100%', paddingVertical: 12, alignItems: 'center', gap: 2,
@@ -993,7 +989,7 @@ const styles = StyleSheet.create({
     shadowColor: '#FFE500', shadowOpacity: 0.40, shadowOffset: { width: 0, height: 4 }, shadowRadius: 16, elevation: 8,
   },
   pullBtnMain: { fontFamily: F.bk, color: '#111', fontSize: 17 },
-  pullBtnSub: { fontFamily: F.r, color: '#555', fontSize: 12 },
+  pullBtnSub: { fontFamily: F.r, color: 'rgba(0,0,0,0.60)', fontSize: 12 },
   pullBtn10: {
     backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1.5, borderColor: 'rgba(255,220,0,0.45)',
     borderRadius: 24, width: '100%', paddingVertical: 16, alignItems: 'center', gap: 4,
