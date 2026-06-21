@@ -9,21 +9,20 @@ import {
 } from 'react-native';
 
 import { F } from '@/shared/fonts';
-import { CARD_POOL, RARITY_COLOR, RARITY_LABEL } from '@/gacha/types';
 import { COINS_PER_AD, MAX_ADS_PER_DAY, getAdsRemaining, recordAdReward } from '@/storage/adRewards';
 import { getBalance, spend } from '@/storage/coins';
 import { hasRemovedAds } from '@/storage/purchases';
-import { addToCollection, getCollection } from '@/storage/collection';
+import { getOwnedShopSkins, addShopSkin } from '@/storage/skinPurchases';
+import { getEquippedFrame, setEquippedFrame } from '@/storage/equippedFrame';
 import { getTodayDateString } from '@/shared/dateUtils';
 
-// ─── 스킨 상점 정의 ──────────────────────────────────────────────────────────
-const SKIN_CARDS = CARD_POOL.filter(c => c.category === 'skin');
-const SKIN_PRICES: Record<string, number> = {
-  frame_ancient: 400,
-  frame_silver:  400,
-  frame_gold:    800,
-  frame_dragon:  1500,
-};
+// ─── 코인샵 전용 스킨 카탈로그 ───────────────────────────────────────────────
+const SHOP_SKINS = [
+  { id: 'shop_dokkaebi', nameKo: '도깨비 프레임', desc: '역동적인 붉은 화염, 도깨비의 기운',    price: 800,  color: '#FF3300' },
+  { id: 'shop_phoenix',  nameKo: '봉황 프레임',   desc: '오색 불꽃의 봉황, 태양의 기운',        price: 900,  color: '#FF7700' },
+  { id: 'shop_gumiho',   nameKo: '구미호 프레임',  desc: '달빛 아홉 꼬리, 황홀한 여우의 기운',  price: 1200, color: '#DD66FF' },
+  { id: 'shop_samjogo',  nameKo: '삼족오 프레임',  desc: '태양 속 삼족오, 황금 태양의 기운',    price: 1500, color: '#FFB700' },
+] as const;
 
 // ─── IAP 패키지 정의 ──────────────────────────────────────────────────────────
 // 실제 Google Play 제품 ID는 Play Console에서 생성 후 교체
@@ -66,16 +65,19 @@ export default function CoinShopScreen() {
   const [adsRemaining, setAdsRemaining] = useState(0);
   const [adLoading, setAdLoading] = useState(false);
   const [purchasing, setPurchasing] = useState<string | null>(null);
-  const [ownedSkinIds, setOwnedSkinIds] = useState<Set<string>>(new Set());
+  const [ownedShopSkinIds, setOwnedShopSkinIds] = useState<Set<string>>(new Set());
+  const [equippedFrameId, setEquippedFrameId] = useState<string | null>(null);
   const [adsRemoved, setAdsRemoved] = useState(false);
 
   useEffect(() => {
-    Promise.all([getBalance(), getAdsRemaining(today), getCollection(), hasRemovedAds()]).then(([bal, ads, col, noAds]) => {
-      setBalance(bal);
-      setAdsRemaining(ads);
-      setOwnedSkinIds(new Set(col.filter(c => c.category === 'skin').map(c => c.id)));
-      setAdsRemoved(noAds);
-    });
+    Promise.all([getBalance(), getAdsRemaining(today), getOwnedShopSkins(), getEquippedFrame(), hasRemovedAds()])
+      .then(([bal, ads, ownedSkins, frameId, noAds]) => {
+        setBalance(bal);
+        setAdsRemaining(ads);
+        setOwnedShopSkinIds(ownedSkins);
+        setEquippedFrameId(frameId);
+        setAdsRemoved(noAds);
+      });
   }, []);
 
   // ─── 광고 시청 ─────────────────────────────────────────────────────────────
@@ -105,26 +107,30 @@ export default function CoinShopScreen() {
   }
 
   // ─── 스킨 구매 ────────────────────────────────────────────────────────────
-  async function handleBuySkin(cardId: string) {
+  async function handleBuyShopSkin(id: string, price: number, nameKo: string) {
     if (purchasing) return;
-    const price = SKIN_PRICES[cardId] ?? 0;
     if (balance < price) {
-      Alert.alert('코인 부족', `${price}코인이 필요합니다. 현재 ${balance}코인`);
+      Alert.alert('코인 부족', `${price}코인이 필요합니다.\n현재 잔액: ${balance}코인`);
       return;
     }
-    const card = SKIN_CARDS.find(c => c.id === cardId);
-    if (!card) return;
-    setPurchasing(cardId);
+    setPurchasing(id);
     try {
       const newBal = await spend(price);
-      await addToCollection([{ ...card, uid: `${cardId}_bought_${Date.now()}`, pulledAt: new Date().toISOString() }]);
+      await addShopSkin(id);
       setBalance(newBal);
-      setOwnedSkinIds(prev => new Set([...prev, cardId]));
-      Alert.alert('구매 완료!', `${card.nameKo}를 획득했습니다.`);
+      setOwnedShopSkinIds(prev => new Set([...prev, id]));
+      Alert.alert('구매 완료!', `${nameKo}를 획득했습니다.\n카드에 즉시 장착할 수 있습니다.`);
     } catch (e: any) {
       Alert.alert('오류', e.message ?? '구매 중 오류가 발생했습니다.');
     }
     setPurchasing(null);
+  }
+
+  // ─── 스킨 장착/해제 ───────────────────────────────────────────────────────
+  async function handleEquipShopSkin(id: string) {
+    const next = equippedFrameId === id ? null : id;
+    await setEquippedFrame(next);
+    setEquippedFrameId(next);
   }
 
   // ─── 광고 제거 구매 ────────────────────────────────────────────────────────
@@ -285,35 +291,53 @@ export default function CoinShopScreen() {
         {/* 구분선 */}
         <View style={styles.divider} />
 
-        {/* 스킨/프레임 상점 */}
+        {/* 코인샵 전용 스킨 */}
         <Text style={styles.sectionTitle}>🖼️ 프레임 상점</Text>
-        <Text style={styles.sectionSub}>코인으로 카드 프레임을 구매하세요. 가챠에서도 획득 가능!</Text>
+        <Text style={styles.sectionSub}>한국신화 테마 전용 프레임 · 코인으로 구매 후 즉시 장착</Text>
 
-        {SKIN_CARDS.map(skin => {
-          const price = SKIN_PRICES[skin.id] ?? 0;
-          const owned = ownedSkinIds.has(skin.id);
+        {SHOP_SKINS.map(skin => {
+          const owned = ownedShopSkinIds.has(skin.id);
+          const equipped = equippedFrameId === skin.id;
           return (
-            <View key={skin.id} style={[styles.packageBtn, owned && { borderColor: 'rgba(0,220,100,0.45)', backgroundColor: 'rgba(0,220,100,0.04)' }]}>
-              <Text style={{ fontSize: 28 }}>🖼️</Text>
+            <View
+              key={skin.id}
+              style={[
+                styles.packageBtn,
+                owned && { borderColor: `${skin.color}55`, backgroundColor: `${skin.color}0A` },
+                equipped && { borderColor: skin.color, borderWidth: 1.5 },
+              ]}
+            >
+              {equipped && (
+                <View style={[styles.bestBadge, { backgroundColor: skin.color }]}>
+                  <Text style={styles.bestText}>장착 중</Text>
+                </View>
+              )}
+              {/* 글로우 컬러 도트 */}
+              <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: `${skin.color}22`, borderWidth: 2, borderColor: skin.color, alignItems: 'center', justifyContent: 'center' }}>
+                <View style={{ width: 14, height: 14, borderRadius: 7, backgroundColor: skin.color, opacity: 0.85 }} />
+              </View>
               <View style={styles.packageInfo}>
-                <Text style={styles.packageLabel}>{skin.nameKo}</Text>
-                <Text style={{ color: RARITY_COLOR[skin.rarity], fontSize: 11, fontWeight: '700' }}>
-                  {RARITY_LABEL[skin.rarity]}
-                </Text>
-                <Text style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11 }} numberOfLines={1}>{skin.description}</Text>
+                <Text style={[styles.packageLabel, { color: skin.color, fontWeight: '800' }]}>{skin.nameKo}</Text>
+                <Text style={{ color: 'rgba(255,255,255,0.4)', fontSize: 11 }}>{skin.desc}</Text>
               </View>
               {owned
-                ? <View style={{ paddingHorizontal: 12, paddingVertical: 6, backgroundColor: 'rgba(0,220,100,0.12)', borderRadius: 10 }}>
-                    <Text style={{ color: '#00DD77', fontSize: 13, fontWeight: '700' }}>보유 중</Text>
-                  </View>
+                ? <Pressable
+                    style={[styles.equipBtn, equipped && { borderColor: skin.color, backgroundColor: `${skin.color}22` }]}
+                    onPress={() => handleEquipShopSkin(skin.id)}
+                  >
+                    <Text style={[styles.equipBtnText, { color: equipped ? skin.color : 'rgba(255,255,255,0.55)' }]}>
+                      {equipped ? '해제' : '장착'}
+                    </Text>
+                  </Pressable>
                 : <Pressable
-                    style={[{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, backgroundColor: 'rgba(255,220,0,0.12)', borderWidth: 1, borderColor: 'rgba(255,220,0,0.3)', alignItems: 'center' }, balance < price && { opacity: 0.5 }]}
-                    onPress={() => handleBuySkin(skin.id)}
-                    disabled={!!purchasing || balance < price}
+                    style={[styles.buyBtn, balance < skin.price && { opacity: 0.45 }]}
+                    onPress={() => handleBuyShopSkin(skin.id, skin.price, skin.nameKo)}
+                    disabled={!!purchasing || balance < skin.price}
+                    accessibilityLabel={`${skin.nameKo} ${skin.price}코인으로 구매`}
                   >
                     {purchasing === skin.id
-                      ? <ActivityIndicator size="small" color="#FFE500" />
-                      : <><Text style={{ color: '#FFE500', fontSize: 13, fontWeight: '800' }}>💰 {price}</Text></>
+                      ? <ActivityIndicator size="small" color={skin.color} />
+                      : <Text style={[styles.buyBtnText, { color: skin.color }]}>💰 {skin.price}</Text>
                     }
                   </Pressable>
               }
@@ -392,6 +416,19 @@ const styles = StyleSheet.create({
   packagePrice: { fontSize: 16, fontWeight: '800' },
 
   notice: { color: 'rgba(255,255,255,0.25)', fontSize: 11, lineHeight: 18, marginTop: 8 },
+
+  buyBtn: {
+    paddingHorizontal: 14, paddingVertical: 9, borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.06)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)',
+    alignItems: 'center', minWidth: 80,
+  },
+  buyBtnText: { fontSize: 13, fontWeight: '800' },
+  equipBtn: {
+    paddingHorizontal: 14, paddingVertical: 9, borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.06)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)',
+    alignItems: 'center', minWidth: 52,
+  },
+  equipBtnText: { fontSize: 13, fontWeight: '700' },
 
   removeAdsBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',

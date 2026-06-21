@@ -109,6 +109,13 @@
 
 ## 🔵 출시 준비
 
+### 코인샵 스킨 상점 (완료)
+- ~~신규 스킨 4종 추가~~ → 완료 (도깨비/봉황/구미호/삼족오, 코인샵 전용)
+  - 가격: 800 / 900 / 1200 / 1500 코인 (1100코인팩 구매 유도)
+  - `src/storage/skinPurchases.ts` — 구매 이력 AsyncStorage 영속화
+  - `src/gacha/frameStyles.ts` — shop_dokkaebi/phoenix/gumiho/samjogo 추가
+  - 코인샵 내 장착/해제 버튼 포함
+
 ### 과금 결제
 
 **IAP 상품 목록:**
@@ -124,11 +131,17 @@
 - ~~`coin-shop.tsx` 상단에 광고 제거 상품 카드 추가~~ → 완료
 - ~~운세 잠금 해제: 광고 제거 구매 시 광고 대신 50코인 차감으로 분기~~ → 완료
 
-**[네이티브] 빌드 필요:**
+**[네이티브] 빌드 필요 — 코인 IAP 결제 연동:**
 - [ ] `react-native-iap` 설치 + `app.json` 플러그인 추가
-- [ ] Play Console 4개 인앱 상품 등록
+- [ ] Play Console에 4개 인앱 상품 등록 (SKU: coins_100/330/1100, remove_ads)
 - [ ] `handlePurchase` 스텁 → 실제 IAP 호출 교체
-- [ ] 구매 복원(restore) 처리
+  ```ts
+  await initConnection();
+  await requestPurchase({ sku });
+  // 결제 완료 후 코인 지급 + finishTransaction
+  ```
+- [ ] 구매 복원(restore purchases) 처리
+- [ ] 영수증 서버 검증 (선택, 출시 후 고려)
 
 ### 스토어 등록
 - [ ] 앱 아이콘 (1024×1024) — 봉황 또는 도깨비 컨셉

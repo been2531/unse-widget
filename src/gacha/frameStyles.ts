@@ -7,6 +7,7 @@ export interface FrameStyle {
 }
 
 const FRAMES: Record<string, FrameStyle> = {
+  // ── 가챠 전용 ────────────────────────────────────────────────────────────────
   frame_ancient: {
     borderColor: '#8B6914',
     borderWidth: 2.5,
@@ -34,6 +35,36 @@ const FRAMES: Record<string, FrameStyle> = {
     glowColor: '#2288FFCC',
     glowRadius: 28,
     label: '용왕',
+  },
+
+  // ── 코인샵 전용 ──────────────────────────────────────────────────────────────
+  shop_dokkaebi: {
+    borderColor: '#FF3300',
+    borderWidth: 3,
+    glowColor: '#FF1100CC',
+    glowRadius: 22,
+    label: '도깨비',
+  },
+  shop_phoenix: {
+    borderColor: '#FF7700',
+    borderWidth: 3,
+    glowColor: '#FF5500CC',
+    glowRadius: 24,
+    label: '봉황',
+  },
+  shop_gumiho: {
+    borderColor: '#DD66FF',
+    borderWidth: 3,
+    glowColor: '#BB33FFCC',
+    glowRadius: 26,
+    label: '구미호',
+  },
+  shop_samjogo: {
+    borderColor: '#FFB700',
+    borderWidth: 3.5,
+    glowColor: '#FF9500CC',
+    glowRadius: 30,
+    label: '삼족오',
   },
 };
 
