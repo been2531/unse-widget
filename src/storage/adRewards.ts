@@ -17,19 +17,23 @@ export async function getAdsRemaining(today: string): Promise<number> {
 }
 
 export async function recordAdReward(today: string): Promise<number> {
-  const [adRaw, coinRaw] = await Promise.all([
-    AsyncStorage.getItem(KEY),
-    AsyncStorage.getItem(COINS_KEY),
-  ]);
-  const adState = adRaw ? JSON.parse(adRaw) : { date: '', watched: 0 };
-  const watched = adState.date === today ? adState.watched + 1 : 1;
+  try {
+    const [adRaw, coinRaw] = await Promise.all([
+      AsyncStorage.getItem(KEY),
+      AsyncStorage.getItem(COINS_KEY),
+    ]);
+    const adState = adRaw ? JSON.parse(adRaw) : { date: '', watched: 0 };
+    const watched = adState.date === today ? adState.watched + 1 : 1;
 
-  const coinState = coinRaw ? JSON.parse(coinRaw) : { balance: 0, lastDailyDate: '' };
-  const newBalance = coinState.balance + COINS_PER_AD;
+    const coinState = coinRaw ? JSON.parse(coinRaw) : { balance: 0, lastDailyDate: '' };
+    const newBalance = coinState.balance + COINS_PER_AD;
 
-  await Promise.all([
-    AsyncStorage.setItem(KEY, JSON.stringify({ date: today, watched })),
-    AsyncStorage.setItem(COINS_KEY, JSON.stringify({ ...coinState, balance: newBalance })),
-  ]);
-  return newBalance;
+    await Promise.all([
+      AsyncStorage.setItem(KEY, JSON.stringify({ date: today, watched })),
+      AsyncStorage.setItem(COINS_KEY, JSON.stringify({ ...coinState, balance: newBalance })),
+    ]);
+    return newBalance;
+  } catch {
+    throw new Error('광고 코인 적립에 실패했습니다.');
+  }
 }

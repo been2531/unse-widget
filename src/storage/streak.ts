@@ -29,7 +29,9 @@ export async function checkInStreak(today: string): Promise<StreakState> {
   const currentStreak = state.lastDate === yStr ? state.currentStreak + 1 : 1;
   const longestStreak = Math.max(state.longestStreak, currentStreak);
   const next: StreakState = { currentStreak, lastDate: today, longestStreak };
-  await AsyncStorage.setItem(KEY, JSON.stringify(next));
+  try {
+    await AsyncStorage.setItem(KEY, JSON.stringify(next));
+  } catch {}
   return next;
 }
 

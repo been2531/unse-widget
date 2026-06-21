@@ -130,7 +130,7 @@ export default function FortuneScreen() {
       setAdsRemoved(noAds);
       if (todayBuff) setActiveBuff(getActiveBuff(todayBuff.cardId));
       setLoading(false);
-    })();
+    })().catch(() => setLoading(false));
   }, []);
 
   useEffect(() => {

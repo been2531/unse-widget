@@ -31,10 +31,10 @@
 - ~~[리뷰] storage/characterState.ts — loadCharacterState() try-catch 누락~~ → 완료
 - ~~[리뷰] synthesis.ts:29 — legendary→mythic 합성 차단 버그 수정~~ → 완료
 - ~~[리뷰] storage/userProfile.ts — loadUserProfile() try-catch 누락~~ → 완료
-- [ ] [리뷰] streak.ts:32 — checkInStreak() AsyncStorage.setItem try-catch 누락 → 홈 화면 영구 로딩 고착
-- [ ] [리뷰] adRewards.ts:19 — recordAdReward() try-catch 누락 → 광고 코인 미적립
-- [ ] [리뷰] coin-shop.tsx:76 — Promise.all().catch() 미처리 → 스켈레톤 무한 표시
-- [ ] [리뷰] fortune.tsx:122 — checkInStreak 에러 시 setLoading(false) 미호출
+- ~~[리뷰] streak.ts:32 — checkInStreak() AsyncStorage.setItem try-catch 누락 → 홈 화면 영구 로딩 고착~~ → 완료
+- ~~[리뷰] adRewards.ts:19 — recordAdReward() try-catch 누락 → 광고 코인 미적립~~ → 완료
+- ~~[리뷰] coin-shop.tsx:76 — Promise.all().catch() 미처리 → 스켈레톤 무한 표시~~ → 완료
+- ~~[리뷰] fortune.tsx:122 — checkInStreak 에러 시 setLoading(false) 미호출~~ → 완료
 
 ---
 

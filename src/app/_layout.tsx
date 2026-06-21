@@ -44,13 +44,9 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
         <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="index" />
+          <Stack.Screen name="(tabs)" />
           <Stack.Screen name="onboarding" />
           <Stack.Screen name="card-demo" />
-          <Stack.Screen name="fortune" />
-          <Stack.Screen name="gacha" />
-          <Stack.Screen name="collection" />
-          <Stack.Screen name="coin-shop" />
         </Stack>
       </ThemeProvider>
     </GestureHandlerRootView>
