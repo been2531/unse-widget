@@ -573,7 +573,7 @@ export default function GachaScreen() {
       </View>
 
       {phase === 'lobby' && (
-        <ScrollView contentContainerStyle={styles.lobby} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={styles.lobby} showsVerticalScrollIndicator={false} overScrollMode="never">
           {dailyClaimed && (
             <View style={styles.bonusBanner}>
               <Text style={styles.bonusText}>🎁 오늘의 코인 +{DAILY_COINS} 지급됨!</Text>
@@ -838,7 +838,7 @@ export default function GachaScreen() {
       {phase === 'multi_result' && multiResult.length > 0 && (
         <View style={{ flex: 1, width: '100%' }}>
           <Text style={[styles.getLabel, { marginTop: 0 }]}>✨ {multiResult.length}장 획득!</Text>
-          <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32, gap: 14 }}>
+          <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32, gap: 14 }} overScrollMode="never">
             <MultiResultGrid cards={multiResult} miniW={MINI_W} />
             {/* 하이라이트: Rare 이상 카드 */}
             {multiResult.filter(c => c.rarity !== 'common').map(c => (

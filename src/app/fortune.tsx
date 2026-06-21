@@ -203,6 +203,7 @@ export default function FortuneScreen() {
         style={{ flex: 1 }}
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
+        overScrollMode="never"
       >
         {/* 종합 점수 */}
         <View style={[styles.overallCard, { borderColor: `${overallColor}30` }]}>

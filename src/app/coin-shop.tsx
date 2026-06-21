@@ -181,7 +181,7 @@ export default function CoinShopScreen() {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} overScrollMode="never">
 
         {/* 광고 제거 상품 */}
         <Pressable
