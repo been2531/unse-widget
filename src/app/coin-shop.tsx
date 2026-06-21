@@ -12,7 +12,7 @@ import { F } from '@/shared/fonts';
 import { CARD_POOL, RARITY_COLOR, RARITY_LABEL } from '@/gacha/types';
 import { COINS_PER_AD, MAX_ADS_PER_DAY, getAdsRemaining, recordAdReward } from '@/storage/adRewards';
 import { getBalance, spend } from '@/storage/coins';
-import { grantRemoveAds, hasRemovedAds } from '@/storage/purchases';
+import { hasRemovedAds } from '@/storage/purchases';
 import { addToCollection, getCollection } from '@/storage/collection';
 import { getTodayDateString } from '@/shared/dateUtils';
 
@@ -352,8 +352,8 @@ const styles = StyleSheet.create({
   content: { paddingHorizontal: 20, paddingBottom: 48, gap: 12 },
 
   section: { gap: 8 },
-  sectionTitle: { color: '#FFF', fontSize: 16, fontWeight: '800' },
-  sectionSub: { color: 'rgba(255,255,255,0.45)', fontSize: 12 },
+  sectionTitle: { color: '#FFF', fontSize: 16, fontWeight: '800', borderLeftWidth: 3, borderLeftColor: '#C8A84B', paddingLeft: 10 },
+  sectionSub: { color: 'rgba(255,255,255,0.45)', fontSize: 12, paddingLeft: 13 },
 
   adBtn: {
     backgroundColor: '#FFE500', borderRadius: 16, paddingVertical: 16, paddingHorizontal: 20,
@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
   adBtnText: { color: '#111', fontWeight: '900', fontSize: 16 },
   adBtnSub: { color: '#444', fontSize: 11 },
 
-  divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.08)', marginVertical: 8 },
+  divider: { height: 1, backgroundColor: 'rgba(200,168,75,0.18)', marginVertical: 8 },
 
   packageBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 14,
@@ -372,7 +372,8 @@ const styles = StyleSheet.create({
     borderRadius: 16, padding: 16, position: 'relative',
   },
   packageHighlight: {
-    borderColor: 'rgba(255,220,0,0.45)', backgroundColor: 'rgba(255,220,0,0.06)',
+    borderColor: 'rgba(255,220,0,0.55)', backgroundColor: 'rgba(255,220,0,0.08)',
+    shadowColor: '#FFE500', shadowOpacity: 0.20, shadowOffset: { width: 0, height: 2 }, shadowRadius: 8, elevation: 3,
   },
   bestBadge: {
     position: 'absolute', top: -8, right: 12,

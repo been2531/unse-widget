@@ -88,7 +88,6 @@ function CardItem({ item, CARD_W, CARD_H, onPress }: {
     <Pressable style={{ width: CARD_W, height: CARD_H, padding: 4 }} onPress={() => onPress(item)} accessibilityLabel={`${item.nameKo} 카드${owned ? '' : ' 미보유'}`}>
       <View style={{
         flex: 1, borderRadius: 10, overflow: 'hidden',
-        opacity: owned ? 1 : 0.25,
         borderWidth: 1,
         borderColor: owned ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.06)',
       }}>
@@ -105,7 +104,7 @@ function CardItem({ item, CARD_W, CARD_H, onPress }: {
           )}
           {/* 캐릭터 아트 — 카드 전체 높이 */}
           {skiaImg && (
-            <Group clip={Skia.RRectXY(Skia.XYWHRect(0, 0, CW, CH), 8, 8)}>
+            <Group clip={Skia.RRectXY(Skia.XYWHRect(0, 0, CW, CH), 8, 8)} opacity={owned ? 1 : 0.45}>
               <SkiaImage image={skiaImg} x={0} y={0} width={CW} height={CH} fit="cover" />
               {/* 하단 그라디언트 — 텍스트 가독성 */}
               <Rect x={0} y={CH - LABEL_H} width={CW} height={LABEL_H}>
@@ -122,6 +121,15 @@ function CardItem({ item, CARD_W, CARD_H, onPress }: {
               <LinearGradient
                 start={vec(0, CH - LABEL_H)} end={vec(0, CH)}
                 colors={['rgba(6,8,20,0)', 'rgba(6,8,20,0.85)']}
+              />
+            </Rect>
+          )}
+          {/* 미수집 안개 — 상단 옅고 하단 짙은 그라디언트 */}
+          {!owned && (
+            <Rect x={0} y={0} width={CW} height={CH}>
+              <LinearGradient
+                start={vec(CW / 2, 0)} end={vec(CW / 2, CH)}
+                colors={['rgba(5,4,18,0.20)', 'rgba(5,4,18,0.68)']}
               />
             </Rect>
           )}

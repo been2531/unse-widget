@@ -221,16 +221,49 @@ function ResultCard({ card, cardW, onReveal }: { card: PulledCard; cardW: number
             <Rect x={0} y={0} width={cardW} height={cardH}>
               <LinearGradient start={vec(0, 0)} end={vec(cardW, cardH)} colors={[bgTop, bgBot]} />
             </Rect>
-            {/* Legendary 별 */}
-            {card.rarity === 'legendary' && Array.from({ length: 30 }, (_, i) => (
+            {/* Rare: 동심원 패턴 */}
+            {card.rarity === 'rare' && [0.28, 0.44, 0.58].map((r, i) => (
+              <Circle key={i} cx={cardW / 2} cy={charH * 0.45} r={cardW * r}
+                color={`${elemColor}${['22', '16', '0C'][i]}`} style="stroke" strokeWidth={1} />
+            ))}
+            {/* Epic+: 네뷸라 */}
+            {(card.rarity === 'epic' || card.rarity === 'legendary' || card.rarity === 'mythic') && <>
+              <Circle cx={cardW * 0.28} cy={charH * 0.4} r={cardW * 0.30} color={`${elemColor}1E`}>
+                <BlurMask blur={28} style="normal" />
+              </Circle>
+              <Circle cx={cardW * 0.75} cy={charH * 0.65} r={cardW * 0.22} color={`${elemColor}14`}>
+                <BlurMask blur={22} style="normal" />
+              </Circle>
+            </>}
+            {/* Legendary+: 별 배경 */}
+            {(card.rarity === 'legendary' || card.rarity === 'mythic') && Array.from({ length: 40 }, (_, i) => (
               <Circle key={i}
                 cx={(i * 71 + 11) % cardW} cy={(i * 109 + 31) % charH}
-                r={0.7 + (i % 4) * 0.5} color={`rgba(255,255,255,${0.2 + (i % 5) * 0.1})`} />
+                r={0.6 + (i % 5) * 0.5} color={`rgba(255,255,255,${0.18 + (i % 6) * 0.09})`} />
+            ))}
+            {/* Mythic: 황금 먼지 */}
+            {card.rarity === 'mythic' && Array.from({ length: 10 }, (_, i) => (
+              <Circle key={i}
+                cx={(i * 97 + 23) % cardW} cy={(i * 137 + 53) % charH}
+                r={1.0 + (i % 3) * 0.7} color={`rgba(200,168,75,${0.28 + (i % 4) * 0.10})`}>
+                <BlurMask blur={2} style="normal" />
+              </Circle>
             ))}
             <Circle cx={cardW / 2} cy={charH / 2} r={glowR} color={`${elemColor}40`}>
               <BlurMask blur={36} style="normal" />
             </Circle>
-            <Rect x={10} y={charH + 10} width={cardW - 20} height={1} color={`${elemColor}66`} />
+            {/* 구분선 — 금빛 */}
+            <Rect x={10} y={charH + 10} width={cardW - 20} height={0.8}>
+              <LinearGradient start={vec(10, 0)} end={vec(cardW - 10, 0)}
+                colors={['rgba(200,168,75,0)', 'rgba(200,168,75,0.70)', 'rgba(200,168,75,0)']} />
+            </Rect>
+            {/* Epic+ 외부 글로우 링 */}
+            {(card.rarity === 'epic' || card.rarity === 'legendary' || card.rarity === 'mythic') && (
+              <RoundedRect x={0} y={0} width={cardW} height={cardH} r={CORNER}
+                color={`${elemColor}55`} style="stroke" strokeWidth={borderW + 4}>
+                <BlurMask blur={card.rarity === 'mythic' ? 16 : card.rarity === 'legendary' ? 12 : 8} style="outer" />
+              </RoundedRect>
+            )}
             <RoundedRect x={0} y={0} width={cardW} height={cardH} r={CORNER}
               color={`${elemColor}CC`} style="stroke" strokeWidth={borderW} />
           </Canvas>

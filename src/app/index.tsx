@@ -642,27 +642,47 @@ export default function HomeScreen() {
                   />
                 </Rect>
 
-                {/* Legendary/Mythic: 별 배경 (창 내부) */}
-                {(rarity === 'legendary' || rarity === 'mythic') && Array.from({ length: 35 }, (_, i) => (
+                {/* Rare: 동심원 파동 패턴 */}
+                {rarity === 'rare' && [0.28, 0.44, 0.60].map((r, i) => (
                   <Circle key={i}
-                    cx={8 + (i * 71 + 11) % (CARD_W - 16)}
-                    cy={8 + (i * 109 + 31) % (CHAR_H - 14)}
-                    r={0.7 + (i % 4) * 0.55}
-                    color={`rgba(255,255,255,${0.25 + (i % 5) * 0.10})`}
-                  />
+                    cx={CARD_W / 2} cy={CHAR_H * 0.45} r={CARD_W * r}
+                    color={`${E.color}${i === 0 ? '22' : i === 1 ? '14' : '0A'}`}
+                    style="stroke" strokeWidth={1}>
+                  </Circle>
                 ))}
 
                 {/* Epic+: 네뷸라 (창 내부) */}
                 {(rarity === 'epic' || rarity === 'legendary' || rarity === 'mythic') && <>
                   <Circle cx={CARD_W * 0.28} cy={CHAR_H * 0.4} r={CARD_W * 0.3}
-                    color={`${E.color}18`}>
+                    color={`${E.color}1E`}>
                     <BlurMask blur={26} style="normal" />
                   </Circle>
                   <Circle cx={CARD_W * 0.74} cy={CHAR_H * 0.65} r={CARD_W * 0.22}
-                    color={`${E.color2}12`}>
+                    color={`${E.color2}14`}>
                     <BlurMask blur={20} style="normal" />
                   </Circle>
                 </>}
+
+                {/* Legendary/Mythic: 별 배경 (창 내부) */}
+                {(rarity === 'legendary' || rarity === 'mythic') && Array.from({ length: 45 }, (_, i) => (
+                  <Circle key={i}
+                    cx={8 + (i * 71 + 11) % (CARD_W - 16)}
+                    cy={8 + (i * 109 + 31) % (CHAR_H - 14)}
+                    r={0.6 + (i % 5) * 0.5}
+                    color={`rgba(255,255,255,${0.20 + (i % 6) * 0.09})`}
+                  />
+                ))}
+
+                {/* Mythic: 황금 먼지 파티클 */}
+                {rarity === 'mythic' && Array.from({ length: 12 }, (_, i) => (
+                  <Circle key={i}
+                    cx={8 + (i * 97 + 23) % (CARD_W - 16)}
+                    cy={8 + (i * 137 + 53) % (CHAR_H - 14)}
+                    r={1.2 + (i % 3) * 0.8}
+                    color={`rgba(200,168,75,${0.30 + (i % 4) * 0.12})`}>
+                    <BlurMask blur={2} style="normal" />
+                  </Circle>
+                ))}
 
                 {/* 아트 창 주변 비네트 — 중앙 집중 조명 */}
                 <Rect x={8} y={8} width={CARD_W - 16} height={CHAR_H - 6}>
@@ -777,9 +797,13 @@ export default function HomeScreen() {
                 />
               </Rect>
 
-              {/* 구분선 */}
-              <Rect x={10} y={CHAR_H + 10} width={CARD_W - 20} height={1}
-                color={`${E.color}66`} />
+              {/* 구분선 — 한국 금빛 */}
+              <Rect x={10} y={CHAR_H + 10} width={CARD_W - 20} height={0.8}>
+                <LinearGradient
+                  start={vec(10, 0)} end={vec(CARD_W - 10, 0)}
+                  colors={['rgba(200,168,75,0)', 'rgba(200,168,75,0.75)', 'rgba(200,168,75,0)']}
+                />
+              </Rect>
 
             </Canvas>
 
@@ -886,8 +910,10 @@ export default function HomeScreen() {
                 <Text style={{ fontFamily: F.bk, color: E.color, fontSize: 15, letterSpacing: 0.4, textShadowColor: `${E.glow}`, textShadowRadius: 8 }} numberOfLines={1}>
                   {charNameKo}
                 </Text>
-                <Text style={{ fontFamily: F.sb, color: E.color2, fontSize: 9, letterSpacing: 1.0, opacity: 0.75 }}>
-                  {E.label} · UNSE CARD
+                <Text style={{ fontFamily: F.sb, fontSize: 9, letterSpacing: 1.2, opacity: 0.80 }}>
+                  <Text style={{ color: E.color2 }}>{E.label} · </Text>
+                  <Text style={{ color: '#C8A84B' }}>UNSE</Text>
+                  <Text style={{ color: 'rgba(200,168,75,0.55)' }}> CARD</Text>
                 </Text>
               </View>
 
@@ -1135,7 +1161,7 @@ const styles = StyleSheet.create({
   arrivalText: { fontFamily: F.b, color: '#FFE500', fontSize: 12, letterSpacing: 0.3 },
   // ── 통합 bento 카드 ──────────────────────────────────────────────────────
   infoCard: {
-    flexDirection: 'row', alignSelf: 'stretch',
+    flexDirection: 'row', alignSelf: 'center',
     backgroundColor: 'rgba(255,255,255,0.055)',
     borderRadius: 20, padding: 14,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)',

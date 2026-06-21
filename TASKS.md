@@ -8,7 +8,7 @@
 ## 🔴 코드 리뷰 이슈
 
 - ~~[리뷰] fortune.tsx:129 — 코인 부족 시 spend() 실패를 catch {} 무음 처리 → 사용자에게 Alert 없음 (adsRemoved 경로)~~ → 완료
-- [ ] [리뷰] coin-shop.tsx:15 — grantRemoveAds import됐지만 handleRemoveAds에서 호출 안 됨 (unused import)
+- ~~[리뷰] coin-shop.tsx:15 — grantRemoveAds import됐지만 handleRemoveAds에서 호출 안 됨 (unused import)~~ → 완료
 
 ---
 
@@ -69,7 +69,7 @@
 - ~~legendary/mythic 등급 글로우 (Layer 6) — 외부 blur glow 추가~~ → 완료
 
 ### UI 완성도
-- [ ] 코인샵 화면 안정성 — grantRemoveAds 미연결 버그 수정 (🔴 코드 리뷰 이슈 참고)
+- ~~코인샵 화면 안정성 — grantRemoveAds 미연결 버그 수정~~ → 완료
 
 ### 접근성
 - ~~주요 Pressable에 `accessibilityLabel` 추가 — 스토어 심사 영향~~ → 홈/운세/가챠/컬렉션/코인샵 완료
@@ -86,12 +86,13 @@
 
 > 아래 항목은 자동 루틴이 제안만 하고 구현하지 않음. 직접 확인 후 🟡로 이동하면 구현 허가.
 
-- [ ] [제안] 홈화면: 카드 배경 스킨 — 아트워크 창 내부 배경 패턴 다변화 (별/빛살/파동 등급별 패턴)
-- [ ] [제안] 홈화면: 카드 하단 정보 영역 — 한국 금빛(#C8A84B) 구분선·뱃지 고급화
-- [ ] [제안] 운세 화면: 한국 금빛 상단 액센트 바 + 점수 라디얼 글로우 (운세앱 벤치마킹)
-- [ ] [제안] 가챠 화면: 카드 풀 공개 시 SweepGradient 스핀 애니메이션 + 희귀도별 연출 차별화
-- [ ] [제안] 컬렉션 그리드: 미수집 카드 안개 효과 — opacity 25% 대신 fog gradient 오버레이
-- [ ] [제안] 코인샵: 전체 UI 세련화 (벤치마킹 기반)
+- ~~[제안] 홈화면: 카드 배경 스킨 — rare 동심원 파동, epic+ 네뷸라 강화, mythic 황금 먼지~~ → 완료
+- ~~[제안] 홈화면: 카드 하단 정보 영역 — 한국 금빛(#C8A84B) 구분선·UNSE CARD 골드 텍스트~~ → 완료
+- ~~[제안] 홈화면: infoCard 왼쪽 치우침 수정 — alignSelf stretch→center~~ → 완료
+- ~~[제안] 운세 화면: 한국 금빛 상단 액센트 바 + 점수 라디얼 글로우~~ → 완료
+- ~~[제안] 가챠 화면: 희귀도별 배경 패턴 + 외부 glow 링 + 금빛 구분선~~ → 완료
+- ~~[제안] 컬렉션 그리드: 미수집 카드 안개 효과 — Skia opacity + fog gradient 오버레이~~ → 완료
+- ~~[제안] 코인샵: 금빛 섹션 타이틀 액센트 + 디바이더 + 패키지 하이라이트 쉐도우~~ → 완료
 
 ---
 

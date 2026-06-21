@@ -194,9 +194,15 @@ export default function FortuneScreen() {
       >
         {/* 종합 점수 */}
         <View style={styles.overallCard}>
+          {/* 한국 금빛 상단 액센트 바 */}
+          <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, borderTopLeftRadius: 20, borderTopRightRadius: 20, overflow: 'hidden' }}>
+            <View style={{ flex: 1, backgroundColor: '#C8A84B', opacity: 0.75 }} />
+          </View>
           <View style={styles.overallLeft}>
+            {/* 점수 뒤 라디얼 글로우 */}
+            <View style={{ position: 'absolute', width: 70, height: 70, borderRadius: 35, backgroundColor: overallColor, opacity: 0.10, top: 12, alignSelf: 'center' }} />
             <Text style={styles.overallDate}>{fortune.date}</Text>
-            <Text style={[styles.overallScore, { color: overallColor }]}>{overall}</Text>
+            <Text style={[styles.overallScore, { color: overallColor, textShadowColor: overallColor, textShadowRadius: 12 }]}>{overall}</Text>
             <Text style={[styles.overallGrade, { color: overallColor }]}>{scoreLabel(overall)}</Text>
             <Text style={styles.overallLabel}>종합 운세</Text>
           </View>
@@ -353,9 +359,10 @@ const styles = StyleSheet.create({
 
   overallCard: {
     backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 20, padding: 20,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 20, padding: 20, paddingTop: 22,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)',
     flexDirection: 'row', gap: 16, alignItems: 'center',
+    overflow: 'hidden',
   },
   overallLeft: { alignItems: 'center', justifyContent: 'center', width: 68 },
   overallDate: { color: 'rgba(255,255,255,0.28)', fontSize: 9, letterSpacing: 0.3, marginBottom: 2 },
