@@ -170,6 +170,9 @@ export default function FortuneScreen() {
     <View style={styles.center}>
       <StatusBar barStyle="light-content" backgroundColor="#080B18" />
       <Text style={styles.err}>운세를 불러올 수 없어요</Text>
+      <Pressable onPress={() => router.back()} style={{ marginTop: 16, paddingHorizontal: 20, paddingVertical: 10, backgroundColor: 'rgba(255,255,255,0.07)', borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)' }}>
+        <Text style={{ color: 'rgba(255,255,255,0.55)', fontSize: 14 }}>뒤로 가기</Text>
+      </Pressable>
     </View>
   );
 
