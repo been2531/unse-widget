@@ -310,6 +310,7 @@ export default function CoinShopScreen() {
                     style={[{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, backgroundColor: 'rgba(255,220,0,0.12)', borderWidth: 1, borderColor: 'rgba(255,220,0,0.3)', alignItems: 'center' }, balance < price && { opacity: 0.5 }]}
                     onPress={() => handleBuySkin(skin.id)}
                     disabled={!!purchasing || balance < price}
+                    accessibilityLabel={`${skin.nameKo} 구매 ${price}코인`}
                   >
                     {purchasing === skin.id
                       ? <ActivityIndicator size="small" color="#FFE500" />

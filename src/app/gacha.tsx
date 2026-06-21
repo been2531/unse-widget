@@ -5,7 +5,7 @@ import {
 import { router } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ActivityIndicator, FlatList, Image, Pressable, ScrollView,
+  ActivityIndicator, Alert, FlatList, Image, Pressable, ScrollView,
   StyleSheet, Text, View, useWindowDimensions,
 } from 'react-native';
 import Animated, {
@@ -470,7 +470,9 @@ export default function GachaScreen() {
       setResult(card);
       setPhase('single_result');
       await checkSynthesisAfterPull(card);
-    } catch {}
+    } catch {
+      Alert.alert('오류', '뽑기 중 오류가 발생했습니다.');
+    }
     setSpinning(false);
   }
 
