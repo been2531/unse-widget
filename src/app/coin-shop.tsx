@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 
 import { F } from '@/shared/fonts';
+import { SkeletonBox } from '@/shared/Skeleton';
 import { showRewardedAd } from '@/ads/admob';
 import { CARD_POOL, RARITY_COLOR, RARITY_LABEL } from '@/gacha/types';
 import { COINS_PER_AD, MAX_ADS_PER_DAY, getAdsRemaining, recordAdReward } from '@/storage/adRewards';
@@ -63,6 +64,7 @@ export default function CoinShopScreen() {
   const { width: screenW } = useWindowDimensions();
   const today = getTodayDateString();
 
+  const [loading, setLoading] = useState(true);
   const [balance, setBalance] = useState(0);
   const [adsRemaining, setAdsRemaining] = useState(0);
   const [adLoading, setAdLoading] = useState(false);
@@ -76,6 +78,7 @@ export default function CoinShopScreen() {
       setAdsRemaining(ads);
       setOwnedSkinIds(new Set(col.filter(c => c.category === 'skin').map(c => c.id)));
       setAdsRemoved(noAds);
+      setLoading(false);
     });
   }, []);
 
@@ -186,6 +189,20 @@ export default function CoinShopScreen() {
         </View>
       </View>
 
+      {loading ? (
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} overScrollMode="never">
+          <SkeletonBox style={{ height: 80, borderRadius: 18 }} />
+          <SkeletonBox style={{ height: 1, borderRadius: 1, marginVertical: 8 }} />
+          <SkeletonBox style={{ height: 24, borderRadius: 6, width: 160 }} />
+          <SkeletonBox style={{ height: 56, borderRadius: 16 }} />
+          <SkeletonBox style={{ height: 1, borderRadius: 1, marginVertical: 8 }} />
+          <SkeletonBox style={{ height: 24, borderRadius: 6, width: 120 }} />
+          {[0,1,2].map(i => <SkeletonBox key={i} style={{ height: 72, borderRadius: 16 }} />)}
+          <SkeletonBox style={{ height: 1, borderRadius: 1, marginVertical: 8 }} />
+          <SkeletonBox style={{ height: 24, borderRadius: 6, width: 140 }} />
+          {[0,1,2,3].map(i => <SkeletonBox key={i} style={{ height: 72, borderRadius: 16 }} />)}
+        </ScrollView>
+      ) : (
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false} overScrollMode="never">
 
         {/* 광고 제거 상품 */}
@@ -318,6 +335,7 @@ export default function CoinShopScreen() {
           );
         })}
       </ScrollView>
+      )}
     </View>
   );
 }
