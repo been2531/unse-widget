@@ -541,6 +541,42 @@ export default function GachaScreen() {
     setSynthReadyCount(uniqueIds.filter(id => canSynthesize(id, ownedIds)).length);
   }
 
+  async function handleSynthBannerPress() {
+    const col = await getCollection();
+    const ownedIds = col.map(c => c.id);
+    const uniqueIds = [...new Set(ownedIds)];
+    const readyIds = uniqueIds.filter(id => canSynthesize(id, ownedIds));
+    if (readyIds.length === 0) return;
+
+    function triggerSynth(id: string) {
+      const def = CARD_POOL.find(c => c.id === id);
+      if (!def) return;
+      const count = ownedIds.filter(i => i === id).length;
+      const pulled: PulledCard = { ...def, uid: `${def.id}_sel`, pulledAt: '' };
+      setSynthCard(pulled);
+      setOwnedCount(count);
+      setSynthPhase('confirm');
+    }
+
+    if (readyIds.length === 1) {
+      triggerSynth(readyIds[0]);
+      return;
+    }
+
+    Alert.alert(
+      '⚗️ 합성 카드 선택',
+      '합성할 카드를 선택하세요',
+      [
+        ...readyIds.map(id => {
+          const def = CARD_POOL.find(c => c.id === id)!;
+          const count = ownedIds.filter(i => i === id).length;
+          return { text: `${def.nameKo} (${count}장)`, onPress: () => triggerSynth(id) };
+        }),
+        { text: '취소', style: 'cancel' as const },
+      ],
+    );
+  }
+
   if (loading) return (
     <View style={styles.screen}>
       <StatusBar barStyle="light-content" backgroundColor="#080B18" />
@@ -716,10 +752,10 @@ export default function GachaScreen() {
           </Pressable>
 
           {synthReadyCount > 0 && (
-            <View style={styles.synthBanner}>
+            <Pressable style={styles.synthBanner} onPress={handleSynthBannerPress} accessibilityLabel={`합성 가능한 카드 ${synthReadyCount}종, 탭하여 합성 시작`}>
               <Text style={styles.synthBannerText}>⚗️ 합성 가능한 카드 {synthReadyCount}종</Text>
-              <Text style={styles.synthBannerSub}>카드를 뽑은 후 합성 옵션이 자동으로 표시됩니다</Text>
-            </View>
+              <Text style={styles.synthBannerSub}>탭하여 지금 바로 합성하기 →</Text>
+            </Pressable>
           )}
 
           <Text style={styles.footNote}>매일 앱 실행 시 100코인 자동 지급 · 10회 뽑기 시 Rare 이상 1장 보장</Text>
@@ -849,11 +885,11 @@ export default function GachaScreen() {
               {/* 버튼 */}
               {synthPhase === 'confirm' && (
                 <View style={styles.synthBtns}>
-                  <Pressable style={styles.synthSkipBtn} onPress={closeSynthesis}>
+                  <Pressable style={styles.synthSkipBtn} onPress={closeSynthesis} accessibilityLabel="합성 나중에">
                     <Text style={styles.synthSkipText}>나중에</Text>
                   </Pressable>
                   <Pressable style={[styles.synthGoBtn, { borderColor: elemColor, backgroundColor: `${elemColor}18` }]}
-                    onPress={doSynthesis}>
+                    onPress={doSynthesis} accessibilityLabel="합성 시도">
                     <Text style={[styles.synthGoText, { color: elemColor }]}>합성 시도!</Text>
                   </Pressable>
                 </View>
@@ -861,7 +897,7 @@ export default function GachaScreen() {
 
               {(synthPhase === 'success' || synthPhase === 'fail') && (
                 <View style={styles.synthBtns}>
-                  <Pressable style={styles.synthGoBtn} onPress={() => {
+                  <Pressable style={styles.synthGoBtn} accessibilityLabel="합성 결과 확인" onPress={() => {
                     closeSynthesis();
                     if (synthPhase === 'success') setPhase('single_result');
                   }}>
