@@ -145,6 +145,8 @@ export default function FortuneScreen() {
       const result = await showRewardedAd();
       if (result === 'earned') {
         setUnlocked(await unlockCategory(today, key));
+      } else if (result === 'error') {
+        Alert.alert('오류', '광고를 불러올 수 없습니다. 잠시 후 다시 시도해 주세요.');
       }
     }
     setAdLoading(null);

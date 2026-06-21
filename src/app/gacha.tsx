@@ -420,28 +420,31 @@ export default function GachaScreen() {
     setSynthPhase('rolling');
     const required = SYNTHESIS_REQUIRED[synthCard.rarity];
 
-    // 주사위 굴리기 애니메이션
     synthRollA.value = withRepeat(
       withTiming(1, { duration: 150, easing: Easing.linear }), 6, true,
     );
 
     await new Promise(r => setTimeout(r, 1000));
 
-    const success = rollSynthesis(synthCard.rarity);
-    // 재료 카드 n장 제거
-    await removeCards(synthCard.id, required);
+    try {
+      const success = rollSynthesis(synthCard.rarity);
+      await removeCards(synthCard.id, required);
 
-    if (success) {
-      const targetId = getSynthesisTarget(synthCard.id)!;
-      const targetDef = CARD_POOL.find(c => c.id === targetId)!;
-      const upgraded: PulledCard = {
-        ...targetDef, uid: `${targetId}_synth_${Date.now()}`, pulledAt: new Date().toISOString(),
-      };
-      await addToCollection([upgraded]);
-      setResult(upgraded);
-      setSynthPhase('success');
-    } else {
+      if (success) {
+        const targetId = getSynthesisTarget(synthCard.id)!;
+        const targetDef = CARD_POOL.find(c => c.id === targetId)!;
+        const upgraded: PulledCard = {
+          ...targetDef, uid: `${targetId}_synth_${Date.now()}`, pulledAt: new Date().toISOString(),
+        };
+        await addToCollection([upgraded]);
+        setResult(upgraded);
+        setSynthPhase('success');
+      } else {
+        setSynthPhase('fail');
+      }
+    } catch (e: any) {
       setSynthPhase('fail');
+      Alert.alert('오류', e?.message ?? '합성 중 오류가 발생했습니다.');
     }
   }
 
