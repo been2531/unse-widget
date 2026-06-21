@@ -54,6 +54,13 @@
 ### 유지 (교체 불필요)
 `fire_2/3`, `water_2/3/4`, `lightning_2/3/4`, `nature_1/2`, `dark_2/3/4`, `light_1/2/3`
 
+### 카드 아트 배경 처리 방향 변경
+- [ ] **배경 유지로 전환** — 흰 배경 제거(BFS flood-fill) 대신 배경 살리기
+  - 배경 있는 버전이 더 고급스럽고 자연스러움 (흰 배경 제거 시 오히려 이상하게 보임)
+  - `scripts/generate-card-art.js`: BASE 프롬프트에서 `white background` 제거, `rich atmospheric background` 추가 완료
+  - `scripts/apply-card-art.js`: Jimp BFS flood-fill 배경 제거 로직 제거 또는 비활성화 필요
+  - 전체 카드(24장) 배경 유지 버전으로 재생성 필요
+
 ---
 
 ## 🟡 콘텐츠 / UI

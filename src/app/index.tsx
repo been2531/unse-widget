@@ -684,15 +684,20 @@ export default function HomeScreen() {
                   </Circle>
                 ))}
 
-                {/* 아트 창 주변 비네트 — 중앙 집중 조명 */}
-                <Rect x={8} y={8} width={CARD_W - 16} height={CHAR_H - 6}>
-                  <RadialGradient
-                    c={vec(CARD_W * 0.5, CHAR_H * 0.38)}
-                    r={CARD_W * 0.70}
-                    colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0)', 'rgba(0,0,0,0.40)']}
-                    positions={[0, 0.48, 1]}
-                  />
-                </Rect>
+                {/* 아트 창 주변 비네트 — 등급별 강도 차별화 */}
+                {(() => {
+                  const vo = rarity === 'mythic' ? 0.20 : rarity === 'legendary' ? 0.26 : rarity === 'epic' ? 0.32 : rarity === 'rare' ? 0.40 : 0.58;
+                  return (
+                    <Rect x={8} y={8} width={CARD_W - 16} height={CHAR_H - 6}>
+                      <RadialGradient
+                        c={vec(CARD_W * 0.5, CHAR_H * 0.38)}
+                        r={CARD_W * 0.70}
+                        colors={['rgba(0,0,0,0)', 'rgba(0,0,0,0)', `rgba(0,0,0,${vo})`]}
+                        positions={[0, 0.48, 1]}
+                      />
+                    </Rect>
+                  );
+                })()}
               </Group>
 
               {/* ── 이펙트: Rare 이상부터, 카드 전체 영역에 표출 ── */}
@@ -825,6 +830,25 @@ export default function HomeScreen() {
                       width={CARD_W - 16} height={CHAR_H - 6}
                       fit="cover"
                     />
+                  )}
+                  {/* common: 어두운 오버레이 → 아직 힘이 약한 존재 */}
+                  {rarity === 'common' && (
+                    <Rect x={0} y={0} width={CARD_W - 16} height={CHAR_H - 6} color="rgba(8,6,20,0.32)" />
+                  )}
+                  {/* rare: 약한 오버레이 */}
+                  {rarity === 'rare' && (
+                    <Rect x={0} y={0} width={CARD_W - 16} height={CHAR_H - 6} color="rgba(8,6,20,0.14)" />
+                  )}
+                  {/* legendary/mythic: 원소 림라이트 — 캐릭터 가장자리를 밝힘 */}
+                  {(rarity === 'legendary' || rarity === 'mythic') && (
+                    <Rect x={0} y={0} width={CARD_W - 16} height={CHAR_H - 6}>
+                      <RadialGradient
+                        c={vec((CARD_W - 16) / 2, (CHAR_H - 6) * 0.45)}
+                        r={(CARD_W - 16) * 0.65}
+                        colors={[`${E.color}00`, `${E.color}00`, `${E.color}1E`]}
+                        positions={[0, 0.58, 1]}
+                      />
+                    </Rect>
                   )}
                 </Group>
               </Canvas>

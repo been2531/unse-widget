@@ -1,6 +1,6 @@
 import {
   BlurMask, Canvas, Circle, Group, Image as SkiaImage,
-  LinearGradient, Rect, RoundedRect, Skia, vec, useImage,
+  LinearGradient, RadialGradient, Rect, RoundedRect, Skia, vec, useImage,
 } from '@shopify/react-native-skia';
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
@@ -130,6 +130,23 @@ function CardItem({ item, CARD_W, CARD_H, onPress }: {
               <LinearGradient
                 start={vec(CW / 2, 0)} end={vec(CW / 2, CH)}
                 colors={['rgba(5,4,18,0.20)', 'rgba(5,4,18,0.68)']}
+              />
+            </Rect>
+          )}
+          {/* 소유 카드 등급별 처리 */}
+          {owned && item.rarity === 'common' && (
+            <Rect x={0} y={0} width={CW} height={CH} color="rgba(8,6,20,0.28)" />
+          )}
+          {owned && item.rarity === 'rare' && (
+            <Rect x={0} y={0} width={CW} height={CH} color="rgba(8,6,20,0.12)" />
+          )}
+          {owned && (item.rarity === 'legendary' || item.rarity === 'mythic') && (
+            <Rect x={0} y={0} width={CW} height={CH}>
+              <RadialGradient
+                c={vec(CW / 2, CH * 0.42)}
+                r={CW * 0.62}
+                colors={[`${elemColor}00`, `${elemColor}00`, `${elemColor}16`]}
+                positions={[0, 0.55, 1]}
               />
             </Rect>
           )}
