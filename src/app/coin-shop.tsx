@@ -293,14 +293,14 @@ export default function CoinShopScreen() {
               <Text style={{ fontSize: 28 }}>🖼️</Text>
               <View style={styles.packageInfo}>
                 <Text style={styles.packageLabel}>{skin.nameKo}</Text>
-                <Text style={{ color: RARITY_COLOR[skin.rarity], fontSize: 11, fontWeight: '700' }}>
+                <Text style={{ fontFamily: F.b, color: RARITY_COLOR[skin.rarity], fontSize: 11 }}>
                   {RARITY_LABEL[skin.rarity]}
                 </Text>
-                <Text style={{ color: 'rgba(255,255,255,0.35)', fontSize: 11 }} numberOfLines={1}>{skin.description}</Text>
+                <Text style={{ fontFamily: F.r, color: 'rgba(255,255,255,0.35)', fontSize: 11 }} numberOfLines={1}>{skin.description}</Text>
               </View>
               {owned
                 ? <View style={{ paddingHorizontal: 12, paddingVertical: 6, backgroundColor: 'rgba(0,220,100,0.12)', borderRadius: 10 }}>
-                    <Text style={{ color: '#00DD77', fontSize: 13, fontWeight: '700' }}>보유 중</Text>
+                    <Text style={{ fontFamily: F.b, color: '#00DD77', fontSize: 13 }}>보유 중</Text>
                   </View>
                 : <Pressable
                     style={[{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, backgroundColor: 'rgba(255,220,0,0.12)', borderWidth: 1, borderColor: 'rgba(255,220,0,0.3)', alignItems: 'center' }, balance < price && { opacity: 0.5 }]}
@@ -310,7 +310,7 @@ export default function CoinShopScreen() {
                   >
                     {purchasing === skin.id
                       ? <ActivityIndicator size="small" color="#FFE500" />
-                      : <><Text style={{ color: '#FFE500', fontSize: 13, fontWeight: '800' }}>💰 {price}</Text></>
+                      : <><Text style={{ fontFamily: F.eb, color: '#FFE500', fontSize: 13 }}>💰 {price}</Text></>
                     }
                   </Pressable>
               }
@@ -339,18 +339,18 @@ const styles = StyleSheet.create({
     borderColor: '#FFF',
     transform: [{ rotate: '45deg' }, { translateX: 2 }],
   },
-  title: { fontSize: 18, fontWeight: '800', color: '#FFF' },
+  title: { fontFamily: F.eb, fontSize: 18, color: '#FFF' },
   balanceBadge: {
     backgroundColor: 'rgba(255,220,0,0.12)', borderWidth: 1, borderColor: 'rgba(255,220,0,0.35)',
     paddingVertical: 5, paddingHorizontal: 12, borderRadius: 14,
   },
-  balanceText: { color: '#FFE500', fontWeight: '700', fontSize: 13 },
+  balanceText: { fontFamily: F.b, color: '#FFE500', fontSize: 13 },
 
   content: { paddingHorizontal: 20, paddingBottom: 48, gap: 12 },
 
   section: { gap: 8 },
-  sectionTitle: { color: '#FFF', fontSize: 16, fontWeight: '800' },
-  sectionSub: { color: 'rgba(255,255,255,0.45)', fontSize: 12 },
+  sectionTitle: { fontFamily: F.eb, color: '#FFF', fontSize: 16 },
+  sectionSub: { fontFamily: F.r, color: 'rgba(255,255,255,0.45)', fontSize: 12 },
 
   adBtn: {
     backgroundColor: '#FFE500', borderRadius: 16, paddingVertical: 16, paddingHorizontal: 20,
@@ -358,8 +358,8 @@ const styles = StyleSheet.create({
     shadowColor: '#FFE500', shadowOpacity: 0.35, shadowOffset: { width: 0, height: 4 }, shadowRadius: 12, elevation: 6,
   },
   adBtnDisabled: { opacity: 0.4 },
-  adBtnText: { color: '#111', fontWeight: '900', fontSize: 16 },
-  adBtnSub: { color: '#444', fontSize: 11 },
+  adBtnText: { fontFamily: F.bk, color: '#111', fontSize: 16 },
+  adBtnSub: { fontFamily: F.r, color: '#444', fontSize: 11 },
 
   divider: { height: 1, backgroundColor: 'rgba(255,255,255,0.08)', marginVertical: 8 },
 
@@ -375,19 +375,19 @@ const styles = StyleSheet.create({
     position: 'absolute', top: -8, right: 12,
     backgroundColor: '#FFE500', borderRadius: 8, paddingHorizontal: 8, paddingVertical: 2,
   },
-  bestText: { color: '#111', fontSize: 10, fontWeight: '900' },
+  bestText: { fontFamily: F.bk, color: '#111', fontSize: 10 },
   packageIcon: { fontSize: 28 },
   packageInfo: { flex: 1, gap: 4 },
-  packageLabel: { color: 'rgba(255,255,255,0.7)', fontSize: 13 },
-  packageCoins: { fontSize: 18, fontWeight: '900' },
+  packageLabel: { fontFamily: F.r, color: 'rgba(255,255,255,0.7)', fontSize: 13 },
+  packageCoins: { fontFamily: F.bk, fontSize: 18 },
   bonusBadge: {
     backgroundColor: 'rgba(0,220,100,0.15)', borderWidth: 1, borderColor: 'rgba(0,220,100,0.35)',
     borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2,
   },
-  bonusText: { color: '#00DD77', fontSize: 10, fontWeight: '700' },
-  packagePrice: { fontSize: 16, fontWeight: '800' },
+  bonusText: { fontFamily: F.b, color: '#00DD77', fontSize: 10 },
+  packagePrice: { fontFamily: F.eb, fontSize: 16 },
 
-  notice: { color: 'rgba(255,255,255,0.25)', fontSize: 11, lineHeight: 18, marginTop: 8 },
+  notice: { fontFamily: F.r, color: 'rgba(255,255,255,0.25)', fontSize: 11, lineHeight: 18, marginTop: 8 },
 
   removeAdsBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
