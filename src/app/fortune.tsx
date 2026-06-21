@@ -93,6 +93,7 @@ export default function FortuneScreen() {
   const [luckyInfo, setLuckyInfo]   = useState<LuckyInfo | null>(null);
   const [scores, setScores]         = useState<Record<CategoryKey, number> | null>(null);
   const [overall, setOverall]       = useState(0);
+  const [displayScore, setDisplayScore] = useState(0);
   const [diiSign, setDiiSign]       = useState('');
   const [starSign, setStarSign]     = useState('');
 
@@ -127,6 +128,22 @@ export default function FortuneScreen() {
       setLoading(false);
     })();
   }, []);
+
+  useEffect(() => {
+    if (overall <= 0) return;
+    let current = 0;
+    const step = overall / 20;
+    const timer = setInterval(() => {
+      current += step;
+      if (current >= overall) {
+        setDisplayScore(overall);
+        clearInterval(timer);
+      } else {
+        setDisplayScore(Math.round(current));
+      }
+    }, 40);
+    return () => clearInterval(timer);
+  }, [overall]);
 
   async function watchAdForCategory(key: CategoryKey) {
     if (adLoading) return;
@@ -217,8 +234,8 @@ export default function FortuneScreen() {
             <Text style={styles.overallDate}>
               {new Date(fortune.date + 'T00:00:00').toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}
             </Text>
-            <Text style={[styles.overallScore, { color: overallColor }]}>{overall}</Text>
-            <Text style={[styles.overallGrade, { color: overallColor }]}>{scoreLabel(overall)}</Text>
+            <Text style={[styles.overallScore, { color: overallColor }]}>{displayScore}</Text>
+            <Text style={[styles.overallGrade, { color: overallColor }]}>{scoreLabel(displayScore)}</Text>
             <Text style={styles.overallLabel}>종합 운세</Text>
           </View>
           <View style={styles.overallRight}>
