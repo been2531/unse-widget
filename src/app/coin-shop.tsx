@@ -83,15 +83,20 @@ export default function CoinShopScreen() {
   async function handleWatchAd() {
     if (adsRemaining <= 0 || adLoading) return;
     setAdLoading(true);
-    const result = await showRewardedAd('gacha_free_pull');
-    if (result === 'earned') {
-      const newBal = await recordAdReward(today);
-      setBalance(newBal);
-      setAdsRemaining(prev => Math.max(0, prev - 1));
-    } else if (result === 'error') {
-      Alert.alert('오류', '광고를 불러올 수 없습니다. 잠시 후 다시 시도해 주세요.');
+    try {
+      const result = await showRewardedAd('gacha_free_pull');
+      if (result === 'earned') {
+        const newBal = await recordAdReward(today);
+        setBalance(newBal);
+        setAdsRemaining(prev => Math.max(0, prev - 1));
+      } else if (result === 'error') {
+        Alert.alert('오류', '광고를 불러올 수 없습니다. 잠시 후 다시 시도해 주세요.');
+      }
+    } catch {
+      Alert.alert('오류', '코인 적립 중 오류가 발생했습니다.');
+    } finally {
+      setAdLoading(false);
     }
-    setAdLoading(false);
   }
 
   // ─── 스킨 구매 ────────────────────────────────────────────────────────────
