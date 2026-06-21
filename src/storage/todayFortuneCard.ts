@@ -22,8 +22,12 @@ export async function saveFortuneCardBuff(
 }
 
 export async function getTodayFortuneBuff(today: string): Promise<ActiveFortuneBuff | null> {
-  const raw = await AsyncStorage.getItem(KEY);
-  if (!raw) return null;
-  const data: ActiveFortuneBuff = JSON.parse(raw);
-  return data.date === today ? data : null;
+  try {
+    const raw = await AsyncStorage.getItem(KEY);
+    if (!raw) return null;
+    const data: ActiveFortuneBuff = JSON.parse(raw);
+    return data.date === today ? data : null;
+  } catch {
+    return null;
+  }
 }
