@@ -157,13 +157,17 @@ export default function FortuneScreen() {
       if (adsRemoved) {
         try {
           await spend(50);
-          setUnlocked(await unlockCategory(today, key));
-        } catch {
-          Alert.alert('코인 부족', '코인이 부족해요.\n코인샵에서 충전하거나 광고 제거를 해제해 보세요.', [
-            { text: '코인샵 가기', onPress: () => router.push('/coin-shop') },
-            { text: '닫기', style: 'cancel' },
-          ]);
+        } catch (e: any) {
+          if (e?.message === '코인 부족') {
+            Alert.alert('코인 부족', '코인이 부족해요.\n코인샵에서 충전하거나 광고 제거를 해제해 보세요.', [
+              { text: '코인샵 가기', onPress: () => router.push('/coin-shop') },
+              { text: '닫기', style: 'cancel' },
+            ]);
+            return;
+          }
+          throw e;
         }
+        setUnlocked(await unlockCategory(today, key));
       } else {
         const result = await showRewardedAd();
         if (result === 'earned') {
