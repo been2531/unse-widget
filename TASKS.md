@@ -1,6 +1,6 @@
 # unse-widget 작업 목록
 
-> 최종 업데이트: 2026-06-21 (루틴 3회차)
+> 최종 업데이트: 2026-06-21 (루틴 4회차)
 > 컨셉 원칙: **한국신화 × 운세** — 이 두 가지는 고정. 나머지 디자인·구조·UI는 루틴/Claude가 자유롭게 개선 가능.
 
 ---
@@ -20,6 +20,15 @@
 - ~~[리뷰] fortune.tsx watchAdForCategory — 광고 오류 무음 처리 → Alert 추가~~ → 완료
 - ~~[리뷰] fortune.tsx shareFortuneResult — 공유 메시지에 raw 날짜 'YYYY-MM-DD' 노출 → 한국어 날짜 형식으로 수정~~ → 완료
 - ~~[리뷰] collection.tsx — fortune 빈 상태 안내 문구 오류("운세 확인 시 카드가 쌓입니다" → 실제로는 가챠에서 획득) → 수정~~ → 완료
+- ~~[리뷰] index.tsx — mood 계산이 항상 affection=100, neglectDays=0 하드코딩 → 실제 캐릭터 상태로 수정~~ → 완료
+- ~~[리뷰] gacha.tsx handleAdReward — setSpinning(false) try 밖 → finally로 이동, storage 실패 시 UI 고착 방지~~ → 완료
+- ~~[리뷰] coin-shop.tsx handleWatchAd — setAdLoading(false) try 밖 → finally로 이동~~ → 완료
+- ~~[리뷰] fortune.tsx watchAdForCategory — setAdLoading(null) try 밖 → finally로 이동, 버튼 영구 비활성화 방지~~ → 완료
+- ~~[리뷰] storage/streak.ts — getStreak() try-catch 누락 → 스토리지 손상 시 앱 크래시 방지~~ → 완료
+- ~~[리뷰] storage/freePulls.ts — try-catch 누락 → 가챠 로딩 화면 영구 고착 방지~~ → 완료
+- ~~[리뷰] storage/adRewards.ts — getAdsRemaining() try-catch 누락~~ → 완료
+- ~~[리뷰] storage/todayFortuneCard.ts — getTodayFortuneBuff() JSON.parse try-catch 누락~~ → 완료
+- ~~[리뷰] storage/characterState.ts — loadCharacterState() try-catch 누락 → 홈 화면 로딩 영구 고착 방지~~ → 완료
 
 ---
 
