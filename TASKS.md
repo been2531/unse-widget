@@ -34,6 +34,8 @@
 
 - [ ] [리뷰] streak.ts:32 — checkInStreak() AsyncStorage.setItem try-catch 누락 → index.tsx IIFE에서 저장 실패 시 setLoading(false) 미호출, 홈 화면 영구 로딩 고착
 - [ ] [리뷰] adRewards.ts:19 — recordAdReward() try-catch 누락 → 광고 시청 후 코인 저장(Promise.all) 실패 시 코인 미적립 (callers에 catch 있어 crash는 방지되나 데이터 손실)
+- [ ] [리뷰] coin-shop.tsx:76 — Promise.all().then() .catch() 미처리 → AsyncStorage 에러 시 setLoading(false) 미호출, 스켈레톤 화면 무한 표시
+- [ ] [리뷰] fortune.tsx:122 — checkInStreak(today) 추가로 fortune 화면도 streak.ts:32 이슈 영향권 진입 → checkInStreak 에러 시 setLoading(false) 미호출, 운세 화면 영구 로딩 고착
 
 ---
 
