@@ -154,7 +154,8 @@ export default function FortuneScreen() {
     if (!fortune || !scores) return;
     const diiLine = diiSign ? `\n🐾 ${diiSign} 띠: ${fortune.dii.text}` : '';
     const starLine = starSign ? `\n⭐ ${starSign}: ${fortune.star.text}` : '';
-    const msg = `[UNSE 오늘의 운세]\n${fortune.date}\n\n종합 운세: ${overall}점 (${scoreLabel(overall)})\n\n✨ ${fortune.general.text}${diiLine}${starLine}`;
+    const dateKo = new Date(fortune.date + 'T00:00:00').toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
+    const msg = `[UNSE 오늘의 운세]\n${dateKo}\n\n종합 운세: ${overall}점 (${scoreLabel(overall)})\n\n✨ ${fortune.general.text}${diiLine}${starLine}`;
     try { await Share.share({ message: msg }); } catch {}
   }
 

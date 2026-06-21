@@ -459,6 +459,8 @@ export default function GachaScreen() {
       const newBalance = await recordAdReward(today);
       setBalance(newBalance);
       setAdsLeft(prev => Math.max(0, prev - 1));
+    } else if (result === 'error') {
+      Alert.alert('오류', '광고를 불러올 수 없습니다. 잠시 후 다시 시도해 주세요.');
     }
     setSpinning(false);
   }
