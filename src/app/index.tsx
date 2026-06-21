@@ -301,6 +301,14 @@ export default function HomeScreen() {
     });
   }, []);
 
+  const todayScore = useMemo(() => {
+    if (!profile) return null;
+    const today = getTodayDateString();
+    const cats = ['wealth', 'love', 'health', 'work'];
+    const sum = cats.reduce((s, c) => s + 30 + (fnv1aHash(`${today}:${profile.diiSign}:${profile.starSign}:score:${c}`) % 61), 0);
+    return Math.round(sum / cats.length);
+  }, [profile]);
+
   const bgStars = useMemo(() => Array.from({ length: 22 }, (_, i) => ({
     x: (i * 137 + 29) % screenW,
     y: (i * 211 + 71) % screenH,
@@ -1024,6 +1032,11 @@ export default function HomeScreen() {
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           <Text style={styles.primaryBtnText}>오늘의 운세 보기</Text>
+          {todayScore !== null && (
+            <Text style={{ fontFamily: F.b, fontSize: 12, color: 'rgba(255,255,255,0.75)' }}>
+              {todayScore >= 70 ? '🟡' : todayScore >= 50 ? '🔵' : '🔴'} {todayScore}점
+            </Text>
+          )}
           <Text style={styles.primaryBtnArrow}>→</Text>
         </View>
       </Pressable>
