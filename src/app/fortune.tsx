@@ -17,6 +17,7 @@ import { getActiveBuff, type FortuneBuff } from '@/fortune/fortuneCardBuff';
 import { getTodayDateString } from '@/shared/dateUtils';
 import { SkeletonBox } from '@/shared/Skeleton';
 import { getTodayUnlocked, unlockCategory } from '@/storage/fortuneUnlock';
+import { checkInStreak, type StreakState } from '@/storage/streak';
 import { getTodayFortuneBuff } from '@/storage/todayFortuneCard';
 import { loadUserProfile } from '@/storage/userProfile';
 
@@ -96,6 +97,7 @@ export default function FortuneScreen() {
   const [displayScore, setDisplayScore] = useState(0);
   const [diiSign, setDiiSign]       = useState('');
   const [starSign, setStarSign]     = useState('');
+  const [streak, setStreak]         = useState<StreakState>({ currentStreak: 0, lastDate: '', longestStreak: 0 });
 
   useEffect(() => {
     (async () => {
@@ -117,11 +119,13 @@ export default function FortuneScreen() {
       setScores(s);
       setOverall(Math.round((s.wealth + s.love + s.health + s.work) / 4));
 
-      const [todayUnlocked, noAds, todayBuff] = await Promise.all([
+      const [todayUnlocked, noAds, todayBuff, streakState] = await Promise.all([
         getTodayUnlocked(today),
         hasRemovedAds(),
         getTodayFortuneBuff(today),
+        checkInStreak(today),
       ]);
+      setStreak(streakState);
       setUnlocked(todayUnlocked);
       setAdsRemoved(noAds);
       if (todayBuff) setActiveBuff(getActiveBuff(todayBuff.cardId));
@@ -219,7 +223,13 @@ export default function FortuneScreen() {
           <Text style={styles.backIcon}>‹</Text>
         </Pressable>
         <Text style={styles.title}>오늘의 운세</Text>
-        <View style={{ width: 40 }} />
+        <View style={{ width: 40, alignItems: 'flex-end' }}>
+          {streak.currentStreak >= 1 && (
+            <View style={{ backgroundColor: 'rgba(255,120,0,0.18)', borderRadius: 10, borderWidth: 1, borderColor: 'rgba(255,120,0,0.40)', paddingVertical: 3, paddingHorizontal: 8 }}>
+              <Text style={{ fontFamily: F.b, color: '#FF8800', fontSize: 11 }}>🔥 {streak.currentStreak}일</Text>
+            </View>
+          )}
+        </View>
       </View>
 
       <ScrollView
