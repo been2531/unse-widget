@@ -76,7 +76,7 @@ function CardItem({ item, CARD_W, CARD_H, onPress }: {
   const owned = item.owned !== false;
   const elemColor = ELEM_COLOR[item.element] ?? '#888';
   const imgSrc = (item.category === 'character' || item.category === 'skin')
-    ? cardImageFor(item.element, item.rarity)
+    ? cardImageFor(item.element, item.rarity, item.id)
     : null;
   const skiaImg = useImage(imgSrc);
   const CW = CARD_W - 8;
@@ -160,7 +160,7 @@ function CardDetailModal({ item, onClose }: { item: ModalItem; onClose: () => vo
   const elemColor = ELEM_COLOR[item.element] ?? '#888';
   const [bgTop, bgBot] = ELEM_BG[item.element] ?? ['#12103a', '#0c1e3e'];
   const imgSrc = (item.category === 'character' || item.category === 'skin')
-    ? cardImageFor(item.element, item.rarity)
+    ? cardImageFor(item.element, item.rarity, item.id)
     : null;
   const owned = 'owned' in item ? item.owned : true;
   const skiaImg = useImage(imgSrc);

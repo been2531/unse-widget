@@ -1,0 +1,22 @@
+﻿Starting project at D:\react_project\unse-widget
+node.exe : No 'iosAppId' was provided. The native Google Mobile Ads SDK will crash on iOS without it.
+At C:\Program Files\nodejs\npx.ps1:29 char:3
++   & $NODE_EXE $NPX_CLI_JS $args
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (No 'iosAppId' w...iOS without it.:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+No 'iosAppId' was provided. The native Google Mobile Ads SDK will crash on iOS without it.
+No 'iosAppId' was provided. The native Google Mobile Ads SDK will crash on iOS without it.
+Using src/app as the root directory for Expo Router.
+React Compiler enabled
+Starting Metro Bundler
+
+No 'iosAppId' was provided. The native Google Mobile Ads SDK will crash on iOS without it.
+No 'iosAppId' was provided. The native Google Mobile Ads SDK will crash on iOS without it.
+No 'iosAppId' was provided. The native Google Mobile Ads SDK will crash on iOS without it.
+No 'iosAppId' was provided. The native Google Mobile Ads SDK will crash on iOS without it.
+No 'iosAppId' was provided. The native Google Mobile Ads SDK will crash on iOS without it.
+Waiting on http://localhost:8081
+1 package may need updating. Run npx expo install --check for details.
+Logs for your project will appear below.

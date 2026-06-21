@@ -257,7 +257,7 @@ function ResultCard({ card, cardW, onReveal }: { card: PulledCard; cardW: number
           <View style={{ position: 'absolute', top: 8, left: 8, right: 8, height: charH, alignItems: 'center', justifyContent: 'center' }}>
             {card.category === 'character'
               ? (() => {
-                  const img = cardImageFor(card.element, card.rarity);
+                  const img = cardImageFor(card.element, card.rarity, card.id);
                   return img
                     ? <Image source={img}
                         style={{ width: charH, height: charH, transform: [{ scale: 1.15 }, { translateY: -6 }] }}
@@ -315,8 +315,8 @@ function MultiResultGrid({ cards, miniW }: { cards: PulledCard[]; miniW: number 
                   color={`${elemColor}BB`} style="stroke" strokeWidth={RARITY_BORDER[card.rarity]} />
               </Canvas>
               <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 2 }}>
-                {card.category === 'character' && cardImageFor(card.element, card.rarity)
-                  ? <Image source={cardImageFor(card.element, card.rarity)!}
+                {card.category === 'character' && cardImageFor(card.element, card.rarity, card.id)
+                  ? <Image source={cardImageFor(card.element, card.rarity, card.id)!}
                       style={{ width: miniW - 4, height: miniW - 4 }} resizeMode="contain" />
                   : <Text style={{ fontSize: miniW * 0.28 }}>
                       {card.category === 'character' ? '🐲' : card.category === 'skin' ? '🎨' : '🔮'}

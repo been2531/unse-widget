@@ -1,6 +1,7 @@
 import type { ImageRequireSource } from 'react-native';
 
 export const CARD_IMAGES: Record<string, ImageRequireSource> = {
+  // ── 기존 원소 시리즈 ─────────────────────────────────────────────────────
   fire_1:        require('../assets/character/fire_1.png'),
   fire_2:        require('../assets/character/fire_2.png'),
   fire_3:        require('../assets/character/fire_3.png'),
@@ -25,9 +26,27 @@ export const CARD_IMAGES: Record<string, ImageRequireSource> = {
   light_2:       require('../assets/character/light_2.png'),
   light_3:       require('../assets/character/light_3.png'),
   light_4:       require('../assets/character/light_4.png'),
+  // ── 신규: 구미호 시리즈 (fire) ─────────────────────────────────────────
+  gumiho_1:      require('../assets/character/gumiho_1.png'),
+  gumiho_2:      require('../assets/character/gumiho_2.png'),
+  gumiho_3:      require('../assets/character/gumiho_3.png'),
+  // ── 신규: 이무기 시리즈 (water) ────────────────────────────────────────
+  imugi_1:       require('../assets/character/imugi_1.png'),
+  imugi_2:       require('../assets/character/imugi_2.png'),
+  imugi_3:       require('../assets/character/imugi_3.png'),
+  // ── 신규: 삼족오 시리즈 (lightning) ────────────────────────────────────
+  samjogo_1:     require('../assets/character/samjogo_1.png'),
+  samjogo_2:     require('../assets/character/samjogo_2.png'),
+  samjogo_3:     require('../assets/character/samjogo_3.png'),
 };
 
-export function cardImageFor(element: string, rarity: string): ImageRequireSource | undefined {
+// id로 직접 조회 → 없으면 element_stage 패턴으로 폴백
+export function cardImageFor(
+  element: string,
+  rarity: string,
+  id?: string,
+): ImageRequireSource | undefined {
+  if (id && CARD_IMAGES[id]) return CARD_IMAGES[id];
   const stage = rarity === 'mythic' ? '4' :
                 (rarity === 'legendary' || rarity === 'epic') ? '3' :
                 rarity === 'rare' ? '2' : '1';
