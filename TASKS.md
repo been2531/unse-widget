@@ -60,6 +60,12 @@
   - `scripts/generate-card-art.js`: BASE 프롬프트에서 `white background` 제거, `rich atmospheric background` 추가 완료
   - ~~`scripts/apply-card-art.js`: Jimp BFS flood-fill 배경 제거 로직 제거 또는 비활성화 필요~~ → 완료 (단순 fs.copyFileSync로 교체)
   - 전체 카드(24장) 배경 유지 버전으로 재생성 필요
+- [ ] **캐릭터 아트 구도 개선** — 얼굴이 지나치게 크게 생성되는 문제 수정
+  - 현재: 얼굴/두상이 화면 대부분을 차지하는 클로즈업으로 생성됨
+  - 목표: 전신 또는 상반신 위주로 구도 잡아 카드에서 자연스럽게 보이도록
+  - `generate-card-art.js` BASE 프롬프트에 구도 지시어 강화 필요
+    - 추가 예시: `full body shot, wide framing, creature small relative to background, head takes up less than 30% of image`
+  - 재생성 후 실제 카드에 올렸을 때 얼굴이 잘리지 않는지 확인
 
 ---
 
