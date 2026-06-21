@@ -735,10 +735,10 @@ export default function GachaScreen() {
             {CATEGORY_LABEL[result.category]} · {RARITY_LABEL[result.rarity]}
           </Text>
           <View style={styles.resultBtns}>
-            <Pressable style={styles.againBtn} onPress={backToLobby}>
+            <Pressable style={styles.againBtn} onPress={backToLobby} accessibilityLabel="다시 뽑기">
               <Text style={styles.againBtnText}>다시 뽑기</Text>
             </Pressable>
-            <Pressable style={styles.okBtn} onPress={() => router.back()}>
+            <Pressable style={styles.okBtn} onPress={() => router.back()} accessibilityLabel="확인하고 뒤로 가기">
               <Text style={styles.okBtnText}>확인</Text>
             </Pressable>
           </View>
@@ -901,10 +901,10 @@ export default function GachaScreen() {
             })}
           </ScrollView>
           <View style={[styles.resultBtns, { paddingBottom: 24 }]}>
-            <Pressable style={styles.againBtn} onPress={backToLobby}>
+            <Pressable style={styles.againBtn} onPress={backToLobby} accessibilityLabel="다시 뽑기">
               <Text style={styles.againBtnText}>다시 뽑기</Text>
             </Pressable>
-            <Pressable style={styles.okBtn} onPress={() => router.back()}>
+            <Pressable style={styles.okBtn} onPress={() => router.back()} accessibilityLabel="확인하고 뒤로 가기">
               <Text style={styles.okBtnText}>확인</Text>
             </Pressable>
           </View>

@@ -348,7 +348,9 @@ export default function CollectionScreen() {
           {FILTERS.map(({ key, label }) => (
             <Pressable key={key}
               style={[styles.tab, filter === key && styles.tabActive]}
-              onPress={() => { setFilter(key); setElemFilter('all'); }}>
+              onPress={() => { setFilter(key); setElemFilter('all'); }}
+              accessibilityLabel={`${label} 탭`}
+              accessibilityState={{ selected: filter === key }}>
               <Text style={[styles.tabText, filter === key && styles.tabTextActive]}>
                 {label}
               </Text>
@@ -367,7 +369,9 @@ export default function CollectionScreen() {
             return (
               <Pressable key={key}
                 style={[styles.elemTab, isActive && { borderColor: color ? `${color}99` : 'rgba(255,255,255,0.55)', backgroundColor: color ? `${color}18` : 'rgba(255,255,255,0.10)' }]}
-                onPress={() => setElemFilter(key)}>
+                onPress={() => setElemFilter(key)}
+                accessibilityLabel={`${label} 필터`}
+                accessibilityState={{ selected: isActive }}>
                 <Text style={[styles.elemTabText, isActive && { color: color ?? '#FFF', fontFamily: F.sb }]}>
                   {label}
                 </Text>
@@ -409,7 +413,7 @@ export default function CollectionScreen() {
                 : filter === 'skin' ? '코인샵에서 프레임을 구매해보세요'
                 : '가챠에서 카드를 뽑아보세요!'}
             </Text>
-            <Pressable style={styles.emptyBtn} onPress={() => router.push(filter === 'skin' ? '/coin-shop' : '/gacha')}>
+            <Pressable style={styles.emptyBtn} onPress={() => router.push(filter === 'skin' ? '/coin-shop' : '/gacha')} accessibilityLabel={filter === 'skin' ? '코인샵으로 이동' : '카드 뽑기로 이동'}>
               <Text style={styles.emptyBtnText}>{filter === 'skin' ? '코인샵 가기' : '카드 뽑기'}</Text>
             </Pressable>
           </View>
