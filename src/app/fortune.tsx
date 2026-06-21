@@ -184,7 +184,11 @@ export default function FortuneScreen() {
     const diiLine = diiSign ? `\n🐾 ${diiSign} 띠: ${fortune.dii.text}` : '';
     const starLine = starSign ? `\n⭐ ${starSign}: ${fortune.star.text}` : '';
     const dateKo = new Date(fortune.date + 'T00:00:00').toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
-    const msg = `[UNSE 오늘의 운세]\n${dateKo}\n\n종합 운세: ${overall}점 (${scoreLabel(overall)})\n\n✨ ${fortune.general.text}${diiLine}${starLine}`;
+    const unlockedLines = CATEGORIES
+      .filter(c => unlocked.includes(c.key))
+      .map(c => `\n${c.emoji} ${c.label} ${scores[c.key]}점: ${fortune[c.key].text}`)
+      .join('');
+    const msg = `[UNSE 오늘의 운세]\n${dateKo}\n\n종합 운세: ${overall}점 (${scoreLabel(overall)})\n\n✨ ${fortune.general.text}${diiLine}${starLine}${unlockedLines}`;
     try { await Share.share({ message: msg }); } catch {}
   }
 

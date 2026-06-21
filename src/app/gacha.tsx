@@ -496,8 +496,9 @@ export default function GachaScreen() {
       await checkSynthesisAfterPull(card);
     } catch {
       Alert.alert('오류', '뽑기 중 오류가 발생했습니다.');
+    } finally {
+      setSpinning(false);
     }
-    setSpinning(false);
   }
 
   async function handlePull(multi: boolean) {
@@ -525,8 +526,9 @@ export default function GachaScreen() {
       }
     } catch (e: any) {
       Alert.alert('오류', e?.message ?? '뽑기 중 오류가 발생했습니다.');
+    } finally {
+      setSpinning(false);
     }
-    setSpinning(false);
   }
 
   async function backToLobby() {
