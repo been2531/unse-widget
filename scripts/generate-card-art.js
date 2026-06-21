@@ -182,6 +182,35 @@ const CARDS = [
       'about to ascend to become a true Korean dragon, ',
   },
 
+  // ── 신규: 주작 시리즈 ─────────────────────────────────────────────────────
+  // 주작 = 남방 수호신, 불새. 봉황(오색 평화)과 달리 → 전투적·방위신·선명한 주홍색
+  {
+    id: 'jujak_1', seed: 2901, rarity: 'common',
+    prompt: 'Jujak vermilion guardian bird of Korean mythology, young hatchling of the south celestial guardian, ' +
+      'brilliant vermilion red plumage with crimson wing tips, round body with bold red-orange feathers, ' +
+      'bright alert eyes watching the southern sky, ' +
+      'small but proud posture, soft warm ember glow around body, ' +
+      'distinct from phoenix — solid vivid red not multicolored, korean shamanic celestial bird spirit, ',
+  },
+  {
+    id: 'jujak_2', seed: 2902, rarity: 'rare',
+    prompt: 'Jujak vermilion bird of Korean southern guardian mythology, adolescent spreading wings, ' +
+      'vivid scarlet and flame-red feathers blazing like southern summer sun, ' +
+      'wings beginning to spread wide in display, commanding red-gold aura, ' +
+      'powerful tail feathers like tongues of fire, ' +
+      'guardian energy radiating southward, summer fire embodied, ' +
+      'warrior bird spirit of Korean cosmos, ',
+  },
+  {
+    id: 'jujak_3', seed: 2903, rarity: 'legendary',
+    prompt: 'Jujak the supreme vermilion bird guardian of the Korean southern heavens, ' +
+      'magnificent fully grown celestial guardian bird, blazing blood-red and scarlet sacred plumage, ' +
+      'wings fully spread commanding the southern sky, intense warrior eyes burning with divine fire, ' +
+      'crown of sacred flame, protector of the south direction, ' +
+      'battle-ready divine guardian posture, overwhelming vermilion fire aura, ' +
+      'one of the four divine guardians of Korean cosmology, immortal phoenix reborn from ashes, ',
+  },
+
   // ── 신규: 삼족오 시리즈 ────────────────────────────────────────────────────
   {
     id: 'samjogo_1', seed: 2801, rarity: 'common',

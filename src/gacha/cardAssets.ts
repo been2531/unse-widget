@@ -26,6 +26,10 @@ export const CARD_IMAGES: Record<string, ImageRequireSource> = {
   light_2:       require('../assets/character/light_2.png'),
   light_3:       require('../assets/character/light_3.png'),
   light_4:       require('../assets/character/light_4.png'),
+  // ── 신규: 주작 시리즈 (fire) ───────────────────────────────────────────
+  jujak_1:       require('../assets/character/jujak_1.png'),
+  jujak_2:       require('../assets/character/jujak_2.png'),
+  jujak_3:       require('../assets/character/jujak_3.png'),
   // ── 신규: 구미호 시리즈 (fire) ─────────────────────────────────────────
   gumiho_1:      require('../assets/character/gumiho_1.png'),
   gumiho_2:      require('../assets/character/gumiho_2.png'),
