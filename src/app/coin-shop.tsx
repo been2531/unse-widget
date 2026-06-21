@@ -306,7 +306,13 @@ export default function CoinShopScreen() {
           const price = SKIN_PRICES[skin.id] ?? 0;
           const owned = ownedSkinIds.has(skin.id);
           return (
-            <View key={skin.id} style={[styles.packageBtn, owned && { borderColor: 'rgba(0,220,100,0.45)', backgroundColor: 'rgba(0,220,100,0.04)' }]}>
+            <Pressable
+              key={skin.id}
+              style={[styles.packageBtn, owned && { borderColor: 'rgba(0,220,100,0.45)', backgroundColor: 'rgba(0,220,100,0.04)' }]}
+              onPress={!owned ? () => handleBuySkin(skin.id) : undefined}
+              disabled={owned || !!purchasing || balance < price}
+              accessibilityLabel={owned ? `${skin.nameKo} 보유 중` : `${skin.nameKo} 구매 ${price}코인`}
+            >
               <Text style={{ fontSize: 28 }}>🖼️</Text>
               <View style={styles.packageInfo}>
                 <Text style={styles.packageLabel}>{skin.nameKo}</Text>
@@ -319,19 +325,14 @@ export default function CoinShopScreen() {
                 ? <View style={{ paddingHorizontal: 12, paddingVertical: 6, backgroundColor: 'rgba(0,220,100,0.12)', borderRadius: 10 }}>
                     <Text style={{ fontFamily: F.b, color: '#00DD77', fontSize: 13 }}>보유 중</Text>
                   </View>
-                : <Pressable
-                    style={[{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, backgroundColor: 'rgba(255,220,0,0.12)', borderWidth: 1, borderColor: 'rgba(255,220,0,0.3)', alignItems: 'center' }, balance < price && { opacity: 0.5 }]}
-                    onPress={() => handleBuySkin(skin.id)}
-                    disabled={!!purchasing || balance < price}
-                    accessibilityLabel={`${skin.nameKo} 구매 ${price}코인`}
-                  >
+                : <View style={[{ paddingHorizontal: 12, paddingVertical: 8, borderRadius: 12, backgroundColor: 'rgba(255,220,0,0.12)', borderWidth: 1, borderColor: 'rgba(255,220,0,0.3)', alignItems: 'center' }, balance < price && { opacity: 0.5 }]}>
                     {purchasing === skin.id
                       ? <ActivityIndicator size="small" color="#FFE500" />
-                      : <><Text style={{ fontFamily: F.eb, color: '#FFE500', fontSize: 13 }}>💰 {price}</Text></>
+                      : <Text style={{ fontFamily: F.eb, color: '#FFE500', fontSize: 13 }}>💰 {price}</Text>
                     }
-                  </Pressable>
+                  </View>
               }
-            </View>
+            </Pressable>
           );
         })}
       </ScrollView>

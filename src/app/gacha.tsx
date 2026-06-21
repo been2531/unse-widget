@@ -366,6 +366,7 @@ export default function GachaScreen() {
   const [synthCard, setSynthCard]       = useState<PulledCard | null>(null);
   const [synthPhase, setSynthPhase]     = useState<'idle' | 'confirm' | 'rolling' | 'success' | 'fail'>('idle');
   const [ownedCount, setOwnedCount]     = useState(0);
+  const [synthReadyCount, setSynthReadyCount] = useState(0);
   const synthRollA = useSharedValue(0);
 
   const packGlowA = useSharedValue(0.5);
@@ -373,15 +374,21 @@ export default function GachaScreen() {
   useEffect(() => {
     (async () => {
       const today = getTodayDateString();
-      const [{ balance: b, claimed }, free, ads] = await Promise.all([
+      const [{ balance: b, claimed }, free, ads, col] = await Promise.all([
         claimDaily(today),
         getFreePullsRemaining(today),
         getAdsRemaining(today),
+        getCollection(),
       ]);
       setBalance(b);
       setDailyClaimed(claimed);
       setFreePulls(free);
       setAdsLeft(ads);
+
+      const ownedIds = col.map(c => c.id);
+      const uniqueIds = [...new Set(ownedIds)];
+      setSynthReadyCount(uniqueIds.filter(id => canSynthesize(id, ownedIds)).length);
+
       setLoading(false);
     })();
     packGlowA.value = withRepeat(
@@ -702,6 +709,13 @@ export default function GachaScreen() {
             )}
           </Pressable>
 
+          {synthReadyCount > 0 && (
+            <View style={styles.synthBanner}>
+              <Text style={styles.synthBannerText}>⚗️ 합성 가능한 카드 {synthReadyCount}종</Text>
+              <Text style={styles.synthBannerSub}>카드를 뽑은 후 합성 옵션이 자동으로 표시됩니다</Text>
+            </View>
+          )}
+
           <Text style={styles.footNote}>매일 앱 실행 시 100코인 자동 지급 · 10회 뽑기 시 Rare 이상 1장 보장</Text>
         </ScrollView>
       )}
@@ -943,6 +957,12 @@ const styles = StyleSheet.create({
     borderRadius: 12, paddingVertical: 8, paddingHorizontal: 20, width: '100%', alignItems: 'center',
   },
   bonusText: { fontFamily: F.b, color: '#FFE500', fontSize: 13 },
+  synthBanner: {
+    backgroundColor: 'rgba(100,200,120,0.10)', borderWidth: 1, borderColor: 'rgba(100,200,120,0.35)',
+    borderRadius: 12, paddingVertical: 10, paddingHorizontal: 16, width: '100%', alignItems: 'center', gap: 3,
+  },
+  synthBannerText: { fontFamily: F.b, color: '#44FF88', fontSize: 13 },
+  synthBannerSub: { fontFamily: F.r, color: 'rgba(68,255,136,0.55)', fontSize: 11 },
 
   rateBox: {
     backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)',

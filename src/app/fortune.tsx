@@ -223,7 +223,7 @@ export default function FortuneScreen() {
           <Text style={styles.backIcon}>‹</Text>
         </Pressable>
         <Text style={styles.title}>오늘의 운세</Text>
-        <View style={{ width: 40, alignItems: 'flex-end' }}>
+        <View style={{ minWidth: 40, alignItems: 'flex-end' }}>
           {streak.currentStreak >= 1 && (
             <View style={{ backgroundColor: 'rgba(255,120,0,0.18)', borderRadius: 10, borderWidth: 1, borderColor: 'rgba(255,120,0,0.40)', paddingVertical: 3, paddingHorizontal: 8 }}>
               <Text style={{ fontFamily: F.b, color: '#FF8800', fontSize: 11 }}>🔥 {streak.currentStreak}일</Text>
