@@ -746,9 +746,15 @@ export default function GachaScreen() {
               {/* 카드 시각화 */}
               <View style={styles.synthCardRow}>
                 <View style={[styles.synthMiniCard, { borderColor: `${elemColor}88` }]}>
-                  <Text style={{ fontSize: 30 }}>
-                    {synthCard.category === 'fortune' ? '🔮' : synthCard.category === 'skin' ? '🖼️' : '🐲'}
-                  </Text>
+                  {synthCard.category === 'character'
+                    ? (() => {
+                        const img = cardImageFor(synthCard.element, synthCard.rarity, synthCard.id);
+                        return img
+                          ? <Image source={img} style={{ width: 72, height: 60, borderRadius: 6, marginBottom: 2 }} resizeMode="contain" />
+                          : <Text style={{ fontSize: 30 }}>🐲</Text>;
+                      })()
+                    : <Text style={{ fontSize: 30 }}>{synthCard.category === 'fortune' ? '🔮' : '🖼️'}</Text>
+                  }
                   <Text style={{ color: elemColor, fontSize: 10, fontWeight: '700' }}>{synthCard.nameKo}</Text>
                   <Text style={{ color: RARITY_COLOR[synthCard.rarity], fontSize: 9 }}>{RARITY_LABEL[synthCard.rarity]}</Text>
                 </View>
@@ -766,7 +772,15 @@ export default function GachaScreen() {
                 }]}>
                   {synthPhase === 'success' && targetDef ? (
                     <>
-                      <Text style={{ fontSize: 30 }}>✨</Text>
+                      {targetDef.category === 'character'
+                        ? (() => {
+                            const img = cardImageFor(targetDef.element, targetDef.rarity, targetDef.id);
+                            return img
+                              ? <Image source={img} style={{ width: 72, height: 60, borderRadius: 6, marginBottom: 2 }} resizeMode="contain" />
+                              : <Text style={{ fontSize: 30 }}>✨</Text>;
+                          })()
+                        : <Text style={{ fontSize: 30 }}>✨</Text>
+                      }
                       <Text style={{ color: ELEM_COLOR[targetDef.element] ?? elemColor, fontSize: 10, fontWeight: '700' }}>{targetDef.nameKo}</Text>
                       <Text style={{ color: RARITY_COLOR[targetDef.rarity], fontSize: 9 }}>{RARITY_LABEL[targetDef.rarity]}</Text>
                     </>
