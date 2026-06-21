@@ -17,6 +17,7 @@ import Animated, {
 import { F } from '@/shared/fonts';
 import { SkeletonBox } from '@/shared/Skeleton';
 import { cardImageFor } from '@/gacha/cardAssets';
+import { getFrameStyle } from '@/gacha/frameStyles';
 import { deriveMood } from '@/character/mood';
 import { type Mood } from '@/character/types';
 import { deriveValence, type FortuneValence } from '@/fortune/deriveValence';
@@ -33,6 +34,7 @@ import { getCollection } from '@/storage/collection';
 import { checkInStreak, streakRarityBoost, type StreakState } from '@/storage/streak';
 import { getTodayFortuneBuff } from '@/storage/todayFortuneCard';
 import { loadUserProfile } from '@/storage/userProfile';
+import { getEquippedFrame } from '@/storage/equippedFrame';
 
 function deriveRarity(date: string, diiSign: DiiSign, valence: FortuneValence): Rarity {
   const roll = fnv1aHash(`${date}:${diiSign}:rarity`) % 100;
@@ -236,6 +238,7 @@ export default function HomeScreen() {
   const [luckyInfo, setLuckyInfo] = useState<LuckyInfo | null>(null);
   const [isNewDay, setIsNewDay]   = useState(false);
   const [collectedCount, setCollectedCount] = useState(0);
+  const [equippedFrameId, setEquippedFrameId] = useState<string | null>(null);
 
   // 카드 도착 연출 애니메이션
   const cardRevealA = useSharedValue(0);
@@ -345,6 +348,8 @@ export default function HomeScreen() {
       const coll = await getCollection();
       const charIdSet = new Set(CARD_POOL.filter(c => c.category === 'character').map(c => c.id));
       setCollectedCount(new Set(coll.filter(c => charIdSet.has(c.id)).map(c => c.id)).size);
+
+      setEquippedFrameId(await getEquippedFrame());
 
       setLoading(false);
     })();
@@ -510,11 +515,16 @@ export default function HomeScreen() {
     </View>
   );
 
-  const cardBorderColor = rarity === 'mythic' ? `${E.color}50`
+  const activeFrame = getFrameStyle(equippedFrameId);
+  const cardBorderColor = activeFrame ? activeFrame.borderColor
+    : rarity === 'mythic' ? `${E.color}50`
     : rarity === 'legendary' ? `${E.color}3A`
     : rarity === 'epic' ? 'rgba(255,255,255,0.16)'
     : 'rgba(255,255,255,0.10)';
-  const cardBorderWidth = rarity === 'mythic' ? 2.5 : rarity === 'legendary' ? 2 : 1.5;
+  const cardBorderWidth = activeFrame ? activeFrame.borderWidth
+    : rarity === 'mythic' ? 2.5 : rarity === 'legendary' ? 2 : 1.5;
+  const cardGlowColor = activeFrame ? activeFrame.glowColor : null;
+  const cardGlowRadius = activeFrame ? activeFrame.glowRadius : null;
 
   return (
     <View style={styles.screen}>
@@ -907,10 +917,45 @@ export default function HomeScreen() {
 
           </View>{/* end overflow:hidden */}
 
-          {/* Layer 6: 외부 테두리 — 캐릭터 위에 렌더링, 카드가 캐릭터를 담는 느낌 */}
+          {/* Layer 6: 외부 테두리 — 카드 스킨/등급 프레임 + 코너 장식 */}
           <Canvas style={[StyleSheet.absoluteFill, { zIndex: 15 }]} pointerEvents="none">
+            {/* 장착 프레임 글로우 */}
+            {cardGlowColor && cardGlowRadius && (
+              <RoundedRect x={0} y={0} width={CARD_W} height={CARD_H} r={CORNER}
+                color={cardGlowColor} style="stroke" strokeWidth={cardBorderWidth + 6}>
+                <BlurMask blur={cardGlowRadius} style="outer" />
+              </RoundedRect>
+            )}
+            {/* 등급 글로우 (legendary/mythic, 프레임 없을 때) */}
+            {!activeFrame && (rarity === 'legendary' || rarity === 'mythic') && (
+              <RoundedRect x={0} y={0} width={CARD_W} height={CARD_H} r={CORNER}
+                color={`${E.color}44`} style="stroke" strokeWidth={5}>
+                <BlurMask blur={rarity === 'mythic' ? 18 : 11} style="outer" />
+              </RoundedRect>
+            )}
+            {/* 메인 테두리 */}
             <RoundedRect x={0} y={0} width={CARD_W} height={CARD_H} r={CORNER}
               color={cardBorderColor} style="stroke" strokeWidth={cardBorderWidth} />
+            {/* 코너 브래킷 — rare 이상 또는 프레임 장착 시 */}
+            {(rarity !== 'common' || activeFrame) && (() => {
+              const CL = 18, BW2 = 1.3, CO = cardBorderWidth + 0.5;
+              const cc = activeFrame ? activeFrame.borderColor
+                : (rarity === 'legendary' || rarity === 'mythic') ? E.color
+                : rarity === 'epic' ? `${E.color}CC` : 'rgba(255,255,255,0.4)';
+              const c = CORNER, W = CARD_W, H = CARD_H;
+              return (
+                <>
+                  <Path path={`M ${c} ${CO} L ${c + CL} ${CO} M ${CO} ${c} L ${CO} ${c + CL}`}
+                    color={cc} style="stroke" strokeWidth={BW2} />
+                  <Path path={`M ${W - c} ${CO} L ${W - c - CL} ${CO} M ${W - CO} ${c} L ${W - CO} ${c + CL}`}
+                    color={cc} style="stroke" strokeWidth={BW2} />
+                  <Path path={`M ${c} ${H - CO} L ${c + CL} ${H - CO} M ${CO} ${H - c} L ${CO} ${H - c - CL}`}
+                    color={cc} style="stroke" strokeWidth={BW2} />
+                  <Path path={`M ${W - c} ${H - CO} L ${W - c - CL} ${H - CO} M ${W - CO} ${H - c} L ${W - CO} ${H - c - CL}`}
+                    color={cc} style="stroke" strokeWidth={BW2} />
+                </>
+              );
+            })()}
           </Canvas>
         </Animated.View>
       </GestureDetector>

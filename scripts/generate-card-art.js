@@ -1,5 +1,5 @@
 // 카드 캐릭터 아트 생성 — Pollinations.ai Flux
-// 교체 필수 + 스타일 보완 + 신규 생성 (TASKS.md 참고)
+// 스타일: 한국신화 판타지 디지털 일러스트 (kawaii/chibi 아님)
 // 실행: node scripts/generate-card-art.js
 // 출력: scripts/test-output/cards/
 
@@ -12,157 +12,170 @@ if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, { recursive: true });
 
 const W = 512, H = 512;
 
+// 공통 스타일: 한국신화 판타지 디지털 아트, CCG 카드 일러스트 스타일
 const STYLE =
-  'cute chibi 2D digital illustration, Korean mythology inspired, ' +
-  'soft cel shading, clean outlines, mobile game character art style, ' +
-  'kawaii cute, white background, centered composition, full body visible, ' +
-  'single character, solo, no text, no border';
+  'Korean mythology fantasy digital art, detailed CCG card illustration style, ' +
+  'dramatic lighting, ethereal spirit energy, dark atmospheric background, ' +
+  'glowing magical aura, painterly fine art, mystical and powerful presence, ' +
+  'single creature centered, full body visible, white background, ' +
+  'professional mobile card game art, no text, no border, no frame';
 
 const NEGATIVE =
-  'pixel art, pixelated, 8-bit, blurry, ugly, deformed, extra limbs, ' +
-  'watermark, text, border, frame, realistic, photo, human face, ' +
-  'multiple characters, reference sheet, collage, grid, panel, chinese style';
+  'chibi, kawaii, cute, cartoon, anime, pixel art, pixelated, ' +
+  'blurry, ugly, deformed, extra limbs, watermark, text, border, ' +
+  'western fantasy, european, chinese deity, japanese anime style, ' +
+  'multiple characters, reference sheet, collage, grid, panel, ' +
+  'realistic photo, human portrait, childish, adorable';
 
 const CARDS = [
   // ── 교체 필수 ──────────────────────────────────────────────────────────────
   {
-    id: 'lightning_1', seed: 1001,
-    prompt: 'tiny cute chibi Korean thunder god infant, chubby baby deity, ' +
-      'golden lightning bolt markings on skin, floating in air, ' +
-      'holding a small traditional drum (buk), electrified fluffy hair, ' +
-      'sparkling golden aura around body, ' + STYLE,
+    id: 'lightning_1', seed: 2101,
+    prompt: 'Cheonbung thunder spirit of Korean mythology, infant storm deity, ' +
+      'swirling golden lightning crackling around small ethereal body, ' +
+      'ancient Korean shamanic aesthetic, electric blue-gold energy vortex, ' +
+      'glowing storm eyes, traditional buk drum floating nearby, ' +
+      'dark thundercloud atmosphere, powerful despite small form, ' + STYLE,
   },
   {
-    id: 'nature_3', seed: 1003,
-    prompt: 'cute chibi Korean mountain spirit (sansin), gentle elderly figure, ' +
-      'white joseon hanbok robe, long flowing white beard, ' +
-      'wooden walking staff with pine tree motif, ' +
-      'small cute white tiger sitting beside, soft green mountain mist, ' + STYLE,
+    id: 'nature_3', seed: 2103,
+    prompt: 'Sansin Korean mountain god spirit of ancient Korea, ' +
+      'venerable elder deity in white joseon hanbok ceremonial robes, ' +
+      'long silver beard flowing with mountain mist, ' +
+      'white tiger companion crouching beside, pine forest spirit energy, ' +
+      'emerald green mountain aura, ancient divine authority, ' +
+      'misty mountain peaks in background, ' + STYLE,
   },
   {
-    id: 'nature_4', seed: 1004,
-    prompt: 'cute chibi Dangun founder of Gojoseon, ancient Korean divine figure, ' +
-      'wearing ceremonial bronze age ritual robes with bear and tiger motifs, ' +
-      'holding celestial three treasures (cheonbuин), ' +
-      'golden divine crown, radiant holy aura, ' + STYLE,
+    id: 'nature_4', seed: 2104,
+    prompt: 'Dangun Wanggeom founder deity of ancient Gojoseon Korea, ' +
+      'powerful divine figure in bronze-age ceremonial ritual robes, ' +
+      'bear and tiger totems flanking, sacred sandalwood tree Sindan behind, ' +
+      'holding three celestial treasures Cheonbu-in glowing with divine light, ' +
+      'golden cosmic aura, primordial Korean creation deity energy, ' + STYLE,
   },
   {
-    id: 'light_4', seed: 2004,
-    prompt: 'cute chibi Hwanin supreme sky god of Korean mythology, ' +
-      'radiant golden divine aura, wearing ancient Korean celestial robes, ' +
-      'holding three heavenly seals (cheonbu-in) glowing with light, ' +
-      'heavenly clouds and stars surrounding, majestic yet cute, ' + STYLE,
+    id: 'light_4', seed: 2204,
+    prompt: 'Hwanin supreme sky god of Korean cosmology, ' +
+      'transcendent celestial deity radiating blinding golden-white light, ' +
+      'wearing ancient Korean heavenly divine robes with cloud patterns, ' +
+      'holding three glowing sacred objects Cheonbu-in, ' +
+      'vast cosmic void and stars behind, absolute divine authority, ' +
+      'rays of pure light emanating from body, ' + STYLE,
   },
   {
-    id: 'fire_4', seed: 3004,
-    prompt: 'cute chibi Korean sun bird taeyangsinjo, ' +
-      'magnificent five-colored (오색) brilliant plumage, ' +
-      'gold red blue green white rainbow feathers, ' +
-      'tiny beak, glowing sun rays radiating around body, ' +
-      'sitting proud on a cloud with sunbeams, ' + STYLE,
+    id: 'fire_4', seed: 2304,
+    prompt: 'Taeyangsinjo the great sun bird of Korean mythology, ' +
+      'magnificent divine bird with blazing five-colored sacred plumage, ' +
+      'osaek gold crimson azure white jade feathers radiating solar fire, ' +
+      'wings fully spread wide catching sunlight, flames and sunbeams around, ' +
+      'ancient Korean solar deity symbolism, ' + STYLE,
   },
 
   // ── 스타일 보완 ─────────────────────────────────────────────────────────────
   {
-    id: 'fire_1', seed: 3001,
-    prompt: 'cute chibi Korean phoenix chick bong-a, ' +
-      'baby phoenix with fluffy five-colored (오색) feathers, ' +
-      'gold red blue green white tiny downy feathers, ' +
-      'oversized round head, tiny beak open in surprise, ' +
-      'small wing-buds, round chubby body, ' + STYLE,
+    id: 'fire_1', seed: 2301,
+    prompt: 'Bonga young Korean phoenix hatchling, ' +
+      'sacred osaek five-colored phoenix chick with vivid gold crimson azure jade plumage, ' +
+      'small but radiating fierce solar fire energy, ' +
+      'Korean traditional ornamental feather patterns, glowing ember eyes, ' +
+      'surrounded by sacred flames and sparks, intense mythological presence, ' + STYLE,
   },
   {
-    id: 'water_1', seed: 4001,
-    prompt: 'cute chibi Korean imugi water serpent, ' +
-      'long sinuous serpent body coiled gently, small dragon-like head, ' +
-      'blue-green iridescent scales, tiny claws, ' +
-      'water droplets sparkling around body, ' +
-      'dreamy expression gazing upward at sky, longing to become a dragon, ' + STYLE,
+    id: 'water_1', seed: 2401,
+    prompt: 'Imugi young Korean water serpent dragon-to-be, ' +
+      'long serpentine body with iridescent blue-green mystical scales, ' +
+      'gazing skyward with profound longing to become a true dragon, ' +
+      'swirling river mist and water spirits around body, ' +
+      'pearl of wisdom Yeouiju glowing nearby, ancient Korean river spirit, ' + STYLE,
   },
   {
-    id: 'dark_1', seed: 5001,
-    prompt: 'cute chibi Korean dokkaebi goblin, ' +
-      'small round body, two tiny red horns on head, ' +
-      'holding a star-covered magic club (도깨비방망이), ' +
-      'mischievous grin showing one fang, ' +
-      'traditional Korean tiger-skin shorts, wild spiky hair, ' + STYLE,
-  },
-
-  // ── 신규: 구미호 시리즈 (fire) ─────────────────────────────────────────────
-  {
-    id: 'gumiho_1', seed: 6001,
-    prompt: 'cute chibi Korean baby fox miho, ' +
-      'tiny round fox pup with one fluffy tail, ' +
-      'large curious innocent eyes, orange-gold fur, small perky ears, ' +
-      'sitting upright, playful innocent expression, very young and small, ' + STYLE,
-  },
-  {
-    id: 'gumiho_2', seed: 6002,
-    prompt: 'cute chibi Korean three-tailed fox yeowoo, ' +
-      'young fox with three beautiful fluffy tails fanned out, ' +
-      'slightly larger than baby stage, clever playful expression, ' +
-      'orange fur with white tail tips, glowing amber eyes, ' +
-      'learning to speak, confident pose, ' + STYLE,
-  },
-  {
-    id: 'gumiho_3', seed: 6003,
-    prompt: 'cute chibi Korean legendary nine-tailed fox gumiho, ' +
-      'nine magnificent fluffy golden tails spread wide, ' +
-      'mystical golden glowing eyes, elegant and powerful, ' +
-      'silver-white and gold fur, ethereal magic sparkles around, ' +
-      'mesmerizing otherworldly beauty even in chibi form, ' + STYLE,
+    id: 'dark_1', seed: 2501,
+    prompt: 'Dokkaebi trickster spirit of Korean folklore, ' +
+      'powerful supernatural being with two wild red horns, ' +
+      'brandishing ornate magic club Dokkaebi-bangmangi with star bursts, ' +
+      'wearing traditional Korean tiger-pattern haori, wild hair and fierce grin, ' +
+      'swirling dark energy and mischief spirits around, ' +
+      'ancient Korean shamanistic night spirit, ' + STYLE,
   },
 
-  // ── 신규: 이무기 시리즈 (water) ────────────────────────────────────────────
+  // ── 신규: 구미호 시리즈 ────────────────────────────────────────────────────
   {
-    id: 'imugi_1', seed: 7001,
-    prompt: 'cute chibi tiny baby imugi Korean water serpent imi, ' +
-      'very small serpent curled up sleeping, ' +
-      'light blue-green soft scales, round sleepy face, ' +
-      'small water bubbles around, resting on river pebbles, ' +
-      'peaceful innocent expression, smallest stage, ' + STYLE,
+    id: 'gumiho_1', seed: 2601,
+    prompt: 'Miho young one-tailed fox spirit of Korean mythology, ' +
+      'elegant young fox with lustrous amber-gold fur and one beautiful tail, ' +
+      'curious sharp intelligent eyes glowing with nascent magic, ' +
+      'ethereal forest spirit energy swirling lightly, ' +
+      'ancient Korean folk spirit aesthetic, mystical and charming, ' + STYLE,
   },
   {
-    id: 'imugi_2', seed: 7002,
-    prompt: 'cute chibi growing imugi Korean water serpent suri, ' +
-      'medium-sized serpent with longer body coiled, ' +
-      'teal and indigo shimmering scales, ' +
-      'stretching upright proudly, light rain and waves swirling around, ' +
-      'beginning to show power, determined expression, ' + STYLE,
+    id: 'gumiho_2', seed: 2602,
+    prompt: 'Yeowoo three-tailed fox spirit growing in power, ' +
+      'sleek fox with three magnificent tails fanned in display, ' +
+      'shapeshifting aura of illusion magic around body, ' +
+      'silver-gold fur with magical shimmer, cunning amber eyes, ' +
+      'ancient Korean supernatural yokai presence, ' + STYLE,
   },
   {
-    id: 'imugi_3', seed: 7003,
-    prompt: 'cute chibi powerful imugi almost-dragon Korean water serpent, ' +
-      'large serpent with pearl in mouth (여의주), ' +
-      'deep blue-violet iridescent scales, small proto-dragon horns, ' +
-      'thunderstorm clouds and lightning around, ' +
-      'gazing skyward ready to ascend and become a dragon, dramatic aura, ' + STYLE,
+    id: 'gumiho_3', seed: 2603,
+    prompt: 'Gumiho legendary nine-tailed fox of Korean mythology, ' +
+      'breathtaking supernatural fox with nine radiant golden tails fanned wide, ' +
+      'mesmerizing glowing golden fox eyes holding centuries of mystery, ' +
+      'ethereal silver-white and gold spirit body, ' +
+      'swirling reality-bending illusion magic and moonlight energy, ' +
+      'apex supernatural being of Korean mythology, ' + STYLE,
   },
 
-  // ── 신규: 삼족오 시리즈 (lightning) ───────────────────────────────────────
+  // ── 신규: 이무기 시리즈 ────────────────────────────────────────────────────
   {
-    id: 'samjogo_1', seed: 8001,
-    prompt: 'cute chibi baby three-legged bird samjogo chick sammi, ' +
-      'tiny fluffy black bird chick with three small legs visible, ' +
-      'oversized round head, bright golden eyes, ' +
-      'small sun disc behind body, baby down feathers, ' +
-      'wobbly standing on three legs, very young adorable, ' + STYLE,
+    id: 'imugi_1', seed: 2701,
+    prompt: 'Imi young imugi water serpent of Korean rivers, ' +
+      'young sinuous water serpent with soft blue-teal scales, ' +
+      'resting in mountain stream with gentle water energy, ' +
+      'small but mystical presence, water droplets and river mist, ' +
+      'ancient Korean water spirit beginning its long journey, ' + STYLE,
   },
   {
-    id: 'samjogo_2', seed: 8002,
-    prompt: 'cute chibi three-legged sun bird haejo samjogo, ' +
-      'grown bird with black feathers and gold markings, three legs clearly shown, ' +
-      'wings spread with lightning crackling between feathers, ' +
-      'bright sun halo behind, confident flying pose, ' +
-      'sparks and electricity around wingtips, ' + STYLE,
+    id: 'imugi_2', seed: 2702,
+    prompt: 'Suri growing imugi serpent gaining power, ' +
+      'large serpent body with deep indigo-blue iridescent scales, ' +
+      'commanding the storm and deep waters, body coiled powerfully, ' +
+      'swirling tempest waters and rain around, intense focused gaze, ' +
+      'ancient Korean river dragon spirit approaching ascension, ' + STYLE,
   },
   {
-    id: 'samjogo_3', seed: 8003,
-    prompt: 'cute chibi legendary three-legged crow samjogo in the sun, ' +
-      'majestic black bird with three legs, golden solar disc surrounding body, ' +
-      'brilliant sun rays and lightning bolts radiating, ' +
-      'most powerful form, ancient cosmic bird of Korean mythology, ' +
-      'divine golden and black contrast, legendary aura, ' + STYLE,
+    id: 'imugi_3', seed: 2703,
+    prompt: 'Imugi the almost-dragon Korean water serpent, ' +
+      'enormous majestic serpent with deep violet-blue dragon-like scales, ' +
+      'holding luminous Yeouiju pearl of dragon ascension, ' +
+      'massive storm clouds and lightning surrounding powerful body, ' +
+      'proto-dragon horns beginning to form, eyes burning with ancient ambition, ' +
+      'about to ascend to become a true Korean dragon, ' + STYLE,
+  },
+
+  // ── 신규: 삼족오 시리즈 ────────────────────────────────────────────────────
+  {
+    id: 'samjogo_1', seed: 2801,
+    prompt: 'Sammi young Samjogo three-legged sun crow of Korean mythology, ' +
+      'young three-legged black bird with distinctly visible three legs, ' +
+      'small golden solar disc halo, emerging solar flame feathers, ' +
+      'ancient Korean solar symbol aesthetic, curious eyes watching the sun, ' + STYLE,
+  },
+  {
+    id: 'samjogo_2', seed: 2802,
+    prompt: 'Haejo adult Samjogo three-legged sun bird in full power, ' +
+      'black feathered bird with three powerful legs fully visible, ' +
+      'golden sun disc radiating behind spread wings, ' +
+      'lightning crackling between primary feathers on wingtips, ' +
+      'living inside the Korean sun, ancient celestial messenger, ' + STYLE,
+  },
+  {
+    id: 'samjogo_3', seed: 2803,
+    prompt: 'Samjogo legendary three-legged sun crow of Korean ancient cosmology, ' +
+      'magnificent black bird with three sacred legs, ' +
+      'blazing solar disc crown of overwhelming golden fire, ' +
+      'ancient cosmic bird deity living within the heart of the Korean sun, ' +
+      'black feathers rimmed in solar gold, supreme celestial divine bird, ' + STYLE,
   },
 ];
 
@@ -192,30 +205,25 @@ function buildUrl(card) {
 }
 
 async function main() {
-  console.log(`카드 아트 생성 시작 — 총 ${CARDS.length}장`);
+  console.log(`카드 아트 재생성 — ${CARDS.length}장 (한국신화 판타지 스타일)`);
   console.log(`출력: ${OUT_DIR}\n`);
 
   for (let i = 0; i < CARDS.length; i++) {
     const card = CARDS[i];
     const fname = `${card.id}.png`;
     const dest  = path.join(OUT_DIR, fname);
-    const url   = buildUrl(card);
-
     process.stdout.write(`[${i + 1}/${CARDS.length}] ${fname} ... `);
     const t0 = Date.now();
     try {
-      await download(url, dest);
+      await download(buildUrl(card), dest);
       console.log(`완료 (${((Date.now() - t0) / 1000).toFixed(1)}s)`);
     } catch (e) {
       console.log(`실패: ${e.message}`);
     }
-
     if (i < CARDS.length - 1) await new Promise(r => setTimeout(r, 1500));
   }
 
-  console.log(`\n전체 완료 → ${OUT_DIR}`);
-  console.log('\n다음 단계:');
-  console.log('  node scripts/apply-card-art.js   (흰 배경 제거 + assets 복사)');
+  console.log(`\n완료 → node scripts/apply-card-art.js 로 적용`);
 }
 
 main().catch(e => { console.error(e); process.exit(1); });

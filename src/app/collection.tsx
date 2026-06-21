@@ -16,6 +16,7 @@ import {
   type CardCategory, type CardDef, type PulledCard,
 } from '@/gacha/types';
 import { getCollection } from '@/storage/collection';
+import { getEquippedFrame, setEquippedFrame } from '@/storage/equippedFrame';
 
 const ELEM_COLOR: Record<string, string> = {
   fire: '#FF6600', water: '#00AAFF', lightning: '#FFE500',
@@ -156,7 +157,12 @@ function CardItem({ item, CARD_W, CARD_H, onPress }: {
 // ─── 카드 상세 모달 ────────────────────────────────────────────────────────────
 type ModalItem = (CardDef & { owned: boolean }) | PulledCard;
 
-function CardDetailModal({ item, onClose }: { item: ModalItem; onClose: () => void }) {
+function CardDetailModal({ item, equippedFrameId, onClose, onEquipChanged }: {
+  item: ModalItem;
+  equippedFrameId: string | null;
+  onClose: () => void;
+  onEquipChanged: (frameId: string | null) => void;
+}) {
   const elemColor = ELEM_COLOR[item.element] ?? '#888';
   const [bgTop, bgBot] = ELEM_BG[item.element] ?? ['#12103a', '#0c1e3e'];
   const imgSrc = (item.category === 'character' || item.category === 'skin')
@@ -164,6 +170,14 @@ function CardDetailModal({ item, onClose }: { item: ModalItem; onClose: () => vo
     : null;
   const owned = 'owned' in item ? item.owned : true;
   const skiaImg = useImage(imgSrc);
+  const isSkin = item.category === 'skin';
+  const isEquipped = equippedFrameId === item.id;
+
+  async function handleEquip() {
+    const nextId = isEquipped ? null : item.id;
+    await setEquippedFrame(nextId);
+    onEquipChanged(nextId);
+  }
 
   return (
     <Modal visible transparent animationType="fade" onRequestClose={onClose}>
@@ -231,6 +245,21 @@ function CardDetailModal({ item, onClose }: { item: ModalItem; onClose: () => vo
             ) : null}
           </View>
 
+          {isSkin && owned && (
+            <Pressable
+              style={[modalStyles.equipBtn, isEquipped
+                ? { backgroundColor: `${elemColor}28`, borderColor: elemColor }
+                : { backgroundColor: 'rgba(255,255,255,0.06)', borderColor: 'rgba(255,255,255,0.18)' }
+              ]}
+              onPress={handleEquip}
+              accessibilityLabel={isEquipped ? '프레임 해제' : '프레임 장착'}
+            >
+              <Text style={[modalStyles.equipBtnText, { color: isEquipped ? elemColor : 'rgba(255,255,255,0.7)' }]}>
+                {isEquipped ? '✓ 장착 중 — 해제하기' : '프레임 장착'}
+              </Text>
+            </Pressable>
+          )}
+
           <Pressable style={[modalStyles.closeBtn, { borderColor: `${elemColor}55` }]} onPress={onClose}>
             <Text style={[modalStyles.closeBtnText, { color: elemColor }]}>확인</Text>
           </Pressable>
@@ -247,9 +276,11 @@ export default function CollectionScreen() {
   const [elemFilter, setElemFilter] = useState<ElemFilter>('all');
   const [collected, setCollected] = useState<PulledCard[]>([]);
   const [selectedCard, setSelectedCard] = useState<ModalItem | null>(null);
+  const [equippedFrameId, setEquippedFrameId] = useState<string | null>(null);
 
   useEffect(() => {
     getCollection().then(setCollected);
+    getEquippedFrame().then(setEquippedFrameId);
   }, []);
 
   const collectedIds = new Set(collected.map(c => c.id));
@@ -403,7 +434,12 @@ export default function CollectionScreen() {
       />
 
       {selectedCard && (
-        <CardDetailModal item={selectedCard} onClose={() => setSelectedCard(null)} />
+        <CardDetailModal
+          item={selectedCard}
+          equippedFrameId={equippedFrameId}
+          onClose={() => setSelectedCard(null)}
+          onEquipChanged={id => setEquippedFrameId(id)}
+        />
       )}
     </View>
   );
@@ -499,6 +535,11 @@ const modalStyles = StyleSheet.create({
   elemLabel: { fontFamily: F.r, color: 'rgba(255,255,255,0.35)', fontSize: 11 },
   desc: { fontFamily: F.r, color: 'rgba(255,255,255,0.90)', fontSize: 14, lineHeight: 23, textAlign: 'center' },
   pullDate: { fontFamily: F.r, color: 'rgba(255,255,255,0.25)', fontSize: 11, textAlign: 'center', marginTop: 4 },
+  equipBtn: {
+    width: 280, paddingVertical: 12, borderRadius: 12,
+    borderWidth: 1.5, alignItems: 'center',
+  },
+  equipBtnText: { fontFamily: F.b, fontSize: 14 },
   closeBtn: {
     width: 160, paddingVertical: 13, borderRadius: 14,
     borderWidth: 1.5, alignItems: 'center',
