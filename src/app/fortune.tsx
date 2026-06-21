@@ -131,25 +131,30 @@ export default function FortuneScreen() {
     if (adLoading) return;
     setAdLoading(key);
     const today = getTodayDateString();
-    if (adsRemoved) {
-      try {
-        await spend(50);
-        setUnlocked(await unlockCategory(today, key));
-      } catch {
-        Alert.alert('코인 부족', '코인이 부족해요.\n코인샵에서 충전하거나 광고 제거를 해제해 보세요.', [
-          { text: '코인샵 가기', onPress: () => router.push('/coin-shop') },
-          { text: '닫기', style: 'cancel' },
-        ]);
+    try {
+      if (adsRemoved) {
+        try {
+          await spend(50);
+          setUnlocked(await unlockCategory(today, key));
+        } catch {
+          Alert.alert('코인 부족', '코인이 부족해요.\n코인샵에서 충전하거나 광고 제거를 해제해 보세요.', [
+            { text: '코인샵 가기', onPress: () => router.push('/coin-shop') },
+            { text: '닫기', style: 'cancel' },
+          ]);
+        }
+      } else {
+        const result = await showRewardedAd();
+        if (result === 'earned') {
+          setUnlocked(await unlockCategory(today, key));
+        } else if (result === 'error') {
+          Alert.alert('오류', '광고를 불러올 수 없습니다. 잠시 후 다시 시도해 주세요.');
+        }
       }
-    } else {
-      const result = await showRewardedAd();
-      if (result === 'earned') {
-        setUnlocked(await unlockCategory(today, key));
-      } else if (result === 'error') {
-        Alert.alert('오류', '광고를 불러올 수 없습니다. 잠시 후 다시 시도해 주세요.');
-      }
+    } catch {
+      Alert.alert('오류', '운세 해금 중 오류가 발생했습니다.');
+    } finally {
+      setAdLoading(null);
     }
-    setAdLoading(null);
   }
 
   async function shareFortuneResult() {
