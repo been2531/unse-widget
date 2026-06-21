@@ -1,10 +1,11 @@
 import { useRouter } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import {
   Animated, Keyboard, KeyboardAvoidingView, Platform,
   Pressable, StatusBar, StyleSheet, Text, TextInput, View,
 } from 'react-native';
 
+import { F } from '@/shared/fonts';
 import { saveUserProfile } from '@/storage/userProfile';
 import { refreshFortuneWidget } from '@/widgets/scheduleDailyRefresh';
 
@@ -35,10 +36,13 @@ export default function OnboardingScreen() {
   const fadeA = useRef(new Animated.Value(1)).current;
   const slideA = useRef(new Animated.Value(0)).current;
 
-  const [year, setYear] = useState('');
+  const [year, setYear]   = useState('');
   const [month, setMonth] = useState('');
-  const [day, setDay] = useState('');
+  const [day, setDay]     = useState('');
   const [error, setError] = useState('');
+
+  const monthRef = useRef<TextInput>(null);
+  const dayRef   = useRef<TextInput>(null);
 
   function transitionTo(next: number) {
     Animated.parallel([
@@ -113,24 +117,40 @@ export default function OnboardingScreen() {
                 keyboardType="number-pad"
                 maxLength={4}
                 value={year}
-                onChangeText={t => { setYear(t); setError(''); }}
+                returnKeyType="next"
+                onSubmitEditing={() => monthRef.current?.focus()}
+                onChangeText={t => {
+                  setYear(t);
+                  setError('');
+                  if (t.length === 4) monthRef.current?.focus();
+                }}
               />
               <TextInput
+                ref={monthRef}
                 style={styles.input}
                 placeholder="MM"
                 placeholderTextColor="rgba(255,255,255,0.25)"
                 keyboardType="number-pad"
                 maxLength={2}
                 value={month}
-                onChangeText={t => { setMonth(t); setError(''); }}
+                returnKeyType="next"
+                onSubmitEditing={() => dayRef.current?.focus()}
+                onChangeText={t => {
+                  setMonth(t);
+                  setError('');
+                  if (t.length === 2) dayRef.current?.focus();
+                }}
               />
               <TextInput
+                ref={dayRef}
                 style={styles.input}
                 placeholder="DD"
                 placeholderTextColor="rgba(255,255,255,0.25)"
                 keyboardType="number-pad"
                 maxLength={2}
                 value={day}
+                returnKeyType="done"
+                onSubmitEditing={handleSubmit}
                 onChangeText={t => { setDay(t); setError(''); }}
               />
             </View>
@@ -192,22 +212,25 @@ const styles = StyleSheet.create({
   },
   iconText: { fontSize: 38 },
   title: {
-    fontSize: 26, fontWeight: '900', textAlign: 'center',
+    fontFamily: F.bk,
+    fontSize: 26, textAlign: 'center',
     lineHeight: 34, letterSpacing: 0.3,
   },
   body: {
+    fontFamily: F.r,
     fontSize: 15, color: 'rgba(255,255,255,0.55)',
     textAlign: 'center', lineHeight: 24,
   },
   inputArea: { width: '100%', gap: 10, marginTop: 8 },
   inputRow: { flexDirection: 'row', gap: 10, justifyContent: 'center' },
   input: {
+    fontFamily: F.r,
     borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.15)',
     borderRadius: 14, paddingVertical: 12, paddingHorizontal: 10,
     fontSize: 16, color: '#FFFFFF', textAlign: 'center', width: 82,
     backgroundColor: 'rgba(255,255,255,0.05)',
   },
-  errorText: { color: '#FF6B9D', fontSize: 13, textAlign: 'center' },
+  errorText: { fontFamily: F.r, color: '#FF6B9D', fontSize: 13, textAlign: 'center' },
   dots: { flexDirection: 'row', gap: 8, marginTop: 40 },
   dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.15)' },
   dotActive: { width: 20, height: 6, borderRadius: 3 },
@@ -218,14 +241,14 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.06)',
     shadowOpacity: 0.3, shadowOffset: { width: 0, height: 4 }, shadowRadius: 12, elevation: 6,
   },
-  nextBtnText: { fontSize: 16, fontWeight: '800', letterSpacing: 0.4 },
+  nextBtnText: { fontFamily: F.eb, fontSize: 16, letterSpacing: 0.4 },
   submitBtn: {
     width: '100%', paddingVertical: 16, borderRadius: 28,
     borderWidth: 1.5, alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.06)',
     shadowOpacity: 0.3, shadowOffset: { width: 0, height: 4 }, shadowRadius: 12, elevation: 6,
   },
-  submitBtnText: { fontSize: 16, fontWeight: '800', letterSpacing: 0.4 },
+  submitBtnText: { fontFamily: F.eb, fontSize: 16, letterSpacing: 0.4 },
   backLink: { paddingVertical: 4 },
-  backLinkText: { color: 'rgba(255,255,255,0.30)', fontSize: 14 },
+  backLinkText: { fontFamily: F.r, color: 'rgba(255,255,255,0.30)', fontSize: 14 },
 });

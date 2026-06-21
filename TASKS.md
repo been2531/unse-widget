@@ -15,8 +15,12 @@
 ### 2. 스트릭 1일차부터 배지 표시
 - 현재 `streak.currentStreak >= 2` 조건 → `>= 1`로 변경, 첫날부터 방문 유도
 
-### 3. 주간 캘린더 스트립 로딩 검증
-- `profile && weekDays` null일 때 weekStrip 미표시 → 로딩 플로우 확인
+### 6. 컬렉션 빈 상태 UI
+- fortune/skin/전체 탭에서 카드 없을 때 안내 화면 없음
+- JS-only: FlatList `ListEmptyComponent` 추가
+
+### 8. 코인샵 폰트 일관성
+- `coin-shop.tsx`에서 `fontWeight` 하드코딩 사용, `F.*` 미적용
 
 ### 4. 오늘의 운세 공유 기능
 - fortune.tsx에 Share API로 운세 텍스트 공유 버튼 추가 → 바이럴
@@ -41,6 +45,9 @@
 - 개인정보처리방침 URL
 - Google Play Console 등록
 
+### 9. 접근성 accessibilityLabel
+- 주요 `Pressable`에 `accessibilityLabel` 누락 → 스토어 심사 영향
+
 ---
 
 ## 완료된 버그 (2026-06-20)
@@ -53,6 +60,14 @@
 ## 완료된 콘텐츠/UI (2026-06-21)
 
 - ~~홈화면 컬렉션 진행도 뱃지~~ → 컬렉션 버튼 하단에 황금색 진행 바 추가
+
+---
+
+## 완료된 UI/UX (2026-06-21)
+
+- ~~주간 캘린더 스트립 로딩 검증~~ → `profile && weekDays` 조건 이미 처리됨, 확인 완료
+- ~~온보딩 생년월일 자동 포커스~~ → YYYY 4자 → MM, MM 2자 → DD 자동 포커스, returnKeyType 추가
+- ~~온보딩 폰트 통일~~ → `fontWeight` 하드코딩 → `fontFamily: F.bk/F.eb/F.r` 로 교체
 
 ---
 
