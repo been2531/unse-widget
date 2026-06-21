@@ -572,7 +572,7 @@ export default function HomeScreen() {
           )}
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-          <Pressable style={styles.coinBadge} onPress={() => router.push('/gacha')} accessibilityLabel={`코인 ${balance.toLocaleString()}개`}>
+          <Pressable style={styles.coinBadge} onPress={() => router.push('/coin-shop')} accessibilityLabel={`코인 ${balance.toLocaleString()}개, 코인샵으로 이동`}>
             <Text style={styles.coinText}>💰 {balance.toLocaleString()}</Text>
           </Pressable>
           <Pressable style={styles.gachaBtn} onPress={() => router.push('/gacha')} accessibilityLabel="카드 뽑기">

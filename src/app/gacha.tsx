@@ -616,7 +616,7 @@ export default function GachaScreen() {
       {/* 헤더 */}
       <View style={styles.header}>
         <Pressable style={styles.backBtn} onPress={() => router.back()} accessibilityLabel="뒤로 가기">
-          <View style={styles.chevron} />
+          <Text style={styles.backIcon}>‹</Text>
         </Pressable>
         <Text style={styles.title}>카드 뽑기</Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
@@ -964,12 +964,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 12,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
   },
-  chevron: {
-    width: 10, height: 10,
-    borderLeftWidth: 2, borderBottomWidth: 2,
-    borderColor: '#FFF',
-    transform: [{ rotate: '45deg' }, { translateX: 2 }],
-  },
+  backIcon: { fontFamily: F.r, color: '#fff', fontSize: 28, lineHeight: 32, marginTop: -2 },
   title: { fontFamily: F.eb, fontSize: 18, color: '#FFF', letterSpacing: 1 },
   collectionBtn: {
     width: 36, height: 36, alignItems: 'center', justifyContent: 'center',
