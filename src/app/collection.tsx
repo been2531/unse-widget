@@ -214,9 +214,21 @@ function CardDetailModal({ item, onClose }: { item: ModalItem; onClose: () => vo
           </View>
 
           {/* 설명 */}
-          <View style={[modalStyles.descBox, { borderColor: 'rgba(255,255,255,0.10)' }]}>
-            <Text style={[modalStyles.descLabel, { color: elemColor }]}>{item.nameKo}</Text>
+          <View style={[modalStyles.descBox, { borderColor: `${elemColor}22` }]}>
+            <View style={modalStyles.mythBadgeRow}>
+              <View style={[modalStyles.mythBadge, { backgroundColor: `${elemColor}18`, borderColor: `${elemColor}44` }]}>
+                <Text style={[modalStyles.mythBadgeText, { color: elemColor }]}>한국신화</Text>
+              </View>
+              <Text style={modalStyles.elemLabel}>
+                {ELEM_LABEL[item.element]} {item.element === 'fire' ? '화염' : item.element === 'water' ? '물' : item.element === 'lightning' ? '번개' : item.element === 'nature' ? '자연' : item.element === 'dark' ? '암흑' : '빛'}
+              </Text>
+            </View>
             <Text style={modalStyles.desc}>{item.description}</Text>
+            {'pulledAt' in item && item.pulledAt ? (
+              <Text style={modalStyles.pullDate}>
+                수집일: {new Date(item.pulledAt).toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' })}
+              </Text>
+            ) : null}
           </View>
 
           <Pressable style={[modalStyles.closeBtn, { borderColor: `${elemColor}55` }]} onPress={onClose}>
@@ -481,8 +493,12 @@ const modalStyles = StyleSheet.create({
     borderRadius: 14, padding: 18,
     borderWidth: 1, gap: 8,
   },
-  descLabel: { fontFamily: F.b, color: 'rgba(255,255,255,0.42)', fontSize: 11, letterSpacing: 1.2, textAlign: 'center', textTransform: 'uppercase' },
-  desc: { fontFamily: F.r, color: '#FFFFFF', fontSize: 14, lineHeight: 22, textAlign: 'center' },
+  mythBadgeRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  mythBadge: { borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3, borderWidth: 1 },
+  mythBadgeText: { fontFamily: F.sb, fontSize: 10, letterSpacing: 0.8 },
+  elemLabel: { fontFamily: F.r, color: 'rgba(255,255,255,0.35)', fontSize: 11 },
+  desc: { fontFamily: F.r, color: 'rgba(255,255,255,0.90)', fontSize: 14, lineHeight: 23, textAlign: 'center' },
+  pullDate: { fontFamily: F.r, color: 'rgba(255,255,255,0.25)', fontSize: 11, textAlign: 'center', marginTop: 4 },
   closeBtn: {
     width: 160, paddingVertical: 13, borderRadius: 14,
     borderWidth: 1.5, alignItems: 'center',
