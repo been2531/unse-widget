@@ -90,7 +90,7 @@ function CardItem({ item, CARD_W, CARD_H, onPress }: {
         flex: 1, borderRadius: 10, overflow: 'hidden',
         opacity: owned ? 1 : 0.25,
         borderWidth: 1,
-        borderColor: owned ? 'rgba(255,255,255,0.14)' : 'rgba(255,255,255,0.06)',
+        borderColor: owned ? `${elemColor}55` : 'rgba(255,255,255,0.06)',
       }}>
         <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
           {/* 배경 */}
