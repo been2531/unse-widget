@@ -84,7 +84,7 @@ function CardItem({ item, CARD_W, CARD_H, onPress }: {
   const LABEL_H = CH * 0.38; // 텍스트 오버레이 영역 (하단 38%)
 
   return (
-    <Pressable style={{ width: CARD_W, height: CARD_H, padding: 4 }} onPress={() => onPress(item)}>
+    <Pressable style={{ width: CARD_W, height: CARD_H, padding: 4 }} onPress={() => onPress(item)} accessibilityLabel={`${item.nameKo} 카드${owned ? '' : ' 미보유'}`}>
       <View style={{
         flex: 1, borderRadius: 10, overflow: 'hidden',
         opacity: owned ? 1 : 0.25,
@@ -307,7 +307,7 @@ export default function CollectionScreen() {
 
       {/* 헤더 */}
       <View style={styles.header}>
-        <Pressable style={styles.backBtn} onPress={() => router.back()}>
+        <Pressable style={styles.backBtn} onPress={() => router.back()} accessibilityLabel="뒤로 가기">
           <Text style={styles.backIcon}>‹</Text>
         </Pressable>
         <Text style={styles.title}>내 컬렉션</Text>

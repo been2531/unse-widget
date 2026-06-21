@@ -543,15 +543,15 @@ export default function GachaScreen() {
 
       {/* 헤더 */}
       <View style={styles.header}>
-        <Pressable style={styles.backBtn} onPress={() => router.back()}>
+        <Pressable style={styles.backBtn} onPress={() => router.back()} accessibilityLabel="뒤로 가기">
           <View style={styles.chevron} />
         </Pressable>
         <Text style={styles.title}>카드 뽑기</Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Pressable onPress={() => router.push('/collection')} style={styles.collectionBtn}>
+          <Pressable onPress={() => router.push('/collection')} style={styles.collectionBtn} accessibilityLabel="컬렉션 보기">
             <Text style={styles.collectionText}>📚</Text>
           </Pressable>
-          <Pressable onPress={() => router.push('/coin-shop')} style={styles.coinBadge}>
+          <Pressable onPress={() => router.push('/coin-shop')} style={styles.coinBadge} accessibilityLabel={`코인 ${balance.toLocaleString()}개, 코인샵으로 이동`}>
             <Text style={styles.coinText}>💰 {balance.toLocaleString()}</Text>
           </Pressable>
         </View>
@@ -640,6 +640,7 @@ export default function GachaScreen() {
             style={[styles.pullBtn, balance < PULL_COST && styles.pullBtnDisabled]}
             onPress={() => handlePull(false)}
             disabled={spinning || balance < PULL_COST}
+            accessibilityLabel={`1회 뽑기 ${PULL_COST}코인`}
           >
             {spinning ? <ActivityIndicator color="#111" /> : <>
               <Text style={styles.pullBtnMain}>✦ 1회 뽑기</Text>
@@ -651,6 +652,7 @@ export default function GachaScreen() {
             style={[styles.pullBtn10, balance < MULTI_PULL_COST && styles.pullBtnDisabled]}
             onPress={() => handlePull(true)}
             disabled={spinning || balance < MULTI_PULL_COST}
+            accessibilityLabel={`10회 뽑기 ${MULTI_PULL_COST}코인 레어 보장`}
           >
             <Text style={styles.pullBtn10Main}>✦ 10회 뽑기</Text>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>

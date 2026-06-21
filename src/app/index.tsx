@@ -561,10 +561,10 @@ export default function HomeScreen() {
           )}
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-          <Pressable style={styles.coinBadge} onPress={() => router.push('/gacha')}>
+          <Pressable style={styles.coinBadge} onPress={() => router.push('/gacha')} accessibilityLabel={`코인 ${balance.toLocaleString()}개`}>
             <Text style={styles.coinText}>💰 {balance.toLocaleString()}</Text>
           </Pressable>
-          <Pressable style={styles.gachaBtn} onPress={() => router.push('/gacha')}>
+          <Pressable style={styles.gachaBtn} onPress={() => router.push('/gacha')} accessibilityLabel="카드 뽑기">
             <Text style={styles.gachaBtnText}>✦ 뽑기</Text>
           </Pressable>
         </View>
@@ -955,6 +955,7 @@ export default function HomeScreen() {
       <Pressable
         style={styles.collBadge}
         onPress={() => router.push('/collection')}
+        accessibilityLabel={`카드 수집 현황 ${collectedCount}/${TOTAL_CHAR_CARDS}`}
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
           <Text style={styles.collBadgeLabel}>✦ 카드 수집</Text>
@@ -969,17 +970,18 @@ export default function HomeScreen() {
       <Pressable
         style={[styles.primaryBtn, { borderColor: `${E.color}44` }]}
         onPress={() => router.push('/fortune')}
+        accessibilityLabel="오늘의 운세 보기"
       >
         <Text style={[styles.primaryBtnText, { color: E.color }]}>✦ 오늘의 운세 보기</Text>
       </Pressable>
 
       {/* 보조 액션 — 컬렉션 | 뽑기 */}
       <View style={{ flexDirection: 'row', gap: 10, width: '100%', paddingHorizontal: 20 }}>
-        <Pressable style={styles.secondaryBtn} onPress={() => router.push('/collection')}>
+        <Pressable style={styles.secondaryBtn} onPress={() => router.push('/collection')} accessibilityLabel="컬렉션">
           <Text style={styles.secondaryBtnIcon}>✦</Text>
           <Text style={styles.secondaryBtnText}>컬렉션</Text>
         </Pressable>
-        <Pressable style={styles.secondaryBtn} onPress={() => router.push('/gacha')}>
+        <Pressable style={styles.secondaryBtn} onPress={() => router.push('/gacha')} accessibilityLabel="카드 뽑기">
           <Text style={styles.secondaryBtnIcon}>✦</Text>
           <Text style={styles.secondaryBtnText}>카드 뽑기</Text>
         </Pressable>

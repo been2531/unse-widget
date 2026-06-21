@@ -180,7 +180,7 @@ export default function FortuneScreen() {
       <StatusBar barStyle="light-content" backgroundColor="#080B18" />
 
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
+        <Pressable onPress={() => router.back()} style={styles.backBtn} accessibilityLabel="뒤로 가기">
           <Text style={styles.backIcon}>‹</Text>
         </Pressable>
         <Text style={styles.title}>오늘의 운세</Text>
@@ -306,6 +306,7 @@ export default function FortuneScreen() {
                   style={[styles.watchAdBtn, { borderColor: `${color}44`, opacity: adLoading === key ? 0.5 : 1 }]}
                   onPress={() => watchAdForCategory(key)}
                   disabled={adLoading !== null}
+                  accessibilityLabel={adsRemoved ? `50코인으로 ${label} 보기` : `광고 보고 ${label} 보기`}
                 >
                   {adLoading === key
                     ? <ActivityIndicator color={color} size="small" />
@@ -319,7 +320,7 @@ export default function FortuneScreen() {
           );
         })}
 
-        <Pressable style={styles.shareBtn} onPress={shareFortuneResult}>
+        <Pressable style={styles.shareBtn} onPress={shareFortuneResult} accessibilityLabel="오늘의 운세 공유하기">
           <Text style={styles.shareBtnText}>↗  오늘의 운세 공유하기</Text>
         </Pressable>
 

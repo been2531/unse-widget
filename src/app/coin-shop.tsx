@@ -181,7 +181,7 @@ export default function CoinShopScreen() {
 
       {/* 헤더 */}
       <View style={styles.header}>
-        <Pressable style={styles.backBtn} onPress={() => router.back()}>
+        <Pressable style={styles.backBtn} onPress={() => router.back()} accessibilityLabel="뒤로 가기">
           <View style={styles.chevron} />
         </Pressable>
         <Text style={styles.title}>코인 충전</Text>
@@ -197,6 +197,7 @@ export default function CoinShopScreen() {
           style={[styles.removeAdsBtn, adsRemoved && styles.removeAdsBtnOwned]}
           onPress={handleRemoveAds}
           disabled={!!purchasing || adsRemoved}
+          accessibilityLabel={adsRemoved ? '광고 제거 이미 구매됨' : '광고 제거 구매 4900원'}
         >
           <View style={styles.removeAdsLeft}>
             <Text style={styles.removeAdsTitle}>🚫 광고 제거</Text>
@@ -222,6 +223,7 @@ export default function CoinShopScreen() {
             style={[styles.adBtn, (adsRemaining <= 0 || adLoading) && styles.adBtnDisabled]}
             onPress={handleWatchAd}
             disabled={adsRemaining <= 0 || adLoading}
+            accessibilityLabel={adsRemaining > 0 ? `광고 보기 ${COINS_PER_AD}코인 획득, 오늘 ${adsRemaining}회 남음` : '오늘 광고 모두 시청 완료'}
           >
             {adLoading
               ? <><ActivityIndicator color="#111" size="small" /><Text style={styles.adBtnText}>광고 로딩 중...</Text></>
@@ -248,6 +250,7 @@ export default function CoinShopScreen() {
             style={[styles.packageBtn, pkg.highlight && styles.packageHighlight]}
             onPress={() => handlePurchase(pkg.sku, pkg.coins)}
             disabled={!!purchasing}
+            accessibilityLabel={`${pkg.label} ${pkg.coins.toLocaleString()}코인 구매`}
           >
             {pkg.highlight && (
               <View style={styles.bestBadge}><Text style={styles.bestText}>인기</Text></View>

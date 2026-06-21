@@ -66,7 +66,7 @@
 - [ ] ~~스트릭 배지 1일차부터 표시~~ → 완료
 
 ### 접근성
-- [ ] 주요 Pressable에 `accessibilityLabel` 추가 — 스토어 심사 영향
+- ~~주요 Pressable에 `accessibilityLabel` 추가 — 스토어 심사 영향~~ → 홈/운세/가챠/컬렉션/코인샵 완료
 
 ### 리텐션 / 참여
 - [ ] 스트릭 알림 — 자정 전 "오늘 운세 확인하셨나요?" 푸시 알림 (expo-notifications, 네이티브)
