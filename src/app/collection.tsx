@@ -5,7 +5,7 @@ import {
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
-  FlatList, Modal, Pressable, ScrollView, Share,
+  ActivityIndicator, FlatList, Modal, Pressable, ScrollView, Share,
   StatusBar, StyleSheet, Text, View, useWindowDimensions,
 } from 'react-native';
 
@@ -259,9 +259,13 @@ export default function CollectionScreen() {
   const [elemFilter, setElemFilter] = useState<ElemFilter>('all');
   const [collected, setCollected] = useState<PulledCard[]>([]);
   const [selectedCard, setSelectedCard] = useState<ModalItem | null>(null);
+  const [loadingColl, setLoadingColl] = useState(true);
 
   useEffect(() => {
-    getCollection().then(setCollected);
+    getCollection().then(col => {
+      setCollected(col);
+      setLoadingColl(false);
+    });
   }, []);
 
   const collectedIds = new Set(collected.map(c => c.id));
@@ -398,7 +402,11 @@ export default function CollectionScreen() {
         </ScrollView>
       )}
 
-      <FlatList
+      {loadingColl ? (
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+          <ActivityIndicator color="rgba(255,255,255,0.35)" size="large" />
+        </View>
+      ) : <FlatList
         data={data as AnyCardItem[]}
         keyExtractor={item => item.uid}
         renderItem={({ item }) => (
@@ -435,7 +443,7 @@ export default function CollectionScreen() {
             </Pressable>
           </View>
         }
-      />
+      />}
 
       {selectedCard && (
         <CardDetailModal
