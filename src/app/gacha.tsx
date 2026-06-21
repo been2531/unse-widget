@@ -5,8 +5,8 @@ import {
 import { router } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ActivityIndicator, FlatList, Image, Pressable, ScrollView,
-  StyleSheet, Text, View, useWindowDimensions,
+  ActivityIndicator, Alert, FlatList, Image, Pressable, ScrollView,
+  StatusBar, StyleSheet, Text, View, useWindowDimensions,
 } from 'react-native';
 import Animated, {
   Easing, interpolate, useAnimatedStyle, useSharedValue,
@@ -14,11 +14,12 @@ import Animated, {
   Extrapolation,
 } from 'react-native-reanimated';
 
+import { F } from '@/shared/fonts';
 import { showRewardedAd } from '@/ads/admob';
 import { makeElementEffects } from '@/character/elementEffects';
 import { cardImageFor } from '@/gacha/cardAssets';
 import {
-  CARD_POOL, CATEGORY_LABEL, MULTI_PULL_COST, PULL_COST,
+  CARD_POOL, CATEGORY_LABEL, DAILY_COINS, MULTI_PULL_COST, PULL_COST,
   RARITY_COLOR, RARITY_LABEL,
   type PulledCard, type Rarity,
 } from '@/gacha/types';
@@ -205,10 +206,10 @@ function ResultCard({ card, cardW, onReveal }: { card: PulledCard; cardW: number
           </Canvas>
           {/* 중앙 텍스트 */}
           <View style={{ ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-            <Text style={{ color: 'rgba(255,210,80,0.90)', fontSize: 11, fontWeight: '700', letterSpacing: 4, opacity: 0.7 }}>✦ ✦ ✦</Text>
-            <Text style={{ color: 'rgba(255,255,255,0.92)', fontSize: 28, fontWeight: '900', letterSpacing: 7, textShadowColor: 'rgba(200,140,255,0.8)', textShadowRadius: 14 }}>UNSE</Text>
-            <Text style={{ color: 'rgba(200,150,255,0.65)', fontSize: 9, fontWeight: '700', letterSpacing: 3 }}>운 세 카 드</Text>
-            <Text style={{ color: 'rgba(255,210,80,0.50)', fontSize: 10, fontWeight: '700', letterSpacing: 4, marginTop: 2, opacity: 0.7 }}>✦ ✦ ✦</Text>
+            <Text style={{ fontFamily: F.b, color: 'rgba(255,210,80,0.90)', fontSize: 11, letterSpacing: 4, opacity: 0.7 }}>✦ ✦ ✦</Text>
+            <Text style={{ fontFamily: F.bk, color: 'rgba(255,255,255,0.92)', fontSize: 28, letterSpacing: 7, textShadowColor: 'rgba(200,140,255,0.8)', textShadowRadius: 14 }}>UNSE</Text>
+            <Text style={{ fontFamily: F.b, color: 'rgba(200,150,255,0.65)', fontSize: 9, letterSpacing: 3 }}>운 세 카 드</Text>
+            <Text style={{ fontFamily: F.b, color: 'rgba(255,210,80,0.50)', fontSize: 10, letterSpacing: 4, marginTop: 2, opacity: 0.7 }}>✦ ✦ ✦</Text>
           </View>
         </View>
       </Animated.View>
@@ -305,11 +306,11 @@ function ResultCard({ card, cardW, onReveal }: { card: PulledCard; cardW: number
           {/* 카드 정보 */}
           <View style={{ position: 'absolute', top: charH + 14, left: 0, right: 0, paddingHorizontal: 12, gap: 4 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Text style={{ color: elemColor, fontSize: 15, fontWeight: '800' }} numberOfLines={1}>{card.nameKo}</Text>
-              <Text style={{ color: elemColor, fontSize: 10, fontWeight: '600' }}>{ELEM_LABEL[card.element]}</Text>
+              <Text style={{ fontFamily: F.eb, color: elemColor, fontSize: 15 }} numberOfLines={1}>{card.nameKo}</Text>
+              <Text style={{ fontFamily: F.sb, color: elemColor, fontSize: 10 }}>{ELEM_LABEL[card.element]}</Text>
             </View>
-            <Text style={{ color: 'rgba(255,255,255,0.65)', fontSize: 11, lineHeight: 16 }} numberOfLines={2}>{card.description}</Text>
-            <Text style={{ color: RARITY_COLOR[card.rarity], fontSize: 12, fontWeight: '700', letterSpacing: 0.8 }}>
+            <Text style={{ fontFamily: F.r, color: 'rgba(255,255,255,0.65)', fontSize: 11, lineHeight: 16 }} numberOfLines={2}>{card.description}</Text>
+            <Text style={{ fontFamily: F.b, color: RARITY_COLOR[card.rarity], fontSize: 12, letterSpacing: 0.8 }}>
               ★ {RARITY_LABEL[card.rarity]}
             </Text>
           </View>
@@ -319,53 +320,59 @@ function ResultCard({ card, cardW, onReveal }: { card: PulledCard; cardW: number
   );
 }
 
-// ─── 10연차 미니 카드 그리드 ───────────────────────────────────────────────
-function MultiResultGrid({ cards, miniW }: { cards: PulledCard[]; miniW: number }) {
+// ─── 10연차 미니 카드 아이템 ──────────────────────────────────────────────
+function MultiCardItem({ card, miniW }: { card: PulledCard; miniW: number }) {
   const miniH = miniW * 1.42;
-  const delayIdx = useRef(0);
+  const elemColor = ELEM_COLOR[card.element] ?? '#888';
+  const [bgTop, bgBot] = ELEM_BG[card.element] ?? ['#12103a', '#0c1e3e'];
+  const enterA = useSharedValue(0);
+
+  useEffect(() => {
+    enterA.value = withTiming(1, { duration: 350, easing: Easing.out(Easing.back(1.5)) });
+  }, []);
+
+  const aStyle = useAnimatedStyle(() => ({
+    opacity: enterA.value,
+    transform: [{ scale: interpolate(enterA.value, [0, 1], [0.6, 1]) }],
+  }));
 
   return (
+    <Animated.View style={aStyle}>
+      <View style={{ width: miniW, height: miniH, borderRadius: 10, overflow: 'hidden' }}>
+        <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
+          <Rect x={0} y={0} width={miniW} height={miniH}>
+            <LinearGradient start={vec(0, 0)} end={vec(miniW, miniH)} colors={[bgTop, bgBot]} />
+          </Rect>
+          <RoundedRect x={0} y={0} width={miniW} height={miniH} r={10}
+            color={`${elemColor}BB`} style="stroke" strokeWidth={RARITY_BORDER[card.rarity]} />
+        </Canvas>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+          {card.category === 'character' && cardImageFor(card.element, card.rarity, card.id)
+            ? <Image source={cardImageFor(card.element, card.rarity, card.id)!}
+                style={{ width: miniW - 4, height: miniW - 4 }} resizeMode="contain" />
+            : <Text style={{ fontSize: miniW * 0.28 }}>
+                {card.category === 'character' ? '🐲' : card.category === 'skin' ? '🎨' : '🔮'}
+              </Text>
+          }
+          <Text style={{ fontFamily: F.b, color: elemColor, fontSize: 8, letterSpacing: 0.5 }}>
+            {RARITY_LABEL[card.rarity]}
+          </Text>
+          <Text style={{ fontFamily: F.r, color: 'rgba(255,255,255,0.7)', fontSize: 7, textAlign: 'center', paddingHorizontal: 2 }} numberOfLines={2}>
+            {card.nameKo}
+          </Text>
+        </View>
+      </View>
+    </Animated.View>
+  );
+}
+
+// ─── 10연차 미니 카드 그리드 ───────────────────────────────────────────────
+function MultiResultGrid({ cards, miniW }: { cards: PulledCard[]; miniW: number }) {
+  return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center' }}>
-      {cards.map((card, i) => {
-        const elemColor = ELEM_COLOR[card.element] ?? '#888';
-        const [bgTop, bgBot] = ELEM_BG[card.element] ?? ['#12103a', '#0c1e3e'];
-        const enterA = useSharedValue(0);
-        useEffect(() => {
-          enterA.value = withTiming(1, { duration: 350, easing: Easing.out(Easing.back(1.5)) });
-        }, []);
-        const aStyle = useAnimatedStyle(() => ({
-          opacity: enterA.value,
-          transform: [{ scale: interpolate(enterA.value, [0, 1], [0.6, 1]) }],
-        }));
-        return (
-          <Animated.View key={card.uid} style={aStyle}>
-            <View style={{ width: miniW, height: miniH, borderRadius: 10, overflow: 'hidden' }}>
-              <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
-                <Rect x={0} y={0} width={miniW} height={miniH}>
-                  <LinearGradient start={vec(0, 0)} end={vec(miniW, miniH)} colors={[bgTop, bgBot]} />
-                </Rect>
-                <RoundedRect x={0} y={0} width={miniW} height={miniH} r={10}
-                  color={`${elemColor}BB`} style="stroke" strokeWidth={RARITY_BORDER[card.rarity]} />
-              </Canvas>
-              <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 2 }}>
-                {card.category === 'character' && cardImageFor(card.element, card.rarity, card.id)
-                  ? <Image source={cardImageFor(card.element, card.rarity, card.id)!}
-                      style={{ width: miniW - 4, height: miniW - 4 }} resizeMode="contain" />
-                  : <Text style={{ fontSize: miniW * 0.28 }}>
-                      {card.category === 'character' ? '🐲' : card.category === 'skin' ? '🎨' : '🔮'}
-                    </Text>
-                }
-                <Text style={{ color: elemColor, fontSize: 8, fontWeight: '700', letterSpacing: 0.5 }}>
-                  {RARITY_LABEL[card.rarity]}
-                </Text>
-                <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 7, textAlign: 'center', paddingHorizontal: 2 }} numberOfLines={2}>
-                  {card.nameKo}
-                </Text>
-              </View>
-            </View>
-          </Animated.View>
-        );
-      })}
+      {cards.map((card) => (
+        <MultiCardItem key={card.uid} card={card} miniW={miniW} />
+      ))}
     </View>
   );
 }
@@ -447,28 +454,31 @@ export default function GachaScreen() {
     setSynthPhase('rolling');
     const required = SYNTHESIS_REQUIRED[synthCard.rarity];
 
-    // 주사위 굴리기 애니메이션
     synthRollA.value = withRepeat(
       withTiming(1, { duration: 150, easing: Easing.linear }), 6, true,
     );
 
     await new Promise(r => setTimeout(r, 1000));
 
-    const success = rollSynthesis(synthCard.rarity);
-    // 재료 카드 n장 제거
-    await removeCards(synthCard.id, required);
+    try {
+      const success = rollSynthesis(synthCard.rarity);
+      await removeCards(synthCard.id, required);
 
-    if (success) {
-      const targetId = getSynthesisTarget(synthCard.id)!;
-      const targetDef = CARD_POOL.find(c => c.id === targetId)!;
-      const upgraded: PulledCard = {
-        ...targetDef, uid: `${targetId}_synth_${Date.now()}`, pulledAt: new Date().toISOString(),
-      };
-      await addToCollection([upgraded]);
-      setResult(upgraded);
-      setSynthPhase('success');
-    } else {
+      if (success) {
+        const targetId = getSynthesisTarget(synthCard.id)!;
+        const targetDef = CARD_POOL.find(c => c.id === targetId)!;
+        const upgraded: PulledCard = {
+          ...targetDef, uid: `${targetId}_synth_${Date.now()}`, pulledAt: new Date().toISOString(),
+        };
+        await addToCollection([upgraded]);
+        setResult(upgraded);
+        setSynthPhase('success');
+      } else {
+        setSynthPhase('fail');
+      }
+    } catch (e: any) {
       setSynthPhase('fail');
+      Alert.alert('오류', e?.message ?? '합성 중 오류가 발생했습니다.');
     }
   }
 
@@ -480,14 +490,21 @@ export default function GachaScreen() {
   async function handleAdReward() {
     if (spinning || adsLeft <= 0) return;
     setSpinning(true);
-    const result = await showRewardedAd('gacha_free_pull');
-    if (result === 'earned') {
-      const today = getTodayDateString();
-      const newBalance = await recordAdReward(today);
-      setBalance(newBalance);
-      setAdsLeft(prev => Math.max(0, prev - 1));
+    try {
+      const result = await showRewardedAd('gacha_free_pull');
+      if (result === 'earned') {
+        const today = getTodayDateString();
+        const newBalance = await recordAdReward(today);
+        setBalance(newBalance);
+        setAdsLeft(prev => Math.max(0, prev - 1));
+      } else if (result === 'error') {
+        Alert.alert('오류', '광고를 불러올 수 없습니다. 잠시 후 다시 시도해 주세요.');
+      }
+    } catch {
+      Alert.alert('오류', '코인 적립 중 오류가 발생했습니다.');
+    } finally {
+      setSpinning(false);
     }
-    setSpinning(false);
   }
 
   async function handleFreePull() {
@@ -503,7 +520,9 @@ export default function GachaScreen() {
       setResult(card);
       setPhase('single_result');
       await checkSynthesisAfterPull(card);
-    } catch {}
+    } catch {
+      Alert.alert('오류', '뽑기 중 오류가 발생했습니다.');
+    }
     setSpinning(false);
   }
 
@@ -531,7 +550,7 @@ export default function GachaScreen() {
         await checkSynthesisAfterPull(card);
       }
     } catch (e: any) {
-      // 코인 부족 — balance 표시로 알 수 있음
+      Alert.alert('오류', e?.message ?? '뽑기 중 오류가 발생했습니다.');
     }
     setSpinning(false);
   }
@@ -544,6 +563,7 @@ export default function GachaScreen() {
 
   if (loading) return (
     <View style={styles.screen}>
+      <StatusBar barStyle="light-content" backgroundColor="#080B18" />
       <View style={{ paddingTop: 52, paddingHorizontal: 20, paddingBottom: 16, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
         <SkeletonBox style={{ width: 60, height: 20 }} />
         <SkeletonBox style={{ width: 80, height: 28, borderRadius: 14 }} />
@@ -558,6 +578,7 @@ export default function GachaScreen() {
 
   return (
     <View style={styles.screen}>
+      <StatusBar barStyle="light-content" backgroundColor="#080B18" />
       {/* 배경 */}
       <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
         <Rect x={0} y={0} width={screenW} height={screenH}>
@@ -591,10 +612,10 @@ export default function GachaScreen() {
       </View>
 
       {phase === 'lobby' && (
-        <ScrollView contentContainerStyle={styles.lobby} showsVerticalScrollIndicator={false}>
+        <ScrollView contentContainerStyle={styles.lobby} showsVerticalScrollIndicator={false} overScrollMode="never">
           {dailyClaimed && (
             <View style={styles.bonusBanner}>
-              <Text style={styles.bonusText}>🎁 오늘의 코인 +{100} 지급됨!</Text>
+              <Text style={styles.bonusText}>🎁 오늘의 코인 +{DAILY_COINS} 지급됨!</Text>
             </View>
           )}
 
@@ -603,6 +624,7 @@ export default function GachaScreen() {
             style={[styles.freePullBtn, freePulls <= 0 && styles.pullBtnDisabled]}
             onPress={handleFreePull}
             disabled={spinning || freePulls <= 0}
+            accessibilityLabel={freePulls > 0 ? '무료 뽑기 1회' : '오늘 무료 뽑기 완료'}
           >
             <Text style={styles.freePullMain}>
               {freePulls > 0 ? '🎁 무료 뽑기 1회' : '✓ 오늘 무료 뽑기 완료'}
@@ -647,8 +669,8 @@ export default function GachaScreen() {
                   color="rgba(160,80,255,0.80)" style="stroke" strokeWidth={2.5} />
               </Canvas>
               <View style={{ ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={{ color: 'rgba(210,170,255,0.70)', fontSize: 32, fontWeight: '900', letterSpacing: 8 }}>UNSE</Text>
-                <Text style={{ color: 'rgba(180,140,255,0.45)', fontSize: 11, letterSpacing: 3, marginTop: 4 }}>CARD</Text>
+                <Text style={{ fontFamily: F.bk, color: 'rgba(210,170,255,0.70)', fontSize: 32, letterSpacing: 8 }}>UNSE</Text>
+                <Text style={{ fontFamily: F.r, color: 'rgba(180,140,255,0.45)', fontSize: 11, letterSpacing: 3, marginTop: 4 }}>CARD</Text>
               </View>
             </View>
           </View>
@@ -657,11 +679,11 @@ export default function GachaScreen() {
           <View style={styles.rateBox}>
             <Text style={styles.rateTitle}>획득 확률</Text>
             <View style={styles.rateRow}>
-              {(['common', 'rare', 'epic', 'legendary'] as Rarity[]).map(r => (
+              {(['common', 'rare', 'epic', 'legendary', 'mythic'] as Rarity[]).map(r => (
                 <View key={r} style={styles.rateItem}>
                   <Text style={[styles.rateLabel, { color: RARITY_COLOR[r] }]}>{RARITY_LABEL[r]}</Text>
                   <Text style={styles.ratePct}>
-                    {r === 'common' ? '60%' : r === 'rare' ? '30%' : r === 'epic' ? '8%' : '2%'}
+                    {r === 'common' ? '70%' : r === 'rare' ? '20%' : r === 'epic' ? '7%' : r === 'legendary' ? '2%' : '1%'}
                   </Text>
                 </View>
               ))}
@@ -699,6 +721,7 @@ export default function GachaScreen() {
             style={[styles.adBtn, adsLeft <= 0 && styles.pullBtnDisabled]}
             onPress={handleAdReward}
             disabled={spinning || adsLeft <= 0}
+            accessibilityLabel={adsLeft > 0 ? `광고 보기 ${COINS_PER_AD}코인 획득, 오늘 ${adsLeft}회 남음` : '오늘 광고 모두 시청 완료'}
           >
             {spinning ? (
               <ActivityIndicator color="#aaa" size="small" />
@@ -757,11 +780,17 @@ export default function GachaScreen() {
               {/* 카드 시각화 */}
               <View style={styles.synthCardRow}>
                 <View style={[styles.synthMiniCard, { borderColor: `${elemColor}88` }]}>
-                  <Text style={{ fontSize: 30 }}>
-                    {synthCard.category === 'fortune' ? '🔮' : synthCard.category === 'skin' ? '🖼️' : '🐲'}
-                  </Text>
-                  <Text style={{ color: elemColor, fontSize: 10, fontWeight: '700' }}>{synthCard.nameKo}</Text>
-                  <Text style={{ color: RARITY_COLOR[synthCard.rarity], fontSize: 9 }}>{RARITY_LABEL[synthCard.rarity]}</Text>
+                  {synthCard.category === 'character'
+                    ? (() => {
+                        const img = cardImageFor(synthCard.element, synthCard.rarity, synthCard.id);
+                        return img
+                          ? <Image source={img} style={{ width: 72, height: 60, borderRadius: 6, marginBottom: 2 }} resizeMode="contain" />
+                          : <Text style={{ fontSize: 30 }}>🐲</Text>;
+                      })()
+                    : <Text style={{ fontSize: 30 }}>{synthCard.category === 'fortune' ? '🔮' : '🖼️'}</Text>
+                  }
+                  <Text style={{ fontFamily: F.b, color: elemColor, fontSize: 10 }}>{synthCard.nameKo}</Text>
+                  <Text style={{ fontFamily: F.r, color: RARITY_COLOR[synthCard.rarity], fontSize: 9 }}>{RARITY_LABEL[synthCard.rarity]}</Text>
                 </View>
 
                 <View style={{ alignItems: 'center', gap: 4 }}>
@@ -777,9 +806,17 @@ export default function GachaScreen() {
                 }]}>
                   {synthPhase === 'success' && targetDef ? (
                     <>
-                      <Text style={{ fontSize: 30 }}>✨</Text>
-                      <Text style={{ color: ELEM_COLOR[targetDef.element] ?? elemColor, fontSize: 10, fontWeight: '700' }}>{targetDef.nameKo}</Text>
-                      <Text style={{ color: RARITY_COLOR[targetDef.rarity], fontSize: 9 }}>{RARITY_LABEL[targetDef.rarity]}</Text>
+                      {targetDef.category === 'character'
+                        ? (() => {
+                            const img = cardImageFor(targetDef.element, targetDef.rarity, targetDef.id);
+                            return img
+                              ? <Image source={img} style={{ width: 72, height: 60, borderRadius: 6, marginBottom: 2 }} resizeMode="contain" />
+                              : <Text style={{ fontSize: 30 }}>✨</Text>;
+                          })()
+                        : <Text style={{ fontSize: 30 }}>✨</Text>
+                      }
+                      <Text style={{ fontFamily: F.b, color: ELEM_COLOR[targetDef.element] ?? elemColor, fontSize: 10 }}>{targetDef.nameKo}</Text>
+                      <Text style={{ fontFamily: F.r, color: RARITY_COLOR[targetDef.rarity], fontSize: 9 }}>{RARITY_LABEL[targetDef.rarity]}</Text>
                     </>
                   ) : (
                     <>
@@ -796,11 +833,11 @@ export default function GachaScreen() {
               {synthPhase === 'confirm' && (
                 <View style={styles.synthInfo}>
                   <Text style={styles.synthInfoText}>
-                    보유 <Text style={{ color: elemColor, fontWeight: '800' }}>{ownedCount}장</Text>
-                    {' '}/ 필요 <Text style={{ color: '#FFE500', fontWeight: '800' }}>{required}장</Text>
+                    보유 <Text style={{ fontFamily: F.eb, color: elemColor }}>{ownedCount}장</Text>
+                    {' '}/ 필요 <Text style={{ fontFamily: F.eb, color: '#FFE500' }}>{required}장</Text>
                   </Text>
                   <Text style={styles.synthInfoText}>
-                    성공 확률: <Text style={{ color: '#44FF88', fontWeight: '800' }}>{rate}%</Text>
+                    성공 확률: <Text style={{ fontFamily: F.eb, color: '#44FF88' }}>{rate}%</Text>
                     {'  '}실패 시 재료 전량 소각
                   </Text>
                 </View>
@@ -854,20 +891,27 @@ export default function GachaScreen() {
       {phase === 'multi_result' && multiResult.length > 0 && (
         <View style={{ flex: 1, width: '100%' }}>
           <Text style={[styles.getLabel, { marginTop: 0 }]}>✨ {multiResult.length}장 획득!</Text>
-          <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32, gap: 14 }}>
+          <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32, gap: 14 }} overScrollMode="never">
             <MultiResultGrid cards={multiResult} miniW={MINI_W} />
             {/* 하이라이트: Rare 이상 카드 */}
-            {multiResult.filter(c => c.rarity !== 'common').map(c => (
-              <View key={c.uid} style={styles.highlightRow}>
-                <Text style={{ fontSize: 18 }}>
-                  {c.category === 'character' ? '🐲' : c.category === 'skin' ? '🎨' : '🔮'}
-                </Text>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ color: RARITY_COLOR[c.rarity], fontWeight: '700', fontSize: 13 }}>{c.nameKo}</Text>
-                  <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11 }}>{ELEM_LABEL[c.element]} · {RARITY_LABEL[c.rarity]}</Text>
+            {multiResult.filter(c => c.rarity !== 'common').map(c => {
+              const img = c.category === 'character' ? cardImageFor(c.element, c.rarity, c.id) : null;
+              return (
+                <View key={c.uid} style={[styles.highlightRow, { borderColor: `${ELEM_COLOR[c.element] ?? '#888'}28`, borderWidth: 1 }]}>
+                  {img
+                    ? <Image source={img} style={{ width: 44, height: 44, borderRadius: 8 }} resizeMode="contain" />
+                    : <Text style={{ fontSize: 22 }}>{c.category === 'skin' ? '🎨' : '🔮'}</Text>
+                  }
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontFamily: F.b, color: RARITY_COLOR[c.rarity], fontSize: 13 }}>{c.nameKo}</Text>
+                    <Text style={{ fontFamily: F.r, color: 'rgba(255,255,255,0.5)', fontSize: 11 }}>{ELEM_LABEL[c.element]} · {RARITY_LABEL[c.rarity]}</Text>
+                  </View>
+                  <View style={{ backgroundColor: `${RARITY_COLOR[c.rarity]}18`, borderRadius: 8, paddingHorizontal: 6, paddingVertical: 3, borderWidth: 1, borderColor: `${RARITY_COLOR[c.rarity]}44` }}>
+                    <Text style={{ fontFamily: F.b, color: RARITY_COLOR[c.rarity], fontSize: 10 }}>NEW</Text>
+                  </View>
                 </View>
-              </View>
-            ))}
+              );
+            })}
           </ScrollView>
           <View style={[styles.resultBtns, { paddingBottom: 24 }]}>
             <Pressable style={styles.againBtn} onPress={backToLobby}>
@@ -901,7 +945,7 @@ const styles = StyleSheet.create({
     borderColor: '#FFF',
     transform: [{ rotate: '45deg' }, { translateX: 2 }],
   },
-  title: { fontSize: 18, fontWeight: '800', color: '#FFF', letterSpacing: 1 },
+  title: { fontFamily: F.eb, fontSize: 18, color: '#FFF', letterSpacing: 1 },
   collectionBtn: {
     width: 36, height: 36, alignItems: 'center', justifyContent: 'center',
     backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 12,
@@ -911,19 +955,19 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,220,0,0.12)', borderWidth: 1, borderColor: 'rgba(255,220,0,0.35)',
     paddingVertical: 5, paddingHorizontal: 12, borderRadius: 14,
   },
-  coinText: { color: '#FFE500', fontWeight: '700', fontSize: 13 },
+  coinText: { fontFamily: F.b, color: '#FFE500', fontSize: 13 },
   freePullBtn: {
     backgroundColor: 'rgba(0,200,120,0.15)', borderWidth: 1.5, borderColor: 'rgba(0,200,120,0.45)',
     borderRadius: 24, width: '100%', paddingVertical: 14, alignItems: 'center', gap: 2,
   },
-  freePullMain: { color: '#00DD88', fontWeight: '900', fontSize: 16 },
-  freePullSub: { color: 'rgba(0,200,120,0.6)', fontSize: 11 },
+  freePullMain: { fontFamily: F.bk, color: '#00DD88', fontSize: 16 },
+  freePullSub: { fontFamily: F.r, color: 'rgba(0,200,120,0.6)', fontSize: 11 },
   adBtn: {
     backgroundColor: 'rgba(255,255,255,0.04)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
     borderRadius: 16, width: '100%', paddingVertical: 12, alignItems: 'center', gap: 2,
   },
-  adBtnText: { color: 'rgba(255,255,255,0.7)', fontWeight: '700', fontSize: 14 },
-  adBtnSub: { color: 'rgba(255,255,255,0.35)', fontSize: 11 },
+  adBtnText: { fontFamily: F.b, color: 'rgba(255,255,255,0.7)', fontSize: 14 },
+  adBtnSub: { fontFamily: F.r, color: 'rgba(255,255,255,0.35)', fontSize: 11 },
 
   lobby: { paddingHorizontal: 24, paddingBottom: 40, gap: 16, alignItems: 'center' },
 
@@ -931,53 +975,53 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,220,0,0.10)', borderWidth: 1, borderColor: 'rgba(255,220,0,0.3)',
     borderRadius: 12, paddingVertical: 8, paddingHorizontal: 20, width: '100%', alignItems: 'center',
   },
-  bonusText: { color: '#FFE500', fontWeight: '700', fontSize: 13 },
+  bonusText: { fontFamily: F.b, color: '#FFE500', fontSize: 13 },
 
   rateBox: {
     backgroundColor: 'rgba(255,255,255,0.05)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)',
     borderRadius: 14, padding: 14, width: '100%', gap: 8,
   },
-  rateTitle: { color: 'rgba(255,255,255,0.5)', fontSize: 11, fontWeight: '600', letterSpacing: 0.5 },
+  rateTitle: { fontFamily: F.sb, color: 'rgba(255,255,255,0.5)', fontSize: 11, letterSpacing: 0.5 },
   rateRow: { flexDirection: 'row', justifyContent: 'space-around' },
   rateItem: { alignItems: 'center', gap: 3 },
-  rateLabel: { fontSize: 11, fontWeight: '700' },
-  ratePct: { color: 'rgba(255,255,255,0.6)', fontSize: 13, fontWeight: '600' },
+  rateLabel: { fontFamily: F.b, fontSize: 11 },
+  ratePct: { fontFamily: F.sb, color: 'rgba(255,255,255,0.6)', fontSize: 13 },
 
   pullBtn: {
     backgroundColor: '#FFE500', borderRadius: 24, width: '100%',
     paddingVertical: 16, alignItems: 'center', gap: 2,
     shadowColor: '#FFE500', shadowOpacity: 0.40, shadowOffset: { width: 0, height: 4 }, shadowRadius: 16, elevation: 8,
   },
-  pullBtnMain: { color: '#111', fontWeight: '900', fontSize: 17 },
-  pullBtnSub: { color: '#555', fontSize: 12 },
+  pullBtnMain: { fontFamily: F.bk, color: '#111', fontSize: 17 },
+  pullBtnSub: { fontFamily: F.r, color: '#555', fontSize: 12 },
   pullBtn10: {
     backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1.5, borderColor: 'rgba(255,220,0,0.45)',
     borderRadius: 24, width: '100%', paddingVertical: 16, alignItems: 'center', gap: 4,
   },
-  pullBtn10Main: { color: '#FFE500', fontWeight: '900', fontSize: 17 },
-  pullBtn10Sub: { color: 'rgba(255,255,255,0.5)', fontSize: 12 },
+  pullBtn10Main: { fontFamily: F.bk, color: '#FFE500', fontSize: 17 },
+  pullBtn10Sub: { fontFamily: F.r, color: 'rgba(255,255,255,0.5)', fontSize: 12 },
   pullBtnDisabled: { opacity: 0.38 },
   discountBadge: {
     backgroundColor: 'rgba(0,200,100,0.18)', borderWidth: 1, borderColor: 'rgba(0,200,100,0.4)',
     borderRadius: 8, paddingHorizontal: 7, paddingVertical: 2,
   },
-  discountText: { color: '#00DD77', fontSize: 10, fontWeight: '700' },
-  footNote: { color: 'rgba(255,255,255,0.25)', fontSize: 11, textAlign: 'center' },
+  discountText: { fontFamily: F.b, color: '#00DD77', fontSize: 10 },
+  footNote: { fontFamily: F.r, color: 'rgba(255,255,255,0.25)', fontSize: 11, textAlign: 'center' },
 
   resultContainer: { flex: 1, alignItems: 'center', paddingHorizontal: 24, gap: 16, paddingTop: 8 },
-  getLabel: { color: '#FFF', fontSize: 22, fontWeight: '900', letterSpacing: 1, marginTop: 8 },
-  rarityBig: { fontSize: 15, fontWeight: '700', letterSpacing: 0.6 },
+  getLabel: { fontFamily: F.bk, color: '#FFF', fontSize: 22, letterSpacing: 1, marginTop: 8 },
+  rarityBig: { fontFamily: F.b, fontSize: 15, letterSpacing: 0.6 },
   resultBtns: { flexDirection: 'row', gap: 12, paddingHorizontal: 24 },
   againBtn: {
     flex: 1, backgroundColor: 'rgba(255,255,255,0.08)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)',
     borderRadius: 22, paddingVertical: 14, alignItems: 'center',
   },
-  againBtnText: { color: '#FFF', fontWeight: '700', fontSize: 15 },
+  againBtnText: { fontFamily: F.b, color: '#FFF', fontSize: 15 },
   okBtn: {
     flex: 1, backgroundColor: '#FFE500', borderRadius: 22, paddingVertical: 14, alignItems: 'center',
     shadowColor: '#FFE500', shadowOpacity: 0.35, shadowOffset: { width: 0, height: 3 }, shadowRadius: 10, elevation: 6,
   },
-  okBtnText: { color: '#111', fontWeight: '900', fontSize: 15 },
+  okBtnText: { fontFamily: F.bk, color: '#111', fontSize: 15 },
 
   highlightRow: {
     flexDirection: 'row', alignItems: 'center', gap: 12,
@@ -996,7 +1040,7 @@ const styles = StyleSheet.create({
     borderRadius: 24, borderWidth: 1.5,
     padding: 24, gap: 20, alignItems: 'center',
   },
-  synthTitle: { color: '#FFF', fontSize: 20, fontWeight: '900', letterSpacing: 0.5 },
+  synthTitle: { fontFamily: F.bk, color: '#FFF', fontSize: 20, letterSpacing: 0.5 },
   synthCardRow: { flexDirection: 'row', alignItems: 'center', gap: 16, justifyContent: 'center' },
   synthMiniCard: {
     width: 88, height: 110, borderRadius: 12, borderWidth: 1.5,
@@ -1004,18 +1048,18 @@ const styles = StyleSheet.create({
     alignItems: 'center', justifyContent: 'center', gap: 4, padding: 6,
   },
   synthInfo: { alignItems: 'center', gap: 6 },
-  synthInfoText: { color: 'rgba(255,255,255,0.65)', fontSize: 13, textAlign: 'center', lineHeight: 20 },
-  synthSuccessText: { fontSize: 17, fontWeight: '900', letterSpacing: 0.5 },
-  synthFailText: { color: 'rgba(255,100,100,0.85)', fontSize: 13, textAlign: 'center' },
+  synthInfoText: { fontFamily: F.r, color: 'rgba(255,255,255,0.65)', fontSize: 13, textAlign: 'center', lineHeight: 20 },
+  synthSuccessText: { fontFamily: F.bk, fontSize: 17, letterSpacing: 0.5 },
+  synthFailText: { fontFamily: F.r, color: 'rgba(255,100,100,0.85)', fontSize: 13, textAlign: 'center' },
   synthBtns: { flexDirection: 'row', gap: 12, width: '100%' },
   synthSkipBtn: {
     flex: 1, borderRadius: 16, paddingVertical: 13, alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.06)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)',
   },
-  synthSkipText: { color: 'rgba(255,255,255,0.55)', fontWeight: '700', fontSize: 14 },
+  synthSkipText: { fontFamily: F.b, color: 'rgba(255,255,255,0.55)', fontSize: 14 },
   synthGoBtn: {
     flex: 1, borderRadius: 16, paddingVertical: 13, alignItems: 'center',
     borderWidth: 1.5, backgroundColor: 'rgba(255,220,0,0.10)', borderColor: '#FFE500',
   },
-  synthGoText: { color: '#FFE500', fontWeight: '900', fontSize: 14 },
+  synthGoText: { fontFamily: F.bk, color: '#FFE500', fontSize: 14 },
 });

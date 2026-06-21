@@ -9,9 +9,13 @@ export interface StreakState {
 }
 
 export async function getStreak(): Promise<StreakState> {
-  const raw = await AsyncStorage.getItem(KEY);
-  if (!raw) return { currentStreak: 0, lastDate: '', longestStreak: 0 };
-  return JSON.parse(raw);
+  try {
+    const raw = await AsyncStorage.getItem(KEY);
+    if (!raw) return { currentStreak: 0, lastDate: '', longestStreak: 0 };
+    return JSON.parse(raw);
+  } catch {
+    return { currentStreak: 0, lastDate: '', longestStreak: 0 };
+  }
 }
 
 export async function checkInStreak(today: string): Promise<StreakState> {

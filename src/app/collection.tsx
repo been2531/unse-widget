@@ -5,8 +5,8 @@ import {
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 import {
-  FlatList, Modal, Pressable, ScrollView,
-  StyleSheet, Text, View, useWindowDimensions,
+  FlatList, Modal, Pressable, ScrollView, Share,
+  StatusBar, StyleSheet, Text, View, useWindowDimensions,
 } from 'react-native';
 
 import { F } from '@/shared/fonts';
@@ -30,7 +30,7 @@ const ELEM_BG: Record<string, [string, string]> = {
   lightning: ['#12103a', '#0c1e3e'], nature: ['#082010', '#041008'],
   dark: ['#100820', '#080412'], light: ['#1a1400', '#100c00'],
 };
-const RARITY_ORDER: Record<string, number> = { legendary: 0, epic: 1, rare: 2, common: 3 };
+const RARITY_ORDER: Record<string, number> = { mythic: 0, legendary: 1, epic: 2, rare: 3, common: 4 };
 
 // 캐릭터 패밀리별 이모지 (이미지 없을 때 폴백)
 const FAMILY_EMOJI: Record<string, string> = {
@@ -346,6 +346,14 @@ export default function CollectionScreen() {
   const totalCharAll = ALL_CHARS.length;
   const completionPct = totalCharAll > 0 ? totalCharOwned / totalCharAll : 0;
 
+  async function shareCollection() {
+    const pct = Math.round(completionPct * 100);
+    const msg = pct >= 100
+      ? `[UNSE 카드 수집] 🎉 ${totalCharAll}/${totalCharAll} 전체 수집 완료!\n한국신화 카드 도감을 완성했습니다! ✨`
+      : `[UNSE 카드 수집]\n캐릭터 수집률 ${totalCharOwned}/${totalCharAll} (${pct}%)\n한국신화를 담은 운세 카드 앱 UNSE에서 카드를 모아보세요! ✨`;
+    try { await Share.share({ message: msg }); } catch {}
+  }
+
   const FILTERS: { key: Filter; label: string }[] = [
     { key: 'character', label: '캐릭터' },
     { key: 'fortune',   label: '운세 카드' },
@@ -355,6 +363,7 @@ export default function CollectionScreen() {
 
   return (
     <View style={styles.screen}>
+      <StatusBar barStyle="light-content" backgroundColor="#080B18" />
       <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
         <Rect x={0} y={0} width={screenW} height={9999}>
           <LinearGradient start={vec(0, 0)} end={vec(0, 400)} colors={['#0E0B22', '#080B18']} />
@@ -376,7 +385,12 @@ export default function CollectionScreen() {
       <View style={styles.progressWrap}>
         <View style={styles.progressRow}>
           <Text style={styles.progressLabel}>캐릭터 수집률</Text>
-          <Text style={styles.progressCount}>{totalCharOwned} / {totalCharAll}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+            <Text style={styles.progressCount}>{totalCharOwned} / {totalCharAll}</Text>
+            <Pressable onPress={shareCollection} style={styles.shareBtn} accessibilityLabel="수집률 공유하기">
+              <Text style={styles.shareBtnText}>↗</Text>
+            </Pressable>
+          </View>
         </View>
         <View style={styles.progressTrack}>
           <View style={[styles.progressFill, { width: `${Math.round(completionPct * 100)}%` as any }]} />
@@ -434,7 +448,7 @@ export default function CollectionScreen() {
         key={`${filter}-${elemFilter}`}
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40, paddingTop: 8 }}
         showsVerticalScrollIndicator={false}
-        overScrollMode="always"
+        overScrollMode="never"
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <Text style={styles.emptyEmoji}>
@@ -447,7 +461,7 @@ export default function CollectionScreen() {
                 : '아직 카드가 없어요'}
             </Text>
             <Text style={styles.emptySub}>
-              {filter === 'fortune' ? '운세 확인 시 카드가 쌓입니다'
+              {filter === 'fortune' ? '가챠 뽑기로 운세 카드를 획득할 수 있어요'
                 : filter === 'skin' ? '코인샵에서 프레임을 구매해보세요'
                 : '가챠에서 카드를 뽑아보세요!'}
             </Text>
@@ -501,6 +515,12 @@ const styles = StyleSheet.create({
   progressRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   progressLabel: { fontFamily: F.sb, color: 'rgba(255,255,255,0.40)', fontSize: 11 },
   progressCount: { fontFamily: F.b, color: 'rgba(255,255,255,0.60)', fontSize: 11 },
+  shareBtn: {
+    paddingHorizontal: 8, paddingVertical: 3,
+    backgroundColor: 'rgba(255,255,255,0.07)', borderRadius: 8,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)',
+  },
+  shareBtnText: { fontFamily: F.b, color: 'rgba(255,255,255,0.50)', fontSize: 11 },
   progressTrack: {
     height: 4, backgroundColor: 'rgba(255,255,255,0.08)',
     borderRadius: 2, overflow: 'hidden',

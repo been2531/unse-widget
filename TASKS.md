@@ -1,14 +1,40 @@
 # unse-widget 작업 목록
 
-> 최종 업데이트: 2026-06-21
+> 최종 업데이트: 2026-06-21 (루틴 7회차)
 > 컨셉 원칙: **한국신화 × 운세** — 이 두 가지는 고정. 나머지 디자인·구조·UI는 루틴/Claude가 자유롭게 개선 가능.
 
 ---
 
 ## 🔴 코드 리뷰 이슈
 
+- ~~[리뷰] gacha.tsx:299 — `MultiResultGrid` 내부 `.map()` 안에서 `useSharedValue`·`useEffect` 호출 → `MultiCardItem` 컴포넌트로 분리 완료~~ → 완료
+- ~~[리뷰] gacha.tsx:502 — `handlePull` catch 블록 빈 채로 무음 처리 → Alert 추가 완료~~ → 완료
+- ~~[리뷰] fortune.tsx — `DailyFortune.dii`(띠별 운세)·`.star`(별자리별 운세) 미표시 → 무료 섹션 2개 추가 완료~~ → 완료
+
+
+
 - ~~[리뷰] fortune.tsx:129 — 코인 부족 시 spend() 실패를 catch {} 무음 처리 → 사용자에게 Alert 없음 (adsRemoved 경로)~~ → 완료
 - ~~[리뷰] coin-shop.tsx:15 — grantRemoveAds import됐지만 handleRemoveAds에서 호출 안 됨 (unused import)~~ → 완료
+- ~~[리뷰] gacha.tsx handleAdReward — 광고 오류(result === 'error') 무음 처리 → Alert 추가~~ → 완료
+- ~~[리뷰] gacha.tsx doSynthesis — 스토리지 실패 시 'rolling' 상태 고착 → try-catch + fail 전환~~ → 완료
+- ~~[리뷰] fortune.tsx watchAdForCategory — 광고 오류 무음 처리 → Alert 추가~~ → 완료
+- ~~[리뷰] fortune.tsx shareFortuneResult — 공유 메시지에 raw 날짜 'YYYY-MM-DD' 노출 → 한국어 날짜 형식으로 수정~~ → 완료
+- ~~[리뷰] collection.tsx — fortune 빈 상태 안내 문구 오류 → 수정~~ → 완료
+- ~~[리뷰] index.tsx — mood 계산 하드코딩 → 실제 캐릭터 상태로 수정~~ → 완료
+- ~~[리뷰] gacha.tsx handleAdReward — setSpinning(false) try 밖 → finally로 이동~~ → 완료
+- ~~[리뷰] coin-shop.tsx handleWatchAd — setAdLoading(false) try 밖 → finally로 이동~~ → 완료
+- ~~[리뷰] fortune.tsx watchAdForCategory — setAdLoading(null) try 밖 → finally로 이동~~ → 완료
+- ~~[리뷰] storage/streak.ts — getStreak() try-catch 누락~~ → 완료
+- ~~[리뷰] storage/freePulls.ts — try-catch 누락~~ → 완료
+- ~~[리뷰] storage/adRewards.ts — getAdsRemaining() try-catch 누락~~ → 완료
+- ~~[리뷰] storage/todayFortuneCard.ts — getTodayFortuneBuff() JSON.parse try-catch 누락~~ → 완료
+- ~~[리뷰] storage/characterState.ts — loadCharacterState() try-catch 누락~~ → 완료
+- ~~[리뷰] synthesis.ts:29 — legendary→mythic 합성 차단 버그 수정~~ → 완료
+- ~~[리뷰] storage/userProfile.ts — loadUserProfile() try-catch 누락~~ → 완료
+- [ ] [리뷰] streak.ts:32 — checkInStreak() AsyncStorage.setItem try-catch 누락 → 홈 화면 영구 로딩 고착
+- [ ] [리뷰] adRewards.ts:19 — recordAdReward() try-catch 누락 → 광고 코인 미적립
+- [ ] [리뷰] coin-shop.tsx:76 — Promise.all().catch() 미처리 → 스켈레톤 무한 표시
+- [ ] [리뷰] fortune.tsx:122 — checkInStreak 에러 시 setLoading(false) 미호출
 
 ---
 
@@ -27,6 +53,11 @@
 - ~~컬렉션 카드 상세 신화 설명 강화~~ → 한국신화 배지·원소·수집일 추가 완료
 - 루틴 에이전트 설정 완료 (매 3시간, master 직접 push, 세션당 95% 컨텍스트 활용)
 - `CHARACTER_ART_GUIDE.md` 작성 완료 (AI 생성 프롬프트 포함)
+- ~~gacha/collection: 접근성 레이블 누락 보완, overScrollMode 통일~~ → 완료
+- ~~fortune: 종합 점수 색상 → 카드 테두리·공유 버튼·해금 카드 테두리 연동~~ → 완료
+- ~~fortune: 오류 상태 뒤로 가기 버튼 추가~~ → 완료
+- ~~gacha: 무료 뽑기 에러 무음 catch → Alert 처리~~ → 완료
+- ~~coin-shop: 스킨 구매 버튼 accessibilityLabel 추가~~ → 완료
 
 ---
 
@@ -81,13 +112,19 @@
 
 ### UI 완성도
 - ~~코인샵 화면 안정성 — grantRemoveAds 미연결 버그 수정~~ → 완료
+- ~~로딩 스켈레톤 — 데이터 로딩 중 빈 화면 대신 placeholder~~ → 홈/운세/가챠/코인샵 완료
+- [ ] **전체 화면 디자인 세련도** — 세련되고 고급스러운 최신 디자인 기준으로 지속 개선
+  - 촌스럽거나 아마추어 느낌 요소 발견 시 즉시 개선 (루틴·Claude 모두 적용)
+  - 벤치마크: 포켓몬 TCG, 원신, 고급 운세앱 디자인 레퍼런스
+  - 폰트: F.eb/F.bk 위계 강화, 여백·타이포그래피 정교화
+  - 컬러: 금빛(#C8A84B) 액센트 일관 적용, 배경 그라디언트 깊이감 강화
 
 ### 접근성
 - ~~주요 Pressable에 `accessibilityLabel` 추가 — 스토어 심사 영향~~ → 홈/운세/가챠/컬렉션/코인샵 완료
 
 ### 리텐션 / 참여
 - [ ] 스트릭 알림 — 자정 전 "오늘 운세 확인하셨나요?" 푸시 알림 (expo-notifications, 네이티브)
-- [ ] 컬렉션 완성률 공유 기능 — "나는 24/24 수집 완료!" 이미지 공유
+- ~~컬렉션 완성률 공유 기능 — "나는 24/24 수집 완료!" 이미지 공유~~ → Share API 텍스트 공유 완료
 
 ---
 
@@ -162,6 +199,12 @@
 - ~~오늘의 운세 공유 기능~~ → fortune.tsx Share API 완료
 - ~~gacha.tsx 테스트 버튼 제거~~ → 완료
 - ~~온보딩 생년월일 자동 포커스 + 폰트 통일~~ → 완료
+- ~~fortune·gacha·index: F. 폰트 시스템 전면 적용 — 하드코딩 fontWeight 제거~~ → 완료
+- ~~fortune: 종합 점수 카운트업 애니메이션 (0→실제점수, 800ms)~~ → 완료
+- ~~fortune: 헤더에 연속 확인 스트릭 배지 추가~~ → 완료
+- ~~gacha: 합성 모달 minicard에 실제 캐릭터 아트 표시~~ → 완료
+- ~~gacha: 10연차 하이라이트 행에 캐릭터 아트·레어리티 배지 추가~~ → 완료
+- ~~index: 홈화면 카드 하단에 캐릭터 기분(mood) 배지 표시~~ → 완료
 
 ---
 

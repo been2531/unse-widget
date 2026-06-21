@@ -12,6 +12,7 @@ import Animated, {
   withRepeat, withSequence, withSpring, withTiming,
 } from 'react-native-reanimated';
 
+import { F } from '@/shared/fonts';
 import DragonSkia from '@/character/DragonSkia';
 
 const CARD_W = 280;
@@ -304,28 +305,28 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   nameRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  cardName: { color: '#FFE500', fontSize: 17, fontWeight: '800', letterSpacing: 0.3 },
-  cardType: { color: '#FFE500', fontSize: 12, fontWeight: '600', opacity: 0.8 },
-  cardDesc: { color: 'rgba(255,255,255,0.65)', fontSize: 12, lineHeight: 18 },
+  cardName: { fontFamily: F.eb, color: '#FFE500', fontSize: 17, letterSpacing: 0.3 },
+  cardType: { fontFamily: F.sb, color: '#FFE500', fontSize: 12, opacity: 0.8 },
+  cardDesc: { fontFamily: F.r, color: 'rgba(255,255,255,0.65)', fontSize: 12, lineHeight: 18 },
   statsRow: { flexDirection: 'row', gap: 8, marginTop: 2 },
   statBox: {
     flex: 1, alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.06)',
     borderRadius: 8, paddingVertical: 6,
   },
-  statLabel: { color: 'rgba(255,255,255,0.45)', fontSize: 10, fontWeight: '600' },
-  statVal: { color: 'white', fontSize: 15, fontWeight: '800' },
+  statLabel: { fontFamily: F.sb, color: 'rgba(255,255,255,0.45)', fontSize: 10 },
+  statVal: { fontFamily: F.eb, color: 'white', fontSize: 15 },
   rarityBox: { backgroundColor: 'rgba(255,220,60,0.12)' },
-  rarityText: { color: '#FFE500', fontSize: 12, fontWeight: '700', marginTop: 2 },
+  rarityText: { fontFamily: F.b, color: '#FFE500', fontSize: 12, marginTop: 2 },
 
   backLabel: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, alignItems: 'center', justifyContent: 'center' },
   backSymbol: { color: 'rgba(255,220,60,0.5)', fontSize: 48 },
 
-  hint: { color: 'rgba(255,255,255,0.3)', fontSize: 12 },
+  hint: { fontFamily: F.r, color: 'rgba(255,255,255,0.3)', fontSize: 12 },
   flipBtn: {
     backgroundColor: 'rgba(255,220,60,0.15)',
     borderWidth: 1, borderColor: 'rgba(255,220,60,0.4)',
     paddingVertical: 12, paddingHorizontal: 36, borderRadius: 24,
   },
-  flipText: { color: '#FFE500', fontSize: 15, fontWeight: '700' },
+  flipText: { fontFamily: F.b, color: '#FFE500', fontSize: 15 },
 });

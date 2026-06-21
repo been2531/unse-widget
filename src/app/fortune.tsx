@@ -5,6 +5,7 @@ import {
   ScrollView, Share, StatusBar, StyleSheet, Text, View,
 } from 'react-native';
 
+import { F } from '@/shared/fonts';
 import { showRewardedAd } from '@/ads/admob';
 import { fnv1aHash } from '@/fortune/hash';
 import { spend } from '@/storage/coins';
@@ -16,6 +17,7 @@ import { getActiveBuff, type FortuneBuff } from '@/fortune/fortuneCardBuff';
 import { getTodayDateString } from '@/shared/dateUtils';
 import { SkeletonBox } from '@/shared/Skeleton';
 import { getTodayUnlocked, unlockCategory } from '@/storage/fortuneUnlock';
+import { checkInStreak, type StreakState } from '@/storage/streak';
 import { getTodayFortuneBuff } from '@/storage/todayFortuneCard';
 import { loadUserProfile } from '@/storage/userProfile';
 
@@ -75,11 +77,11 @@ function ScoreBar({ score, color, label, emoji, delay }: {
 const barStyles = StyleSheet.create({
   row:   { flexDirection: 'row', alignItems: 'center', gap: 8 },
   emoji: { fontSize: 15, width: 20 },
-  label: { color: 'rgba(255,255,255,0.55)', fontSize: 11, fontWeight: '600', width: 36 },
+  label: { fontFamily: F.sb, color: 'rgba(255,255,255,0.55)', fontSize: 11, width: 36 },
   track: { flex: 1, height: 5, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 3, overflow: 'hidden' },
   fill:  { height: '100%', borderRadius: 3 },
-  num:   { fontSize: 13, fontWeight: '900', width: 28, textAlign: 'right' },
-  tag:   { color: 'rgba(255,255,255,0.30)', fontSize: 10, width: 26 },
+  num:   { fontFamily: F.bk, fontSize: 13, width: 28, textAlign: 'right' },
+  tag:   { fontFamily: F.r, color: 'rgba(255,255,255,0.30)', fontSize: 10, width: 26 },
 });
 
 export default function FortuneScreen() {
@@ -92,6 +94,10 @@ export default function FortuneScreen() {
   const [luckyInfo, setLuckyInfo]   = useState<LuckyInfo | null>(null);
   const [scores, setScores]         = useState<Record<CategoryKey, number> | null>(null);
   const [overall, setOverall]       = useState(0);
+  const [displayScore, setDisplayScore] = useState(0);
+  const [diiSign, setDiiSign]       = useState('');
+  const [starSign, setStarSign]     = useState('');
+  const [streak, setStreak]         = useState<StreakState>({ currentStreak: 0, lastDate: '', longestStreak: 0 });
 
   useEffect(() => {
     (async () => {
@@ -101,6 +107,8 @@ export default function FortuneScreen() {
 
       setFortune(selectDailyFortune(today, p.diiSign, p.starSign));
       setLuckyInfo(deriveLuckyInfo(today, p.diiSign, p.starSign));
+      setDiiSign(p.diiSign);
+      setStarSign(p.starSign);
 
       const s: Record<CategoryKey, number> = {
         wealth: deriveScore(today, p.diiSign, p.starSign, 'wealth'),
@@ -111,11 +119,13 @@ export default function FortuneScreen() {
       setScores(s);
       setOverall(Math.round((s.wealth + s.love + s.health + s.work) / 4));
 
-      const [todayUnlocked, noAds, todayBuff] = await Promise.all([
+      const [todayUnlocked, noAds, todayBuff, streakState] = await Promise.all([
         getTodayUnlocked(today),
         hasRemovedAds(),
         getTodayFortuneBuff(today),
+        checkInStreak(today),
       ]);
+      setStreak(streakState);
       setUnlocked(todayUnlocked);
       setAdsRemoved(noAds);
       if (todayBuff) setActiveBuff(getActiveBuff(todayBuff.cardId));
@@ -123,32 +133,58 @@ export default function FortuneScreen() {
     })();
   }, []);
 
+  useEffect(() => {
+    if (overall <= 0) return;
+    let current = 0;
+    const step = overall / 20;
+    const timer = setInterval(() => {
+      current += step;
+      if (current >= overall) {
+        setDisplayScore(overall);
+        clearInterval(timer);
+      } else {
+        setDisplayScore(Math.round(current));
+      }
+    }, 40);
+    return () => clearInterval(timer);
+  }, [overall]);
+
   async function watchAdForCategory(key: CategoryKey) {
     if (adLoading) return;
     setAdLoading(key);
     const today = getTodayDateString();
-    if (adsRemoved) {
-      try {
-        await spend(50);
-        setUnlocked(await unlockCategory(today, key));
-      } catch {
-        Alert.alert('코인 부족', '코인이 부족해요.\n코인샵에서 충전하거나 광고 제거를 해제해 보세요.', [
-          { text: '코인샵 가기', onPress: () => router.push('/coin-shop') },
-          { text: '닫기', style: 'cancel' },
-        ]);
+    try {
+      if (adsRemoved) {
+        try {
+          await spend(50);
+          setUnlocked(await unlockCategory(today, key));
+        } catch {
+          Alert.alert('코인 부족', '코인이 부족해요.\n코인샵에서 충전하거나 광고 제거를 해제해 보세요.', [
+            { text: '코인샵 가기', onPress: () => router.push('/coin-shop') },
+            { text: '닫기', style: 'cancel' },
+          ]);
+        }
+      } else {
+        const result = await showRewardedAd();
+        if (result === 'earned') {
+          setUnlocked(await unlockCategory(today, key));
+        } else if (result === 'error') {
+          Alert.alert('오류', '광고를 불러올 수 없습니다. 잠시 후 다시 시도해 주세요.');
+        }
       }
-    } else {
-      const result = await showRewardedAd();
-      if (result === 'earned') {
-        setUnlocked(await unlockCategory(today, key));
-      }
+    } catch {
+      Alert.alert('오류', '운세 해금 중 오류가 발생했습니다.');
+    } finally {
+      setAdLoading(null);
     }
-    setAdLoading(null);
   }
 
   async function shareFortuneResult() {
     if (!fortune || !scores) return;
-    const msg = `[UNSE 오늘의 운세]\n${fortune.date}\n\n종합 운세: ${overall}점 (${scoreLabel(overall)})\n\n✨ ${fortune.general.text}`;
+    const diiLine = diiSign ? `\n🐾 ${diiSign} 띠: ${fortune.dii.text}` : '';
+    const starLine = starSign ? `\n⭐ ${starSign}: ${fortune.star.text}` : '';
+    const dateKo = new Date(fortune.date + 'T00:00:00').toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric' });
+    const msg = `[UNSE 오늘의 운세]\n${dateKo}\n\n종합 운세: ${overall}점 (${scoreLabel(overall)})\n\n✨ ${fortune.general.text}${diiLine}${starLine}`;
     try { await Share.share({ message: msg }); } catch {}
   }
 
@@ -170,6 +206,9 @@ export default function FortuneScreen() {
     <View style={styles.center}>
       <StatusBar barStyle="light-content" backgroundColor="#080B18" />
       <Text style={styles.err}>운세를 불러올 수 없어요</Text>
+      <Pressable onPress={() => router.back()} style={{ marginTop: 16, paddingHorizontal: 20, paddingVertical: 10, backgroundColor: 'rgba(255,255,255,0.07)', borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)' }}>
+        <Text style={{ fontFamily: F.r, color: 'rgba(255,255,255,0.55)', fontSize: 14 }}>뒤로 가기</Text>
+      </Pressable>
     </View>
   );
 
@@ -184,16 +223,23 @@ export default function FortuneScreen() {
           <Text style={styles.backIcon}>‹</Text>
         </Pressable>
         <Text style={styles.title}>오늘의 운세</Text>
-        <View style={{ width: 40 }} />
+        <View style={{ width: 40, alignItems: 'flex-end' }}>
+          {streak.currentStreak >= 1 && (
+            <View style={{ backgroundColor: 'rgba(255,120,0,0.18)', borderRadius: 10, borderWidth: 1, borderColor: 'rgba(255,120,0,0.40)', paddingVertical: 3, paddingHorizontal: 8 }}>
+              <Text style={{ fontFamily: F.b, color: '#FF8800', fontSize: 11 }}>🔥 {streak.currentStreak}일</Text>
+            </View>
+          )}
+        </View>
       </View>
 
       <ScrollView
         style={{ flex: 1 }}
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
+        overScrollMode="never"
       >
         {/* 종합 점수 */}
-        <View style={styles.overallCard}>
+        <View style={[styles.overallCard, { borderColor: `${overallColor}30` }]}>
           {/* 한국 금빛 상단 액센트 바 */}
           <View style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, borderTopLeftRadius: 20, borderTopRightRadius: 20, overflow: 'hidden' }}>
             <View style={{ flex: 1, backgroundColor: '#C8A84B', opacity: 0.75 }} />
@@ -201,9 +247,11 @@ export default function FortuneScreen() {
           <View style={styles.overallLeft}>
             {/* 점수 뒤 라디얼 글로우 */}
             <View style={{ position: 'absolute', width: 70, height: 70, borderRadius: 35, backgroundColor: overallColor, opacity: 0.10, top: 12, alignSelf: 'center' }} />
-            <Text style={styles.overallDate}>{fortune.date}</Text>
-            <Text style={[styles.overallScore, { color: overallColor, textShadowColor: overallColor, textShadowRadius: 12 }]}>{overall}</Text>
-            <Text style={[styles.overallGrade, { color: overallColor }]}>{scoreLabel(overall)}</Text>
+            <Text style={styles.overallDate}>
+              {new Date(fortune.date + 'T00:00:00').toLocaleDateString('ko-KR', { month: 'long', day: 'numeric' })}
+            </Text>
+            <Text style={[styles.overallScore, { color: overallColor, textShadowColor: overallColor, textShadowRadius: 12 }]}>{displayScore}</Text>
+            <Text style={[styles.overallGrade, { color: overallColor }]}>{scoreLabel(displayScore)}</Text>
             <Text style={styles.overallLabel}>종합 운세</Text>
           </View>
           <View style={styles.overallRight}>
@@ -266,6 +314,26 @@ export default function FortuneScreen() {
           <Text style={styles.cardText}>{fortune.general.text}</Text>
         </View>
 
+        {/* 띠별 운세 — 항상 무료 */}
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardEmoji}>🐾</Text>
+            <Text style={styles.cardLabel}>{diiSign} 띠 운세</Text>
+            <View style={styles.freeBadge}><Text style={styles.freeBadgeText}>무료</Text></View>
+          </View>
+          <Text style={styles.cardText}>{fortune.dii.text}</Text>
+        </View>
+
+        {/* 별자리 운세 — 항상 무료 */}
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardEmoji}>⭐</Text>
+            <Text style={styles.cardLabel}>{starSign} 운세</Text>
+            <View style={styles.freeBadge}><Text style={styles.freeBadgeText}>무료</Text></View>
+          </View>
+          <Text style={styles.cardText}>{fortune.star.text}</Text>
+        </View>
+
         {/* 유료 카테고리 */}
         {CATEGORIES.map(({ key, label, emoji, color }) => {
           const isUnlocked = unlocked.includes(key);
@@ -274,6 +342,7 @@ export default function FortuneScreen() {
           return (
             <View key={key} style={[
               styles.card,
+              isUnlocked && { borderColor: `${color}30` },
               isBoosted && { borderColor: `${activeBuff!.color}44` },
             ]}>
               <View style={styles.cardHeader}>
@@ -326,8 +395,12 @@ export default function FortuneScreen() {
           );
         })}
 
-        <Pressable style={styles.shareBtn} onPress={shareFortuneResult} accessibilityLabel="오늘의 운세 공유하기">
-          <Text style={styles.shareBtnText}>↗  오늘의 운세 공유하기</Text>
+        <Pressable
+          style={[styles.shareBtn, { borderColor: `${overallColor}40`, backgroundColor: `${overallColor}08` }]}
+          onPress={shareFortuneResult}
+          accessibilityLabel="오늘의 운세 공유하기"
+        >
+          <Text style={[styles.shareBtnText, { color: overallColor }]}>↗  오늘의 운세 공유하기</Text>
         </Pressable>
 
         <Text style={styles.footNote}>
@@ -341,7 +414,7 @@ export default function FortuneScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#080B18' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#080B18' },
-  err: { color: 'rgba(255,255,255,0.5)' },
+  err: { fontFamily: F.r, color: 'rgba(255,255,255,0.5)' },
 
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
@@ -352,8 +425,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.07)', borderRadius: 12,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)',
   },
-  backIcon: { color: '#fff', fontSize: 28, lineHeight: 32, marginTop: -2 },
-  title: { fontSize: 18, fontWeight: '700', color: '#FFFFFF' },
+  backIcon: { fontFamily: F.r, color: '#fff', fontSize: 28, lineHeight: 32, marginTop: -2 },
+  title: { fontFamily: F.b, fontSize: 18, color: '#FFFFFF' },
 
   scroll: { paddingHorizontal: 16, paddingBottom: 40, gap: 12 },
 
@@ -365,10 +438,10 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   overallLeft: { alignItems: 'center', justifyContent: 'center', width: 68 },
-  overallDate: { color: 'rgba(255,255,255,0.28)', fontSize: 9, letterSpacing: 0.3, marginBottom: 2 },
-  overallScore: { fontSize: 46, fontWeight: '900', lineHeight: 50 },
-  overallGrade: { fontSize: 13, fontWeight: '800', marginTop: 2 },
-  overallLabel: { color: 'rgba(255,255,255,0.30)', fontSize: 10, marginTop: 4 },
+  overallDate: { fontFamily: F.r, color: 'rgba(255,255,255,0.28)', fontSize: 9, letterSpacing: 0.3, marginBottom: 2 },
+  overallScore: { fontFamily: F.bk, fontSize: 46, lineHeight: 50 },
+  overallGrade: { fontFamily: F.eb, fontSize: 13, marginTop: 2 },
+  overallLabel: { fontFamily: F.r, color: 'rgba(255,255,255,0.30)', fontSize: 10, marginTop: 4 },
   overallRight: { flex: 1, gap: 10 },
 
   luckyCard: {
@@ -377,13 +450,13 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
     gap: 12,
   },
-  sectionTitle: { color: 'rgba(255,255,255,0.40)', fontSize: 11, fontWeight: '700', letterSpacing: 0.8 },
+  sectionTitle: { fontFamily: F.b, color: 'rgba(255,255,255,0.40)', fontSize: 11, letterSpacing: 0.8 },
   luckyGrid: { flexDirection: 'row', alignItems: 'center' },
   luckyCell: { flex: 1, alignItems: 'center', gap: 4 },
   luckyDot: { width: 20, height: 20, borderRadius: 10, marginBottom: 2, borderWidth: 1, borderColor: 'rgba(255,255,255,0.20)' },
   luckyCellIcon: { fontSize: 18, marginBottom: 2 },
-  luckyCellLabel: { color: 'rgba(255,255,255,0.30)', fontSize: 9, fontWeight: '600' },
-  luckyCellVal: { color: '#FFFFFF', fontSize: 13, fontWeight: '800' },
+  luckyCellLabel: { fontFamily: F.sb, color: 'rgba(255,255,255,0.30)', fontSize: 9 },
+  luckyCellVal: { fontFamily: F.eb, color: '#FFFFFF', fontSize: 13 },
   luckyDivider: { width: 1, height: 44, backgroundColor: 'rgba(255,255,255,0.07)' },
 
   card: {
@@ -394,41 +467,41 @@ const styles = StyleSheet.create({
   },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   cardEmoji: { fontSize: 18 },
-  cardLabel: { fontSize: 15, fontWeight: '700', color: '#FFFFFF', flex: 1 },
-  inlineScore: { fontSize: 13, fontWeight: '900' },
+  cardLabel: { fontFamily: F.b, fontSize: 15, color: '#FFFFFF', flex: 1 },
+  inlineScore: { fontFamily: F.bk, fontSize: 13 },
   badge: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8, borderWidth: 1 },
-  badgeText: { fontSize: 10, fontWeight: '700' },
+  badgeText: { fontFamily: F.b, fontSize: 10 },
   freeBadge: {
     paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8,
     backgroundColor: 'rgba(255,220,0,0.12)', borderWidth: 1, borderColor: 'rgba(255,220,0,0.35)',
   },
-  freeBadgeText: { fontSize: 10, fontWeight: '700', color: '#FFE500' },
+  freeBadgeText: { fontFamily: F.b, fontSize: 10, color: '#FFE500' },
   lockIcon: { fontSize: 14 },
-  cardText: { fontSize: 14, color: 'rgba(255,255,255,0.72)', lineHeight: 22 },
+  cardText: { fontFamily: F.r, fontSize: 14, color: 'rgba(255,255,255,0.72)', lineHeight: 22 },
 
   watchAdBtn: {
     borderWidth: 1, borderRadius: 12,
     paddingVertical: 12, alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.03)',
   },
-  watchAdText: { fontSize: 14, fontWeight: '600' },
+  watchAdText: { fontFamily: F.sb, fontSize: 14 },
 
-  footNote: { fontSize: 11, color: 'rgba(255,255,255,0.18)', textAlign: 'center', marginTop: 4 },
+  footNote: { fontFamily: F.r, fontSize: 11, color: 'rgba(255,255,255,0.18)', textAlign: 'center', marginTop: 4 },
 
   buffBanner: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 10,
     borderWidth: 1, borderRadius: 14, padding: 12,
   },
   buffEmoji: { fontSize: 22, marginTop: 1 },
-  buffTitle: { fontSize: 12, fontWeight: '700', marginBottom: 2 },
-  buffDesc: { fontSize: 12, color: 'rgba(255,255,255,0.50)', lineHeight: 17 },
+  buffTitle: { fontFamily: F.b, fontSize: 12, marginBottom: 2 },
+  buffDesc: { fontFamily: F.r, fontSize: 12, color: 'rgba(255,255,255,0.50)', lineHeight: 17 },
   buffInline: { borderWidth: 1, borderRadius: 10, padding: 8, marginTop: 4 },
-  buffInlineText: { fontSize: 12, lineHeight: 18 },
+  buffInlineText: { fontFamily: F.r, fontSize: 12, lineHeight: 18 },
 
   shareBtn: {
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.14)', borderRadius: 16,
     paddingVertical: 12, alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.04)',
   },
-  shareBtnText: { color: 'rgba(255,255,255,0.55)', fontSize: 14, fontWeight: '600' },
+  shareBtnText: { fontFamily: F.sb, color: 'rgba(255,255,255,0.55)', fontSize: 14 },
 });

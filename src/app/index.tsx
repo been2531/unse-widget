@@ -19,6 +19,7 @@ import { SkeletonBox } from '@/shared/Skeleton';
 import { cardImageFor } from '@/gacha/cardAssets';
 import { getFrameStyle } from '@/gacha/frameStyles';
 import { deriveMood } from '@/character/mood';
+import { computeEffectiveAffection, computeNeglectDays } from '@/character/state';
 import { type Mood } from '@/character/types';
 import { deriveValence, type FortuneValence } from '@/fortune/deriveValence';
 import { getActiveBuff, type FortuneBuff } from '@/fortune/fortuneCardBuff';
@@ -303,6 +304,14 @@ export default function HomeScreen() {
     });
   }, []);
 
+  const todayScore = useMemo(() => {
+    if (!profile) return null;
+    const today = getTodayDateString();
+    const cats = ['wealth', 'love', 'health', 'work'];
+    const sum = cats.reduce((s, c) => s + 30 + (fnv1aHash(`${today}:${profile.diiSign}:${profile.starSign}:score:${c}`) % 61), 0);
+    return Math.round(sum / cats.length);
+  }, [profile]);
+
   const bgStars = useMemo(() => Array.from({ length: 22 }, (_, i) => ({
     x: (i * 137 + 29) % screenW,
     y: (i * 211 + 71) % screenH,
@@ -316,9 +325,11 @@ export default function HomeScreen() {
       const p = await loadUserProfile();
       if (!p) { setLoading(false); return; }
       const today = getTodayDateString();
-      await loadCharacterState();
+      const charState = await loadCharacterState();
       const valence = deriveValence(today, p.diiSign, p.starSign);
-      setMood(deriveMood({ affection: 100, neglectDays: 0, fortuneValence: valence }));
+      const neglectDays = computeNeglectDays(charState, today);
+      const affection = computeEffectiveAffection(charState, today);
+      setMood(deriveMood({ affection, neglectDays, fortuneValence: valence }));
       setElement(DII_ELEMENT[p.diiSign] ?? 'lightning');
 
       const streakState = await checkInStreak(today);
@@ -947,10 +958,10 @@ export default function HomeScreen() {
                 letterSpacing: 0.1,
               }} numberOfLines={4}>{fortune.general.text}</Text>
 
-              {/* 하단 행: 희귀도 + 버프 */}
+              {/* 하단 행: 희귀도 + 버프/기분 */}
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 6, paddingBottom: 6, paddingTop: 3 }}>
                 <Text style={{ fontFamily: F.b, color: R.starColor, fontSize: 12, letterSpacing: 1, textShadowColor: R.starColor, textShadowRadius: 6 }}>{R.stars}</Text>
-                {activeBuff && (
+                {activeBuff ? (
                   <View style={{
                     flexDirection: 'row', alignItems: 'center', gap: 3,
                     backgroundColor: `${activeBuff.color}25`, borderRadius: 6,
@@ -959,6 +970,19 @@ export default function HomeScreen() {
                   }}>
                     <Text style={{ fontFamily: F.eb, fontSize: 8, color: activeBuff.color }}>
                       {activeBuff.emoji} BUFF
+                    </Text>
+                  </View>
+                ) : (
+                  <View style={{
+                    borderRadius: 6, borderWidth: 1, paddingHorizontal: 5, paddingVertical: 2,
+                    backgroundColor: mood === 'joyful' ? 'rgba(68,255,136,0.12)' : mood === 'lonely' ? 'rgba(136,170,255,0.12)' : 'rgba(255,255,255,0.06)',
+                    borderColor: mood === 'joyful' ? 'rgba(68,255,136,0.30)' : mood === 'lonely' ? 'rgba(136,170,255,0.30)' : 'rgba(255,255,255,0.12)',
+                  }}>
+                    <Text style={{
+                      fontFamily: F.r, fontSize: 8,
+                      color: mood === 'joyful' ? '#44FF88' : mood === 'lonely' ? '#88AAFF' : 'rgba(255,255,255,0.40)',
+                    }}>
+                      {mood === 'joyful' ? '😊 기쁨' : mood === 'lonely' ? '😔 외로움' : '😶 보통'}
                     </Text>
                   </View>
                 )}
@@ -1103,6 +1127,11 @@ export default function HomeScreen() {
       >
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           <Text style={styles.primaryBtnText}>오늘의 운세 보기</Text>
+          {todayScore !== null && (
+            <Text style={{ fontFamily: F.b, fontSize: 12, color: 'rgba(255,255,255,0.75)' }}>
+              {todayScore >= 70 ? '🟡' : todayScore >= 50 ? '🔵' : '🔴'} {todayScore}점
+            </Text>
+          )}
           <Text style={styles.primaryBtnArrow}>→</Text>
         </View>
       </Pressable>

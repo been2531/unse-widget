@@ -6,10 +6,14 @@ export const COINS_PER_AD = 10;
 export const MAX_ADS_PER_DAY = 5;
 
 export async function getAdsRemaining(today: string): Promise<number> {
-  const raw = await AsyncStorage.getItem(KEY);
-  if (!raw) return MAX_ADS_PER_DAY;
-  const { date, watched } = JSON.parse(raw);
-  return date === today ? Math.max(0, MAX_ADS_PER_DAY - watched) : MAX_ADS_PER_DAY;
+  try {
+    const raw = await AsyncStorage.getItem(KEY);
+    if (!raw) return MAX_ADS_PER_DAY;
+    const { date, watched } = JSON.parse(raw);
+    return date === today ? Math.max(0, MAX_ADS_PER_DAY - watched) : MAX_ADS_PER_DAY;
+  } catch {
+    return MAX_ADS_PER_DAY;
+  }
 }
 
 export async function recordAdReward(today: string): Promise<number> {
