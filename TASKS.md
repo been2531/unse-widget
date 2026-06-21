@@ -7,6 +7,12 @@
 
 ## 🔴 코드 리뷰 이슈
 
+- [ ] gacha.tsx:299 — `MultiResultGrid` 내부 `.map()` 안에서 `useSharedValue`·`useEffect` 호출 → React hooks 규칙 위반, 카드 수가 고정(10장)이라 현재는 크래시 없지만 컴포넌트 분리 필요
+- [ ] gacha.tsx:502 — `handlePull` catch 블록 빈 채로 무음 처리 → AsyncStorage 오류 시 사용자 피드백 없음
+- [ ] fortune.tsx — `DailyFortune.dii`(띠별 운세)·`.star`(별자리별 운세) 데이터가 UI에 전혀 표시 안 됨 → 무료 콘텐츠 2개 섹션 누락
+
+
+
 - ~~[리뷰] fortune.tsx:129 — 코인 부족 시 spend() 실패를 catch {} 무음 처리 → 사용자에게 Alert 없음 (adsRemoved 경로)~~ → 완료
 - ~~[리뷰] coin-shop.tsx:15 — grantRemoveAds import됐지만 handleRemoveAds에서 호출 안 됨 (unused import)~~ → 완료
 

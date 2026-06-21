@@ -286,53 +286,59 @@ function ResultCard({ card, cardW, onReveal }: { card: PulledCard; cardW: number
   );
 }
 
-// ─── 10연차 미니 카드 그리드 ───────────────────────────────────────────────
-function MultiResultGrid({ cards, miniW }: { cards: PulledCard[]; miniW: number }) {
+// ─── 10연차 미니 카드 아이템 ──────────────────────────────────────────────
+function MultiCardItem({ card, miniW }: { card: PulledCard; miniW: number }) {
   const miniH = miniW * 1.42;
-  const delayIdx = useRef(0);
+  const elemColor = ELEM_COLOR[card.element] ?? '#888';
+  const [bgTop, bgBot] = ELEM_BG[card.element] ?? ['#12103a', '#0c1e3e'];
+  const enterA = useSharedValue(0);
+
+  useEffect(() => {
+    enterA.value = withTiming(1, { duration: 350, easing: Easing.out(Easing.back(1.5)) });
+  }, []);
+
+  const aStyle = useAnimatedStyle(() => ({
+    opacity: enterA.value,
+    transform: [{ scale: interpolate(enterA.value, [0, 1], [0.6, 1]) }],
+  }));
 
   return (
+    <Animated.View style={aStyle}>
+      <View style={{ width: miniW, height: miniH, borderRadius: 10, overflow: 'hidden' }}>
+        <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
+          <Rect x={0} y={0} width={miniW} height={miniH}>
+            <LinearGradient start={vec(0, 0)} end={vec(miniW, miniH)} colors={[bgTop, bgBot]} />
+          </Rect>
+          <RoundedRect x={0} y={0} width={miniW} height={miniH} r={10}
+            color={`${elemColor}BB`} style="stroke" strokeWidth={RARITY_BORDER[card.rarity]} />
+        </Canvas>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 2 }}>
+          {card.category === 'character' && cardImageFor(card.element, card.rarity, card.id)
+            ? <Image source={cardImageFor(card.element, card.rarity, card.id)!}
+                style={{ width: miniW - 4, height: miniW - 4 }} resizeMode="contain" />
+            : <Text style={{ fontSize: miniW * 0.28 }}>
+                {card.category === 'character' ? '🐲' : card.category === 'skin' ? '🎨' : '🔮'}
+              </Text>
+          }
+          <Text style={{ color: elemColor, fontSize: 8, fontWeight: '700', letterSpacing: 0.5 }}>
+            {RARITY_LABEL[card.rarity]}
+          </Text>
+          <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 7, textAlign: 'center', paddingHorizontal: 2 }} numberOfLines={2}>
+            {card.nameKo}
+          </Text>
+        </View>
+      </View>
+    </Animated.View>
+  );
+}
+
+// ─── 10연차 미니 카드 그리드 ───────────────────────────────────────────────
+function MultiResultGrid({ cards, miniW }: { cards: PulledCard[]; miniW: number }) {
+  return (
     <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center' }}>
-      {cards.map((card, i) => {
-        const elemColor = ELEM_COLOR[card.element] ?? '#888';
-        const [bgTop, bgBot] = ELEM_BG[card.element] ?? ['#12103a', '#0c1e3e'];
-        const enterA = useSharedValue(0);
-        useEffect(() => {
-          enterA.value = withTiming(1, { duration: 350, easing: Easing.out(Easing.back(1.5)) });
-        }, []);
-        const aStyle = useAnimatedStyle(() => ({
-          opacity: enterA.value,
-          transform: [{ scale: interpolate(enterA.value, [0, 1], [0.6, 1]) }],
-        }));
-        return (
-          <Animated.View key={card.uid} style={aStyle}>
-            <View style={{ width: miniW, height: miniH, borderRadius: 10, overflow: 'hidden' }}>
-              <Canvas style={StyleSheet.absoluteFill} pointerEvents="none">
-                <Rect x={0} y={0} width={miniW} height={miniH}>
-                  <LinearGradient start={vec(0, 0)} end={vec(miniW, miniH)} colors={[bgTop, bgBot]} />
-                </Rect>
-                <RoundedRect x={0} y={0} width={miniW} height={miniH} r={10}
-                  color={`${elemColor}BB`} style="stroke" strokeWidth={RARITY_BORDER[card.rarity]} />
-              </Canvas>
-              <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 2 }}>
-                {card.category === 'character' && cardImageFor(card.element, card.rarity, card.id)
-                  ? <Image source={cardImageFor(card.element, card.rarity, card.id)!}
-                      style={{ width: miniW - 4, height: miniW - 4 }} resizeMode="contain" />
-                  : <Text style={{ fontSize: miniW * 0.28 }}>
-                      {card.category === 'character' ? '🐲' : card.category === 'skin' ? '🎨' : '🔮'}
-                    </Text>
-                }
-                <Text style={{ color: elemColor, fontSize: 8, fontWeight: '700', letterSpacing: 0.5 }}>
-                  {RARITY_LABEL[card.rarity]}
-                </Text>
-                <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 7, textAlign: 'center', paddingHorizontal: 2 }} numberOfLines={2}>
-                  {card.nameKo}
-                </Text>
-              </View>
-            </View>
-          </Animated.View>
-        );
-      })}
+      {cards.map((card) => (
+        <MultiCardItem key={card.uid} card={card} miniW={miniW} />
+      ))}
     </View>
   );
 }
@@ -500,7 +506,7 @@ export default function GachaScreen() {
         await checkSynthesisAfterPull(card);
       }
     } catch (e: any) {
-      // 코인 부족 — balance 표시로 알 수 있음
+      Alert.alert('오류', e?.message ?? '뽑기 중 오류가 발생했습니다.');
     }
     setSpinning(false);
   }
