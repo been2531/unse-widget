@@ -932,6 +932,20 @@ export default function HomeScreen() {
         </View>
       )}
 
+      {/* 수집 진행도 뱃지 */}
+      <Pressable
+        style={styles.collBadge}
+        onPress={() => router.push('/collection')}
+      >
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 5 }}>
+          <Text style={styles.collBadgeLabel}>✦ 카드 수집</Text>
+          <Text style={styles.collBadgeCount}>{collectedCount}/{TOTAL_CHAR_CARDS} 수집</Text>
+        </View>
+        <View style={styles.collProgressTrack}>
+          <View style={[styles.collProgressFill, { width: `${Math.round((collectedCount / TOTAL_CHAR_CARDS) * 100)}%`, backgroundColor: E.color }]} />
+        </View>
+      </Pressable>
+
       {/* 주요 액션 — 운세 보기 (1순위) */}
       <Pressable
         style={[styles.primaryBtn, { borderColor: `${E.color}44` }]}
@@ -945,18 +959,6 @@ export default function HomeScreen() {
         <Pressable style={styles.secondaryBtn} onPress={() => router.push('/collection')}>
           <Text style={styles.secondaryBtnIcon}>✦</Text>
           <Text style={styles.secondaryBtnText}>컬렉션</Text>
-          <Text style={{ fontFamily: F.sb, color: 'rgba(255,255,255,0.65)', fontSize: 10 }}>
-            {collectedCount}/{TOTAL_CHAR_CARDS}
-          </Text>
-          <View style={{
-            position: 'absolute', bottom: 0, left: 0, right: 0,
-            height: 2.5, overflow: 'hidden', borderBottomLeftRadius: 14, borderBottomRightRadius: 14,
-          }}>
-            <View style={{
-              height: '100%', backgroundColor: '#FFD700',
-              width: `${Math.round((collectedCount / TOTAL_CHAR_CARDS) * 100)}%` as any,
-            }} />
-          </View>
         </Pressable>
         <Pressable style={styles.secondaryBtn} onPress={() => router.push('/gacha')}>
           <Text style={styles.secondaryBtnIcon}>✦</Text>
@@ -1040,4 +1042,14 @@ const styles = StyleSheet.create({
   weekDot: {
     width: 12, height: 12, borderRadius: 6,
   },
+  collBadge: {
+    alignSelf: 'stretch', marginHorizontal: 20,
+    backgroundColor: 'rgba(255,255,255,0.04)',
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
+    borderRadius: 12, paddingVertical: 8, paddingHorizontal: 14,
+  },
+  collBadgeLabel: { fontFamily: F.sb, color: 'rgba(255,255,255,0.45)', fontSize: 11, letterSpacing: 0.5 },
+  collBadgeCount: { fontFamily: F.b, color: 'rgba(255,255,255,0.80)', fontSize: 12 },
+  collProgressTrack: { height: 3, borderRadius: 2, backgroundColor: 'rgba(255,255,255,0.08)' },
+  collProgressFill: { height: 3, borderRadius: 2 },
 });
