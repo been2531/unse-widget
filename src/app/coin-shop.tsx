@@ -9,6 +9,7 @@ import {
 } from 'react-native';
 
 import { F } from '@/shared/fonts';
+import { showRewardedAd } from '@/ads/admob';
 import { CARD_POOL, RARITY_COLOR, RARITY_LABEL } from '@/gacha/types';
 import { COINS_PER_AD, MAX_ADS_PER_DAY, getAdsRemaining, recordAdReward } from '@/storage/adRewards';
 import { getBalance, spend } from '@/storage/coins';
@@ -82,24 +83,13 @@ export default function CoinShopScreen() {
   async function handleWatchAd() {
     if (adsRemaining <= 0 || adLoading) return;
     setAdLoading(true);
-    try {
-      // TODO: react-native-google-mobile-ads 연동 후 아래 코드로 교체
-      // const rewarded = RewardedAd.createForAdRequest(TestIds.REWARDED);
-      // await new Promise((resolve, reject) => {
-      //   rewarded.addAdEventListener(RewardedAdEventType.LOADED, () => rewarded.show());
-      //   rewarded.addAdEventListener(RewardedAdEventType.EARNED_REWARD, resolve);
-      //   rewarded.addAdEventListener(AdEventType.ERROR, reject);
-      //   rewarded.load();
-      // });
-
-      // 임시: 3초 대기 후 코인 지급 (광고 SDK 연동 전 목업)
-      await new Promise(r => setTimeout(r, 3000));
+    const result = await showRewardedAd('gacha_free_pull');
+    if (result === 'earned') {
       const newBal = await recordAdReward(today);
       setBalance(newBal);
       setAdsRemaining(prev => Math.max(0, prev - 1));
-      Alert.alert('광고 완료!', `+${COINS_PER_AD}코인 지급됐습니다.`);
-    } catch (e) {
-      Alert.alert('오류', '광고를 불러올 수 없습니다.');
+    } else if (result === 'error') {
+      Alert.alert('오류', '광고를 불러올 수 없습니다. 잠시 후 다시 시도해 주세요.');
     }
     setAdLoading(false);
   }

@@ -633,11 +633,11 @@ export default function GachaScreen() {
           <View style={styles.rateBox}>
             <Text style={styles.rateTitle}>획득 확률</Text>
             <View style={styles.rateRow}>
-              {(['common', 'rare', 'epic', 'legendary'] as Rarity[]).map(r => (
+              {(['common', 'rare', 'epic', 'legendary', 'mythic'] as Rarity[]).map(r => (
                 <View key={r} style={styles.rateItem}>
                   <Text style={[styles.rateLabel, { color: RARITY_COLOR[r] }]}>{RARITY_LABEL[r]}</Text>
                   <Text style={styles.ratePct}>
-                    {r === 'common' ? '60%' : r === 'rare' ? '30%' : r === 'epic' ? '8%' : '2%'}
+                    {r === 'common' ? '70%' : r === 'rare' ? '20%' : r === 'epic' ? '7%' : r === 'legendary' ? '2%' : '1%'}
                   </Text>
                 </View>
               ))}
