@@ -581,14 +581,9 @@ export default function HomeScreen() {
             </View>
           )}
         </View>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-          <Pressable style={styles.coinBadge} onPress={() => router.push('/gacha')} accessibilityLabel={`코인 ${balance.toLocaleString()}개`}>
-            <Text style={styles.coinText}>💰 {balance.toLocaleString()}</Text>
-          </Pressable>
-          <Pressable style={styles.gachaBtn} onPress={() => router.push('/gacha')} accessibilityLabel="카드 뽑기">
-            <Text style={styles.gachaBtnText}>✦ 뽑기</Text>
-          </Pressable>
-        </View>
+        <Pressable style={styles.coinBadge} onPress={() => router.push('/coin-shop')} accessibilityLabel={`코인 ${balance.toLocaleString()}개`}>
+          <Text style={styles.coinText}>💰 {balance.toLocaleString()}</Text>
+        </Pressable>
       </View>
 
       {/* 스크롤 가능한 본문 */}
@@ -1136,25 +1131,6 @@ export default function HomeScreen() {
         </View>
       </Pressable>
 
-      {/* 보조 액션 — 컬렉션 | 뽑기 */}
-      <View style={{ flexDirection: 'row', gap: 10, width: CARD_W }}>
-        <Pressable
-          style={[styles.secondaryBtn, { borderColor: `${E.color}40`, backgroundColor: `${E.color}12` }]}
-          onPress={() => router.push('/collection')}
-          accessibilityLabel="컬렉션"
-        >
-          <Text style={[styles.secondaryBtnText, { color: E.color }]}>컬렉션</Text>
-          <Text style={[styles.secondaryBtnArrow, { color: `${E.color}BB` }]}>›</Text>
-        </Pressable>
-        <Pressable
-          style={[styles.secondaryBtn, { borderColor: 'rgba(255,220,0,0.35)', backgroundColor: 'rgba(255,220,0,0.09)' }]}
-          onPress={() => router.push('/gacha')}
-          accessibilityLabel="카드 뽑기"
-        >
-          <Text style={[styles.secondaryBtnText, { color: '#FFE500' }]}>카드 뽑기</Text>
-          <Text style={[styles.secondaryBtnArrow, { color: 'rgba(255,229,0,0.65)' }]}>›</Text>
-        </Pressable>
-      </View>
 
       </ScrollView>
     </View>
@@ -1176,12 +1152,6 @@ const styles = StyleSheet.create({
     paddingVertical: 5, paddingHorizontal: 10, borderRadius: 12,
   },
   coinText: { fontFamily: F.b, color: '#FFE500', fontSize: 12 },
-  gachaBtn: {
-    backgroundColor: '#FFE500', borderRadius: 16,
-    paddingVertical: 7, paddingHorizontal: 14,
-    shadowColor: '#FFE500', shadowOpacity: 0.4, shadowOffset: { width: 0, height: 2 }, shadowRadius: 8, elevation: 5,
-  },
-  gachaBtnText: { fontFamily: F.bk, color: '#111', fontSize: 12 },
   nameRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   cardName: { fontFamily: F.eb, fontSize: 17, letterSpacing: 0.3 },
   cardType: { fontFamily: F.sb, fontSize: 12, opacity: 0.85 },
@@ -1194,12 +1164,6 @@ const styles = StyleSheet.create({
   },
   primaryBtnText: { fontFamily: F.bk, fontSize: 16, letterSpacing: 0.3, color: 'rgba(0,0,0,0.82)' },
   primaryBtnArrow: { fontFamily: F.bk, fontSize: 18, color: 'rgba(0,0,0,0.72)' },
-  secondaryBtn: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5,
-    borderWidth: 1, borderRadius: 18, paddingVertical: 13,
-  },
-  secondaryBtnText: { fontFamily: F.b, fontSize: 14 },
-  secondaryBtnArrow: { fontFamily: F.bk, fontSize: 18, lineHeight: 20 },
   streakBadge: {
     backgroundColor: 'rgba(255,120,0,0.18)', borderRadius: 10,
     borderWidth: 1, borderColor: 'rgba(255,120,0,0.40)',
