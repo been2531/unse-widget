@@ -58,7 +58,7 @@
 - [ ] **배경 유지로 전환** — 흰 배경 제거(BFS flood-fill) 대신 배경 살리기
   - 배경 있는 버전이 더 고급스럽고 자연스러움 (흰 배경 제거 시 오히려 이상하게 보임)
   - `scripts/generate-card-art.js`: BASE 프롬프트에서 `white background` 제거, `rich atmospheric background` 추가 완료
-  - `scripts/apply-card-art.js`: Jimp BFS flood-fill 배경 제거 로직 제거 또는 비활성화 필요
+  - ~~`scripts/apply-card-art.js`: Jimp BFS flood-fill 배경 제거 로직 제거 또는 비활성화 필요~~ → 완료 (단순 fs.copyFileSync로 교체)
   - 전체 카드(24장) 배경 유지 버전으로 재생성 필요
 
 ---
