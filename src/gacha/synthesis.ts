@@ -26,7 +26,7 @@ export function getCardFamily(id: string): string {
 // 같은 패밀리의 다음 등급 카드 ID 반환
 export function getSynthesisTarget(cardId: string): string | null {
   const card = CARD_POOL.find(c => c.id === cardId);
-  if (!card || card.rarity === 'legendary') return null;
+  if (!card) return null;
 
   const family = getCardFamily(cardId);
   const nextRarity: Record<Rarity, Rarity | null> = {
