@@ -206,10 +206,10 @@ function ResultCard({ card, cardW, onReveal }: { card: PulledCard; cardW: number
           </Canvas>
           {/* 중앙 텍스트 */}
           <View style={{ ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-            <Text style={{ color: 'rgba(255,210,80,0.90)', fontSize: 11, fontWeight: '700', letterSpacing: 4, opacity: 0.7 }}>✦ ✦ ✦</Text>
-            <Text style={{ color: 'rgba(255,255,255,0.92)', fontSize: 28, fontWeight: '900', letterSpacing: 7, textShadowColor: 'rgba(200,140,255,0.8)', textShadowRadius: 14 }}>UNSE</Text>
-            <Text style={{ color: 'rgba(200,150,255,0.65)', fontSize: 9, fontWeight: '700', letterSpacing: 3 }}>운 세 카 드</Text>
-            <Text style={{ color: 'rgba(255,210,80,0.50)', fontSize: 10, fontWeight: '700', letterSpacing: 4, marginTop: 2, opacity: 0.7 }}>✦ ✦ ✦</Text>
+            <Text style={{ fontFamily: F.b, color: 'rgba(255,210,80,0.90)', fontSize: 11, letterSpacing: 4, opacity: 0.7 }}>✦ ✦ ✦</Text>
+            <Text style={{ fontFamily: F.bk, color: 'rgba(255,255,255,0.92)', fontSize: 28, letterSpacing: 7, textShadowColor: 'rgba(200,140,255,0.8)', textShadowRadius: 14 }}>UNSE</Text>
+            <Text style={{ fontFamily: F.b, color: 'rgba(200,150,255,0.65)', fontSize: 9, letterSpacing: 3 }}>운 세 카 드</Text>
+            <Text style={{ fontFamily: F.b, color: 'rgba(255,210,80,0.50)', fontSize: 10, letterSpacing: 4, marginTop: 2, opacity: 0.7 }}>✦ ✦ ✦</Text>
           </View>
         </View>
       </Animated.View>
@@ -273,11 +273,11 @@ function ResultCard({ card, cardW, onReveal }: { card: PulledCard; cardW: number
           {/* 카드 정보 */}
           <View style={{ position: 'absolute', top: charH + 14, left: 0, right: 0, paddingHorizontal: 12, gap: 4 }}>
             <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
-              <Text style={{ color: elemColor, fontSize: 15, fontWeight: '800' }} numberOfLines={1}>{card.nameKo}</Text>
-              <Text style={{ color: elemColor, fontSize: 10, fontWeight: '600' }}>{ELEM_LABEL[card.element]}</Text>
+              <Text style={{ fontFamily: F.eb, color: elemColor, fontSize: 15 }} numberOfLines={1}>{card.nameKo}</Text>
+              <Text style={{ fontFamily: F.sb, color: elemColor, fontSize: 10 }}>{ELEM_LABEL[card.element]}</Text>
             </View>
-            <Text style={{ color: 'rgba(255,255,255,0.65)', fontSize: 11, lineHeight: 16 }} numberOfLines={2}>{card.description}</Text>
-            <Text style={{ color: RARITY_COLOR[card.rarity], fontSize: 12, fontWeight: '700', letterSpacing: 0.8 }}>
+            <Text style={{ fontFamily: F.r, color: 'rgba(255,255,255,0.65)', fontSize: 11, lineHeight: 16 }} numberOfLines={2}>{card.description}</Text>
+            <Text style={{ fontFamily: F.b, color: RARITY_COLOR[card.rarity], fontSize: 12, letterSpacing: 0.8 }}>
               ★ {RARITY_LABEL[card.rarity]}
             </Text>
           </View>
@@ -321,10 +321,10 @@ function MultiCardItem({ card, miniW }: { card: PulledCard; miniW: number }) {
                 {card.category === 'character' ? '🐲' : card.category === 'skin' ? '🎨' : '🔮'}
               </Text>
           }
-          <Text style={{ color: elemColor, fontSize: 8, fontWeight: '700', letterSpacing: 0.5 }}>
+          <Text style={{ fontFamily: F.b, color: elemColor, fontSize: 8, letterSpacing: 0.5 }}>
             {RARITY_LABEL[card.rarity]}
           </Text>
-          <Text style={{ color: 'rgba(255,255,255,0.7)', fontSize: 7, textAlign: 'center', paddingHorizontal: 2 }} numberOfLines={2}>
+          <Text style={{ fontFamily: F.r, color: 'rgba(255,255,255,0.7)', fontSize: 7, textAlign: 'center', paddingHorizontal: 2 }} numberOfLines={2}>
             {card.nameKo}
           </Text>
         </View>
@@ -636,8 +636,8 @@ export default function GachaScreen() {
                   color="rgba(160,80,255,0.80)" style="stroke" strokeWidth={2.5} />
               </Canvas>
               <View style={{ ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center' }}>
-                <Text style={{ color: 'rgba(210,170,255,0.70)', fontSize: 32, fontWeight: '900', letterSpacing: 8 }}>UNSE</Text>
-                <Text style={{ color: 'rgba(180,140,255,0.45)', fontSize: 11, letterSpacing: 3, marginTop: 4 }}>CARD</Text>
+                <Text style={{ fontFamily: F.bk, color: 'rgba(210,170,255,0.70)', fontSize: 32, letterSpacing: 8 }}>UNSE</Text>
+                <Text style={{ fontFamily: F.r, color: 'rgba(180,140,255,0.45)', fontSize: 11, letterSpacing: 3, marginTop: 4 }}>CARD</Text>
               </View>
             </View>
           </View>
@@ -756,8 +756,8 @@ export default function GachaScreen() {
                       })()
                     : <Text style={{ fontSize: 30 }}>{synthCard.category === 'fortune' ? '🔮' : '🖼️'}</Text>
                   }
-                  <Text style={{ color: elemColor, fontSize: 10, fontWeight: '700' }}>{synthCard.nameKo}</Text>
-                  <Text style={{ color: RARITY_COLOR[synthCard.rarity], fontSize: 9 }}>{RARITY_LABEL[synthCard.rarity]}</Text>
+                  <Text style={{ fontFamily: F.b, color: elemColor, fontSize: 10 }}>{synthCard.nameKo}</Text>
+                  <Text style={{ fontFamily: F.r, color: RARITY_COLOR[synthCard.rarity], fontSize: 9 }}>{RARITY_LABEL[synthCard.rarity]}</Text>
                 </View>
 
                 <View style={{ alignItems: 'center', gap: 4 }}>
@@ -782,8 +782,8 @@ export default function GachaScreen() {
                           })()
                         : <Text style={{ fontSize: 30 }}>✨</Text>
                       }
-                      <Text style={{ color: ELEM_COLOR[targetDef.element] ?? elemColor, fontSize: 10, fontWeight: '700' }}>{targetDef.nameKo}</Text>
-                      <Text style={{ color: RARITY_COLOR[targetDef.rarity], fontSize: 9 }}>{RARITY_LABEL[targetDef.rarity]}</Text>
+                      <Text style={{ fontFamily: F.b, color: ELEM_COLOR[targetDef.element] ?? elemColor, fontSize: 10 }}>{targetDef.nameKo}</Text>
+                      <Text style={{ fontFamily: F.r, color: RARITY_COLOR[targetDef.rarity], fontSize: 9 }}>{RARITY_LABEL[targetDef.rarity]}</Text>
                     </>
                   ) : (
                     <>
@@ -800,11 +800,11 @@ export default function GachaScreen() {
               {synthPhase === 'confirm' && (
                 <View style={styles.synthInfo}>
                   <Text style={styles.synthInfoText}>
-                    보유 <Text style={{ color: elemColor, fontWeight: '800' }}>{ownedCount}장</Text>
-                    {' '}/ 필요 <Text style={{ color: '#FFE500', fontWeight: '800' }}>{required}장</Text>
+                    보유 <Text style={{ fontFamily: F.eb, color: elemColor }}>{ownedCount}장</Text>
+                    {' '}/ 필요 <Text style={{ fontFamily: F.eb, color: '#FFE500' }}>{required}장</Text>
                   </Text>
                   <Text style={styles.synthInfoText}>
-                    성공 확률: <Text style={{ color: '#44FF88', fontWeight: '800' }}>{rate}%</Text>
+                    성공 확률: <Text style={{ fontFamily: F.eb, color: '#44FF88' }}>{rate}%</Text>
                     {'  '}실패 시 재료 전량 소각
                   </Text>
                 </View>
