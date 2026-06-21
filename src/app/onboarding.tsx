@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useRef, useState } from 'react';
 import {
-  Animated, Keyboard, KeyboardAvoidingView, Platform,
+  Alert, Animated, Keyboard, KeyboardAvoidingView, Platform,
   Pressable, StatusBar, StyleSheet, Text, TextInput, View,
 } from 'react-native';
 
@@ -74,9 +74,13 @@ export default function OnboardingScreen() {
     }
     Keyboard.dismiss();
     const birthdate = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-    await saveUserProfile(birthdate);
-    await refreshFortuneWidget();
-    router.replace('/');
+    try {
+      await saveUserProfile(birthdate);
+      await refreshFortuneWidget();
+      router.replace('/');
+    } catch {
+      Alert.alert('오류', '저장에 실패했습니다. 다시 시도해주세요.');
+    }
   }
 
   const slide = SLIDES[step];
