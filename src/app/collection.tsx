@@ -29,7 +29,7 @@ const ELEM_BG: Record<string, [string, string]> = {
   lightning: ['#12103a', '#0c1e3e'], nature: ['#082010', '#041008'],
   dark: ['#100820', '#080412'], light: ['#1a1400', '#100c00'],
 };
-const RARITY_ORDER: Record<string, number> = { legendary: 0, epic: 1, rare: 2, common: 3 };
+const RARITY_ORDER: Record<string, number> = { mythic: 0, legendary: 1, epic: 2, rare: 3, common: 4 };
 
 // 캐릭터 패밀리별 이모지 (이미지 없을 때 폴백)
 const FAMILY_EMOJI: Record<string, string> = {
