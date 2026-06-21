@@ -919,16 +919,15 @@ export default function HomeScreen() {
       {/* 오늘의 행운 정보 — 색상/숫자/방향 */}
       {/* 행운 + 이번 주 — 통합 bento 카드 */}
       {(luckyInfo || (profile && weekDays)) && (
-        <View style={[styles.infoCard, { marginHorizontal: 20 }]}>
-          {/* 왼쪽: 오늘의 행운 */}
+        <View style={[styles.infoCard, { width: CARD_W }]}>
           {luckyInfo && (
             <View style={styles.infoLeft}>
               <Text style={styles.infoTitle}>오늘의 행운</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 }}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7, marginTop: 8 }}>
                 <View style={[styles.luckyColorSwatch, { backgroundColor: luckyInfo.color.hex, shadowColor: luckyInfo.color.hex }]} />
                 <Text style={styles.luckyChipText}>{luckyInfo.color.name}</Text>
               </View>
-              <View style={{ flexDirection: 'row', gap: 6, marginTop: 7 }}>
+              <View style={{ flexDirection: 'row', gap: 5, marginTop: 8 }}>
                 <View style={styles.luckyChip}>
                   <Text style={styles.luckyChipLabel}>숫자</Text>
                   <Text style={styles.luckyChipVal}>{luckyInfo.number}</Text>
@@ -937,16 +936,19 @@ export default function HomeScreen() {
                   <Text style={styles.luckyChipLabel}>방향</Text>
                   <Text style={styles.luckyChipVal}>{luckyInfo.direction}</Text>
                 </View>
+                <View style={styles.luckyChip}>
+                  <Text style={styles.luckyChipLabel}>시간</Text>
+                  <Text style={styles.luckyChipVal}>{luckyInfo.hour.split('(')[0]}</Text>
+                </View>
               </View>
             </View>
           )}
 
           <View style={styles.infoCardDivider} />
 
-          {/* 오른쪽: 이번 주 */}
           {profile && weekDays && (
             <View style={styles.infoRight}>
-              <Text style={styles.infoTitle}>이번 주</Text>
+              <Text style={styles.infoTitle}>이번 주 흐름</Text>
               <View style={styles.weekDotsRow}>
                 {weekDays.map(({ date: d, dayLabel, isToday }) => {
                   const v = deriveValence(d, profile.diiSign, profile.starSign);
@@ -972,29 +974,35 @@ export default function HomeScreen() {
         </View>
       )}
 
-      {/* 수집 진행도 뱃지 */}
+      {/* 수집 진행도 */}
       <Pressable
-        style={styles.collBadge}
+        style={[styles.collBadge, { width: CARD_W }]}
         onPress={() => router.push('/collection')}
         accessibilityLabel={`카드 수집 현황 ${collectedCount}/${TOTAL_CHAR_CARDS}`}
       >
-        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 7 }}>
-          <Text style={styles.collBadgeLabel}>✦ 카드 수집</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-            <Text style={styles.collBadgeCount}>{collectedCount}/{TOTAL_CHAR_CARDS}</Text>
-            <View style={[styles.collPctBadge, { backgroundColor: `${E.color}18`, borderColor: `${E.color}35` }]}>
-              <Text style={[styles.collPctText, { color: E.color }]}>{Math.round((collectedCount / TOTAL_CHAR_CARDS) * 100)}%</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <View style={{ flex: 1 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 7 }}>
+              <Text style={styles.collBadgeLabel}>카드 수집</Text>
+              <Text style={styles.collBadgeCount}>{collectedCount} / {TOTAL_CHAR_CARDS}</Text>
+            </View>
+            <View style={styles.collProgressTrack}>
+              <View style={[styles.collProgressFill, {
+                width: `${Math.round((collectedCount / TOTAL_CHAR_CARDS) * 100)}%`,
+                backgroundColor: E.color,
+                shadowColor: E.color, shadowOpacity: 0.6, shadowRadius: 4, elevation: 3,
+              }]} />
             </View>
           </View>
-        </View>
-        <View style={styles.collProgressTrack}>
-          <View style={[styles.collProgressFill, { width: `${Math.round((collectedCount / TOTAL_CHAR_CARDS) * 100)}%`, backgroundColor: E.color, shadowColor: E.color, shadowOpacity: 0.6, shadowRadius: 4, elevation: 3 }]} />
+          <View style={[styles.collPctBadge, { backgroundColor: `${E.color}18`, borderColor: `${E.color}35` }]}>
+            <Text style={[styles.collPctText, { color: E.color }]}>{Math.round((collectedCount / TOTAL_CHAR_CARDS) * 100)}%</Text>
+          </View>
         </View>
       </Pressable>
 
       {/* 주요 액션 — 운세 보기 */}
       <Pressable
-        style={[styles.primaryBtn, { backgroundColor: E.color, shadowColor: E.color }]}
+        style={[styles.primaryBtn, { width: CARD_W, backgroundColor: E.color, shadowColor: E.color }]}
         onPress={() => router.push('/fortune')}
         accessibilityLabel="오늘의 운세 보기"
       >
@@ -1005,22 +1013,22 @@ export default function HomeScreen() {
       </Pressable>
 
       {/* 보조 액션 — 컬렉션 | 뽑기 */}
-      <View style={{ flexDirection: 'row', gap: 10, width: '100%', paddingHorizontal: 20 }}>
+      <View style={{ flexDirection: 'row', gap: 10, width: CARD_W }}>
         <Pressable
-          style={[styles.secondaryBtn, { borderColor: `${E.color}35`, backgroundColor: `${E.color}10` }]}
+          style={[styles.secondaryBtn, { borderColor: `${E.color}40`, backgroundColor: `${E.color}12` }]}
           onPress={() => router.push('/collection')}
           accessibilityLabel="컬렉션"
         >
-          <Text style={styles.secondaryBtnIcon}>📚</Text>
-          <Text style={[styles.secondaryBtnText, { color: E.color2 }]}>컬렉션</Text>
+          <Text style={[styles.secondaryBtnText, { color: E.color }]}>컬렉션</Text>
+          <Text style={[styles.secondaryBtnArrow, { color: `${E.color}BB` }]}>›</Text>
         </Pressable>
         <Pressable
-          style={[styles.secondaryBtn, { borderColor: 'rgba(255,220,0,0.30)', backgroundColor: 'rgba(255,220,0,0.08)' }]}
+          style={[styles.secondaryBtn, { borderColor: 'rgba(255,220,0,0.35)', backgroundColor: 'rgba(255,220,0,0.09)' }]}
           onPress={() => router.push('/gacha')}
           accessibilityLabel="카드 뽑기"
         >
-          <Text style={styles.secondaryBtnIcon}>✨</Text>
-          <Text style={[styles.secondaryBtnText, { color: '#FFE500CC' }]}>카드 뽑기</Text>
+          <Text style={[styles.secondaryBtnText, { color: '#FFE500' }]}>카드 뽑기</Text>
+          <Text style={[styles.secondaryBtnArrow, { color: 'rgba(255,229,0,0.65)' }]}>›</Text>
         </Pressable>
       </View>
 
@@ -1056,7 +1064,6 @@ const styles = StyleSheet.create({
   cardFortune: { fontFamily: F.r, color: 'rgba(255,255,255,0.70)', fontSize: 12, lineHeight: 18 },
   rarityText: { fontFamily: F.b, fontSize: 13, letterSpacing: 0.8 },
   primaryBtn: {
-    alignSelf: 'stretch', marginHorizontal: 20,
     borderRadius: 26,
     paddingVertical: 17, alignItems: 'center',
     shadowOpacity: 0.45, shadowOffset: { width: 0, height: 4 }, shadowRadius: 14, elevation: 8,
@@ -1064,12 +1071,11 @@ const styles = StyleSheet.create({
   primaryBtnText: { fontFamily: F.bk, fontSize: 16, letterSpacing: 0.3, color: 'rgba(0,0,0,0.82)' },
   primaryBtnArrow: { fontFamily: F.bk, fontSize: 18, color: 'rgba(0,0,0,0.72)' },
   secondaryBtn: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7,
-    borderWidth: 1,
-    borderRadius: 16, paddingVertical: 11,
+    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 5,
+    borderWidth: 1, borderRadius: 18, paddingVertical: 13,
   },
-  secondaryBtnIcon: { fontSize: 16 },
   secondaryBtnText: { fontFamily: F.b, fontSize: 14 },
+  secondaryBtnArrow: { fontFamily: F.bk, fontSize: 18, lineHeight: 20 },
   streakBadge: {
     backgroundColor: 'rgba(255,120,0,0.18)', borderRadius: 10,
     borderWidth: 1, borderColor: 'rgba(255,120,0,0.40)',
@@ -1111,15 +1117,14 @@ const styles = StyleSheet.create({
   weekDayLabelToday: { fontFamily: F.b, color: '#FFFFFF' },
   weekDot: { width: 13, height: 13, borderRadius: 7 },
   collBadge: {
-    alignSelf: 'stretch', marginHorizontal: 20,
     backgroundColor: 'rgba(255,255,255,0.05)',
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)',
-    borderRadius: 14, paddingVertical: 10, paddingHorizontal: 14,
+    borderRadius: 18, paddingVertical: 12, paddingHorizontal: 14,
   },
-  collBadgeLabel: { fontFamily: F.sb, color: 'rgba(255,255,255,0.48)', fontSize: 11, letterSpacing: 0.5 },
-  collBadgeCount: { fontFamily: F.b, color: 'rgba(255,255,255,0.75)', fontSize: 12 },
-  collPctBadge: { paddingHorizontal: 6, paddingVertical: 1, borderRadius: 6, borderWidth: 1 },
-  collPctText: { fontFamily: F.b, fontSize: 11 },
+  collBadgeLabel: { fontFamily: F.sb, color: 'rgba(255,255,255,0.40)', fontSize: 11, letterSpacing: 0.6 },
+  collBadgeCount: { fontFamily: F.b, color: 'rgba(255,255,255,0.72)', fontSize: 12 },
+  collPctBadge: { paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10, borderWidth: 1, minWidth: 40, alignItems: 'center' },
+  collPctText: { fontFamily: F.b, fontSize: 12 },
   collProgressTrack: { height: 5, borderRadius: 3, backgroundColor: 'rgba(255,255,255,0.08)' },
   collProgressFill: { height: 5, borderRadius: 3 },
 });
