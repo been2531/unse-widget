@@ -1,6 +1,6 @@
 # unse-widget 작업 목록
 
-> 최종 업데이트: 2026-06-21
+> 최종 업데이트: 2026-06-21 (루틴 2회차)
 > 컨셉 원칙: **한국신화 × 운세** — 이 두 가지는 고정. 나머지 디자인·구조·UI는 루틴/Claude가 자유롭게 개선 가능.
 
 ---
@@ -8,7 +8,7 @@
 ## 🔴 코드 리뷰 이슈
 
 - ~~[리뷰] fortune.tsx:129 — 코인 부족 시 spend() 실패를 catch {} 무음 처리 → 사용자에게 Alert 없음 (adsRemoved 경로)~~ → 완료
-- [ ] [리뷰] coin-shop.tsx:15 — grantRemoveAds import됐지만 handleRemoveAds에서 호출 안 됨 (unused import)
+- ~~[리뷰] coin-shop.tsx:15 — grantRemoveAds import됐지만 handleRemoveAds에서 호출 안 됨 (unused import)~~ → 완료
 
 ---
 
@@ -70,7 +70,7 @@
 
 ### 리텐션 / 참여
 - [ ] 스트릭 알림 — 자정 전 "오늘 운세 확인하셨나요?" 푸시 알림 (expo-notifications, 네이티브)
-- [ ] 컬렉션 완성률 공유 기능 — "나는 24/24 수집 완료!" 이미지 공유
+- ~~컬렉션 완성률 공유 기능 — "나는 24/24 수집 완료!" 이미지 공유~~ → Share API 텍스트 공유 완료
 
 ---
 
