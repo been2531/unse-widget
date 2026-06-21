@@ -7,6 +7,8 @@ import {
 
 import { showRewardedAd } from '@/ads/admob';
 import { fnv1aHash } from '@/fortune/hash';
+import { spend } from '@/storage/coins';
+import { hasRemovedAds } from '@/storage/purchases';
 import { deriveLuckyInfo, type LuckyInfo } from '@/fortune/luckyInfo';
 import type { DailyFortune, DiiSign, StarSign } from '@/fortune/types';
 import { selectDailyFortune } from '@/fortune/selectFortune';
@@ -84,6 +86,7 @@ export default function FortuneScreen() {
   const [fortune, setFortune]       = useState<DailyFortune | null>(null);
   const [unlocked, setUnlocked]     = useState<string[]>([]);
   const [adLoading, setAdLoading]   = useState<CategoryKey | null>(null);
+  const [adsRemoved, setAdsRemoved] = useState(false);
   const [activeBuff, setActiveBuff] = useState<FortuneBuff | null>(null);
   const [luckyInfo, setLuckyInfo]   = useState<LuckyInfo | null>(null);
   const [scores, setScores]         = useState<Record<CategoryKey, number> | null>(null);
@@ -107,8 +110,13 @@ export default function FortuneScreen() {
       setScores(s);
       setOverall(Math.round((s.wealth + s.love + s.health + s.work) / 4));
 
-      setUnlocked(await getTodayUnlocked(today));
-      const todayBuff = await getTodayFortuneBuff(today);
+      const [todayUnlocked, noAds, todayBuff] = await Promise.all([
+        getTodayUnlocked(today),
+        hasRemovedAds(),
+        getTodayFortuneBuff(today),
+      ]);
+      setUnlocked(todayUnlocked);
+      setAdsRemoved(noAds);
       if (todayBuff) setActiveBuff(getActiveBuff(todayBuff.cardId));
       setLoading(false);
     })();
@@ -117,10 +125,19 @@ export default function FortuneScreen() {
   async function watchAdForCategory(key: CategoryKey) {
     if (adLoading) return;
     setAdLoading(key);
-    const result = await showRewardedAd();
-    if (result === 'earned') {
-      const today = getTodayDateString();
-      setUnlocked(await unlockCategory(today, key));
+    const today = getTodayDateString();
+    if (adsRemoved) {
+      try {
+        await spend(50);
+        setUnlocked(await unlockCategory(today, key));
+      } catch {
+        // 코인 부족 시 무시 (spend가 throw)
+      }
+    } else {
+      const result = await showRewardedAd();
+      if (result === 'earned') {
+        setUnlocked(await unlockCategory(today, key));
+      }
     }
     setAdLoading(null);
   }
@@ -274,7 +291,9 @@ export default function FortuneScreen() {
                 >
                   {adLoading === key
                     ? <ActivityIndicator color={color} size="small" />
-                    : <Text style={[styles.watchAdText, { color }]}>📺  광고 보고 {label} 보기</Text>
+                    : <Text style={[styles.watchAdText, { color }]}>
+                        {adsRemoved ? `💰 50코인으로 ${label} 보기` : `📺 광고 보고 ${label} 보기`}
+                      </Text>
                   }
                 </Pressable>
               )}
@@ -282,7 +301,9 @@ export default function FortuneScreen() {
           );
         })}
 
-        <Text style={styles.footNote}>광고 시청은 카테고리당 1회, 자정에 초기화됩니다.</Text>
+        <Text style={styles.footNote}>
+          {adsRemoved ? '카테고리당 50코인 차감 · 자정에 초기화됩니다.' : '광고 시청은 카테고리당 1회 · 자정에 초기화됩니다.'}
+        </Text>
       </ScrollView>
     </View>
   );
