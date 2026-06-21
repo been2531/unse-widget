@@ -32,8 +32,8 @@
 - ~~[리뷰] synthesis.ts:29 — `card.rarity === 'legendary'` 조기 반환으로 legendary→mythic 합성 차단 → fire_3·water_3·lightning_3·light_3 합성 불가 버그 수정~~ → 완료
 - ~~[리뷰] storage/userProfile.ts — loadUserProfile() try-catch 누락 → 프로필 JSON 손상 시 홈/운세 로딩 영구 고착 방지~~ → 완료
 
-- [ ] [리뷰] streak.ts:32 — checkInStreak() AsyncStorage.setItem try-catch 누락 → index.tsx IIFE에서 저장 실패 시 setLoading(false) 미호출, 홈 화면 영구 로딩 고착
-- [ ] [리뷰] adRewards.ts:19 — recordAdReward() try-catch 누락 → 광고 시청 후 코인 저장(Promise.all) 실패 시 코인 미적립 (callers에 catch 있어 crash는 방지되나 데이터 손실)
+- ~~[리뷰] streak.ts:32 — checkInStreak() AsyncStorage.setItem try-catch 누락 → index.tsx IIFE에서 저장 실패 시 setLoading(false) 미호출, 홈 화면 영구 로딩 고착~~ → 완료
+- ~~[리뷰] adRewards.ts:19 — recordAdReward() try-catch 누락 → 광고 시청 후 코인 저장(Promise.all) 실패 시 코인 미적립 (callers에 catch 있어 crash는 방지되나 데이터 손실)~~ → 완료
 
 ---
 
