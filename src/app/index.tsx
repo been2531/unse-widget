@@ -998,9 +998,9 @@ const skStyles = StyleSheet.create({
 });
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: '#080B18', alignItems: 'center', paddingTop: 0, paddingBottom: 24, gap: 6 },
+  screen: { flex: 1, backgroundColor: '#080B18', alignItems: 'center', paddingTop: 0, paddingBottom: 24, gap: 0 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#080B18' },
-  topBar: { width: '100%', paddingTop: 52, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  topBar: { width: '100%', paddingTop: 52, paddingBottom: 4, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   appTitle: { fontFamily: F.bk, fontSize: 22, color: '#FFFFFF', letterSpacing: 3.5 },
   coinBadge: {
     backgroundColor: 'rgba(255,220,0,0.12)', borderWidth: 1, borderColor: 'rgba(255,220,0,0.30)',
