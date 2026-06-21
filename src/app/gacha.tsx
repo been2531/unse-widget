@@ -570,6 +570,7 @@ export default function GachaScreen() {
             style={[styles.freePullBtn, freePulls <= 0 && styles.pullBtnDisabled]}
             onPress={handleFreePull}
             disabled={spinning || freePulls <= 0}
+            accessibilityLabel={freePulls > 0 ? '무료 뽑기 1회' : '오늘 무료 뽑기 완료'}
           >
             <Text style={styles.freePullMain}>
               {freePulls > 0 ? '🎁 무료 뽑기 1회' : '✓ 오늘 무료 뽑기 완료'}
@@ -666,6 +667,7 @@ export default function GachaScreen() {
             style={[styles.adBtn, adsLeft <= 0 && styles.pullBtnDisabled]}
             onPress={handleAdReward}
             disabled={spinning || adsLeft <= 0}
+            accessibilityLabel={adsLeft > 0 ? `광고 보기 ${COINS_PER_AD}코인 획득, 오늘 ${adsLeft}회 남음` : '오늘 광고 모두 시청 완료'}
           >
             {spinning ? (
               <ActivityIndicator color="#aaa" size="small" />

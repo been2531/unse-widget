@@ -391,7 +391,7 @@ export default function CollectionScreen() {
         key={`${filter}-${elemFilter}`}
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40, paddingTop: 8 }}
         showsVerticalScrollIndicator={false}
-        overScrollMode="always"
+        overScrollMode="never"
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <Text style={styles.emptyEmoji}>
