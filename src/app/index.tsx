@@ -533,7 +533,7 @@ export default function HomeScreen() {
       <View style={styles.topBar}>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
           <Text style={styles.appTitle}>UNSE</Text>
-          {streak.currentStreak >= 2 && (
+          {streak.currentStreak >= 1 && (
             <View style={styles.streakBadge}>
               <Text style={styles.streakText}>🔥 {streak.currentStreak}일째</Text>
             </View>
@@ -945,9 +945,18 @@ export default function HomeScreen() {
         <Pressable style={styles.secondaryBtn} onPress={() => router.push('/collection')}>
           <Text style={styles.secondaryBtnIcon}>✦</Text>
           <Text style={styles.secondaryBtnText}>컬렉션</Text>
-          <Text style={{ fontFamily: F.sb, color: 'rgba(255,255,255,0.38)', fontSize: 10 }}>
+          <Text style={{ fontFamily: F.sb, color: 'rgba(255,255,255,0.65)', fontSize: 10 }}>
             {collectedCount}/{TOTAL_CHAR_CARDS}
           </Text>
+          <View style={{
+            position: 'absolute', bottom: 0, left: 0, right: 0,
+            height: 2.5, overflow: 'hidden', borderBottomLeftRadius: 14, borderBottomRightRadius: 14,
+          }}>
+            <View style={{
+              height: '100%', backgroundColor: '#FFD700',
+              width: `${Math.round((collectedCount / TOTAL_CHAR_CARDS) * 100)}%` as any,
+            }} />
+          </View>
         </Pressable>
         <Pressable style={styles.secondaryBtn} onPress={() => router.push('/gacha')}>
           <Text style={styles.secondaryBtnIcon}>✦</Text>
