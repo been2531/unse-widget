@@ -665,10 +665,6 @@ export default function GachaScreen() {
           </Pressable>
 
           <Text style={styles.footNote}>매일 앱 실행 시 100코인 자동 지급 · 10회 뽑기 시 Rare 이상 1장 보장</Text>
-          {/* 개발용 — 출시 전 제거 */}
-          <Pressable onPress={async () => { const { spend: _, ...rest } = await import('@/storage/coins'); const s = await import('@react-native-async-storage/async-storage'); const raw = await s.default.getItem('coins_v1'); const state = raw ? JSON.parse(raw) : { balance: 0, lastDailyDate: '' }; await s.default.setItem('coins_v1', JSON.stringify({ ...state, balance: state.balance + 500 })); setBalance(state.balance + 500); }}>
-            <Text style={{ color: 'rgba(255,255,255,0.15)', fontSize: 10, textAlign: 'center', marginTop: 4 }}>[ 테스트: +500코인 ]</Text>
-          </Pressable>
         </ScrollView>
       )}
 
