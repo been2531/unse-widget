@@ -1033,7 +1033,7 @@ export default function HomeScreen() {
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           <Text style={styles.primaryBtnText}>오늘의 운세 보기</Text>
           {todayScore !== null && (
-            <Text style={{ fontFamily: F.b, fontSize: 12, color: 'rgba(255,255,255,0.75)' }}>
+            <Text style={{ fontFamily: F.b, fontSize: 12, color: todayScore >= 70 ? '#FFD700' : todayScore >= 50 ? '#88AAFF' : '#FF6B9D' }}>
               {todayScore >= 70 ? '🟡' : todayScore >= 50 ? '🔵' : '🔴'} {todayScore}점
             </Text>
           )}

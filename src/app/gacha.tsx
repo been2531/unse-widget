@@ -529,10 +529,14 @@ export default function GachaScreen() {
     setSpinning(false);
   }
 
-  function backToLobby() {
+  async function backToLobby() {
     setPhase('lobby');
     setResult(null);
     setMulti([]);
+    const col = await getCollection();
+    const ownedIds = col.map(c => c.id);
+    const uniqueIds = [...new Set(ownedIds)];
+    setSynthReadyCount(uniqueIds.filter(id => canSynthesize(id, ownedIds)).length);
   }
 
   if (loading) return (
