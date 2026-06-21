@@ -363,10 +363,31 @@ export default function CollectionScreen() {
           />
         )}
         numColumns={COLS}
-        key={filter}
+        key={`${filter}-${elemFilter}`}
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40, paddingTop: 8 }}
         showsVerticalScrollIndicator={false}
         overScrollMode="always"
+        ListEmptyComponent={
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyEmoji}>
+              {filter === 'fortune' ? '🔮' : filter === 'skin' ? '🖼️' : elemFilter !== 'all' ? ELEM_LABEL[elemFilter] : '✨'}
+            </Text>
+            <Text style={styles.emptyTitle}>
+              {filter === 'fortune' ? '운세 카드 없음'
+                : filter === 'skin' ? '보유한 프레임 없음'
+                : elemFilter !== 'all' ? `${ELEM_LABEL[elemFilter]} 계열 카드 없음`
+                : '아직 카드가 없어요'}
+            </Text>
+            <Text style={styles.emptySub}>
+              {filter === 'fortune' ? '운세 확인 시 카드가 쌓입니다'
+                : filter === 'skin' ? '코인샵에서 프레임을 구매해보세요'
+                : '가챠에서 카드를 뽑아보세요!'}
+            </Text>
+            <Pressable style={styles.emptyBtn} onPress={() => router.push(filter === 'skin' ? '/coin-shop' : '/gacha')}>
+              <Text style={styles.emptyBtnText}>{filter === 'skin' ? '코인샵 가기' : '카드 뽑기'}</Text>
+            </Pressable>
+          </View>
+        }
       />
 
       {selectedCard && (
@@ -426,6 +447,20 @@ const styles = StyleSheet.create({
     fontFamily: F.r, color: 'rgba(255,255,255,0.40)', fontSize: 12,
     lineHeight: 34, textAlign: 'center', includeFontPadding: false,
   },
+
+  emptyState: {
+    flex: 1, alignItems: 'center', justifyContent: 'center',
+    paddingTop: 80, paddingHorizontal: 32, gap: 12,
+  },
+  emptyEmoji: { fontSize: 52, marginBottom: 4 },
+  emptyTitle: { fontFamily: F.b, color: 'rgba(255,255,255,0.65)', fontSize: 16, textAlign: 'center' },
+  emptySub: { fontFamily: F.r, color: 'rgba(255,255,255,0.30)', fontSize: 13, textAlign: 'center', lineHeight: 20 },
+  emptyBtn: {
+    marginTop: 8, paddingHorizontal: 24, paddingVertical: 12,
+    backgroundColor: 'rgba(255,220,0,0.12)', borderWidth: 1, borderColor: 'rgba(255,220,0,0.35)',
+    borderRadius: 14,
+  },
+  emptyBtnText: { fontFamily: F.b, color: '#FFE500', fontSize: 14 },
 });
 
 const modalStyles = StyleSheet.create({
