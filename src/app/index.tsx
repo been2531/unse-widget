@@ -573,7 +573,7 @@ export default function HomeScreen() {
       {/* 스크롤 가능한 본문 */}
       <ScrollView
         style={{ flex: 1, width: '100%' }}
-        contentContainerStyle={{ alignItems: 'center', paddingBottom: 20, gap: 14 }}
+        contentContainerStyle={{ alignItems: 'center', paddingBottom: 28, gap: 12 }}
         showsVerticalScrollIndicator={false}
         overScrollMode="never"
       >
@@ -917,43 +917,58 @@ export default function HomeScreen() {
       </Animated.View>
 
       {/* 오늘의 행운 정보 — 색상/숫자/방향 */}
-      {luckyInfo && (
-        <View style={styles.luckyRow}>
-          <View style={[styles.luckyColorDot, { backgroundColor: luckyInfo.color.hex, shadowColor: luckyInfo.color.hex, shadowOpacity: 0.7, shadowRadius: 6, elevation: 4 }]} />
-          <Text style={styles.luckyVal}>{luckyInfo.color.name}</Text>
-          <View style={styles.luckySepLine} />
-          <Text style={styles.luckyLabel}>숫자</Text>
-          <Text style={styles.luckyVal}>{luckyInfo.number}</Text>
-          <View style={styles.luckySepLine} />
-          <Text style={styles.luckyLabel}>방향</Text>
-          <Text style={styles.luckyVal}>{luckyInfo.direction}</Text>
-        </View>
-      )}
-
-      {/* 이번 주 운세 흐름 캘린더 */}
-      {profile && weekDays && (
-        <View style={styles.weekStrip}>
-          {weekDays.map(({ date: d, dayLabel, isToday }) => {
-            const v = deriveValence(d, profile.diiSign, profile.starSign);
-            const dotColor = v === 'good' ? '#FFD700' : v === 'neutral' ? '#88AAFF' : '#FF6B9D';
-            return (
-              <View key={d} style={[styles.weekCell, isToday && styles.weekCellToday]}>
-                <Text style={[styles.weekDayLabel, isToday && styles.weekDayLabelToday]}>{dayLabel}</Text>
-                <View style={[
-                  styles.weekDot,
-                  {
-                    backgroundColor: isToday ? dotColor : `${dotColor}28`,
-                    borderColor: isToday ? dotColor : `${dotColor}44`,
-                    borderWidth: isToday ? 0 : 1,
-                    shadowColor: isToday ? dotColor : 'transparent',
-                    shadowOpacity: isToday ? 0.8 : 0,
-                    shadowRadius: isToday ? 5 : 0,
-                    elevation: isToday ? 4 : 0,
-                  },
-                ]} />
+      {/* 행운 + 이번 주 — 통합 bento 카드 */}
+      {(luckyInfo || (profile && weekDays)) && (
+        <View style={[styles.infoCard, { marginHorizontal: 20 }]}>
+          {/* 왼쪽: 오늘의 행운 */}
+          {luckyInfo && (
+            <View style={styles.infoLeft}>
+              <Text style={styles.infoTitle}>오늘의 행운</Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 6 }}>
+                <View style={[styles.luckyColorSwatch, { backgroundColor: luckyInfo.color.hex, shadowColor: luckyInfo.color.hex }]} />
+                <Text style={styles.luckyChipText}>{luckyInfo.color.name}</Text>
               </View>
-            );
-          })}
+              <View style={{ flexDirection: 'row', gap: 6, marginTop: 7 }}>
+                <View style={styles.luckyChip}>
+                  <Text style={styles.luckyChipLabel}>숫자</Text>
+                  <Text style={styles.luckyChipVal}>{luckyInfo.number}</Text>
+                </View>
+                <View style={styles.luckyChip}>
+                  <Text style={styles.luckyChipLabel}>방향</Text>
+                  <Text style={styles.luckyChipVal}>{luckyInfo.direction}</Text>
+                </View>
+              </View>
+            </View>
+          )}
+
+          <View style={styles.infoCardDivider} />
+
+          {/* 오른쪽: 이번 주 */}
+          {profile && weekDays && (
+            <View style={styles.infoRight}>
+              <Text style={styles.infoTitle}>이번 주</Text>
+              <View style={styles.weekDotsRow}>
+                {weekDays.map(({ date: d, dayLabel, isToday }) => {
+                  const v = deriveValence(d, profile.diiSign, profile.starSign);
+                  const dotColor = v === 'good' ? '#FFD700' : v === 'neutral' ? '#88AAFF' : '#FF6B9D';
+                  return (
+                    <View key={d} style={[styles.weekDotCol, isToday && styles.weekDotColToday]}>
+                      <View style={[styles.weekDot, {
+                        backgroundColor: isToday ? dotColor : `${dotColor}28`,
+                        borderColor: isToday ? dotColor : `${dotColor}44`,
+                        borderWidth: isToday ? 0 : 1,
+                        shadowColor: dotColor,
+                        shadowOpacity: isToday ? 0.9 : 0,
+                        shadowRadius: 4,
+                        elevation: isToday ? 4 : 0,
+                      }]} />
+                      <Text style={[styles.weekDayLabel, isToday && styles.weekDayLabelToday]}>{dayLabel}</Text>
+                    </View>
+                  );
+                })}
+              </View>
+            </View>
+          )}
         </View>
       )}
 
@@ -977,22 +992,22 @@ export default function HomeScreen() {
         </View>
       </Pressable>
 
-      {/* 주요 액션 — 운세 보기 (1순위) */}
+      {/* 주요 액션 — 운세 보기 */}
       <Pressable
-        style={[styles.primaryBtn, { borderColor: `${E.color}66`, shadowColor: E.color }]}
+        style={[styles.primaryBtn, { backgroundColor: E.color, shadowColor: E.color }]}
         onPress={() => router.push('/fortune')}
         accessibilityLabel="오늘의 운세 보기"
       >
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Text style={[styles.primaryBtnText, { color: E.color }]}>오늘의 운세 보기</Text>
-          <Text style={[styles.primaryBtnArrow, { color: E.color }]}>→</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+          <Text style={styles.primaryBtnText}>오늘의 운세 보기</Text>
+          <Text style={styles.primaryBtnArrow}>→</Text>
         </View>
       </Pressable>
 
       {/* 보조 액션 — 컬렉션 | 뽑기 */}
       <View style={{ flexDirection: 'row', gap: 10, width: '100%', paddingHorizontal: 20 }}>
         <Pressable
-          style={[styles.secondaryBtn, { borderColor: `${E.color}30`, backgroundColor: `${E.color}0C` }]}
+          style={[styles.secondaryBtn, { borderColor: `${E.color}35`, backgroundColor: `${E.color}10` }]}
           onPress={() => router.push('/collection')}
           accessibilityLabel="컬렉션"
         >
@@ -1000,12 +1015,12 @@ export default function HomeScreen() {
           <Text style={[styles.secondaryBtnText, { color: E.color2 }]}>컬렉션</Text>
         </Pressable>
         <Pressable
-          style={[styles.secondaryBtn, { borderColor: 'rgba(255,220,0,0.28)', backgroundColor: 'rgba(255,220,0,0.07)' }]}
+          style={[styles.secondaryBtn, { borderColor: 'rgba(255,220,0,0.30)', backgroundColor: 'rgba(255,220,0,0.08)' }]}
           onPress={() => router.push('/gacha')}
           accessibilityLabel="카드 뽑기"
         >
           <Text style={styles.secondaryBtnIcon}>✨</Text>
-          <Text style={[styles.secondaryBtnText, { color: 'rgba(255,229,0,0.85)' }]}>카드 뽑기</Text>
+          <Text style={[styles.secondaryBtnText, { color: '#FFE500CC' }]}>카드 뽑기</Text>
         </Pressable>
       </View>
 
@@ -1042,13 +1057,12 @@ const styles = StyleSheet.create({
   rarityText: { fontFamily: F.b, fontSize: 13, letterSpacing: 0.8 },
   primaryBtn: {
     alignSelf: 'stretch', marginHorizontal: 20,
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    borderWidth: 1.5, borderRadius: 24,
-    paddingVertical: 16, alignItems: 'center',
-    shadowOpacity: 0.25, shadowOffset: { width: 0, height: 3 }, shadowRadius: 10, elevation: 5,
+    borderRadius: 26,
+    paddingVertical: 17, alignItems: 'center',
+    shadowOpacity: 0.45, shadowOffset: { width: 0, height: 4 }, shadowRadius: 14, elevation: 8,
   },
-  primaryBtnText: { fontFamily: F.bk, fontSize: 16, letterSpacing: 0.4 },
-  primaryBtnArrow: { fontFamily: F.bk, fontSize: 18 },
+  primaryBtnText: { fontFamily: F.bk, fontSize: 16, letterSpacing: 0.3, color: 'rgba(0,0,0,0.82)' },
+  primaryBtnArrow: { fontFamily: F.bk, fontSize: 18, color: 'rgba(0,0,0,0.72)' },
   secondaryBtn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7,
     borderWidth: 1,
@@ -1068,29 +1082,34 @@ const styles = StyleSheet.create({
     paddingVertical: 6, paddingHorizontal: 14,
   },
   arrivalText: { fontFamily: F.b, color: '#FFE500', fontSize: 12, letterSpacing: 0.3 },
-  luckyRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 14, paddingVertical: 7, paddingHorizontal: 14,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)',
-  },
-  luckyColorDot: { width: 13, height: 13, borderRadius: 7 },
-  luckyLabel: { fontFamily: F.r, color: 'rgba(255,255,255,0.35)', fontSize: 11 },
-  luckyVal: { fontFamily: F.b, color: 'rgba(255,255,255,0.88)', fontSize: 12 },
-  luckySepLine: { width: 1, height: 12, backgroundColor: 'rgba(255,255,255,0.12)' },
-  weekStrip: {
+  // ── 통합 bento 카드 ──────────────────────────────────────────────────────
+  infoCard: {
     flexDirection: 'row', alignSelf: 'stretch',
-    marginHorizontal: 20,
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderRadius: 14, paddingVertical: 8, paddingHorizontal: 6,
-    borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
-    justifyContent: 'space-between',
+    backgroundColor: 'rgba(255,255,255,0.055)',
+    borderRadius: 20, padding: 14,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)',
+    gap: 12,
   },
-  weekCell: { alignItems: 'center', gap: 6, flex: 1, paddingVertical: 2, borderRadius: 10 },
-  weekCellToday: { backgroundColor: 'rgba(255,255,255,0.08)' },
-  weekDayLabel: { fontFamily: F.sb, color: 'rgba(255,255,255,0.30)', fontSize: 10, lineHeight: 13 },
+  infoLeft: { flex: 1 },
+  infoRight: { flex: 1 },
+  infoCardDivider: { width: 1, backgroundColor: 'rgba(255,255,255,0.10)', borderRadius: 1 },
+  infoTitle: { fontFamily: F.sb, color: 'rgba(255,255,255,0.35)', fontSize: 10, letterSpacing: 0.8, textTransform: 'uppercase' },
+  luckyColorSwatch: { width: 14, height: 14, borderRadius: 7, shadowOpacity: 0.8, shadowRadius: 5, elevation: 3 },
+  luckyChipText: { fontFamily: F.b, color: '#FFFFFF', fontSize: 13 },
+  luckyChip: {
+    flex: 1, backgroundColor: 'rgba(255,255,255,0.07)',
+    borderRadius: 10, paddingVertical: 5, paddingHorizontal: 8,
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)',
+    alignItems: 'center',
+  },
+  luckyChipLabel: { fontFamily: F.r, color: 'rgba(255,255,255,0.35)', fontSize: 9, marginBottom: 2 },
+  luckyChipVal: { fontFamily: F.b, color: '#FFFFFF', fontSize: 12 },
+  weekDotsRow: { flexDirection: 'row', marginTop: 8, justifyContent: 'space-between' },
+  weekDotCol: { alignItems: 'center', gap: 5, flex: 1, paddingVertical: 3, borderRadius: 8 },
+  weekDotColToday: { backgroundColor: 'rgba(255,255,255,0.08)' },
+  weekDayLabel: { fontFamily: F.r, color: 'rgba(255,255,255,0.30)', fontSize: 9 },
   weekDayLabelToday: { fontFamily: F.b, color: '#FFFFFF' },
-  weekDot: { width: 14, height: 14, borderRadius: 7 },
+  weekDot: { width: 13, height: 13, borderRadius: 7 },
   collBadge: {
     alignSelf: 'stretch', marginHorizontal: 20,
     backgroundColor: 'rgba(255,255,255,0.05)',
