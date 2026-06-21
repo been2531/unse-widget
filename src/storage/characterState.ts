@@ -30,16 +30,20 @@ function migrateStage(state: CharacterState, today: string): CharacterState {
 // app opening, the widget refreshing, or right after a care action.
 export async function loadCharacterState(): Promise<CharacterState> {
   const today = getTodayDateString();
-  const raw = await AsyncStorage.getItem(STORAGE_KEY);
-  const state: CharacterState = raw
-    ? migrateStage(JSON.parse(raw) as CharacterState, today)
-    : createInitialCharacterState(today, new Date().toISOString());
+  try {
+    const raw = await AsyncStorage.getItem(STORAGE_KEY);
+    const state: CharacterState = raw
+      ? migrateStage(JSON.parse(raw) as CharacterState, today)
+      : createInitialCharacterState(today, new Date().toISOString());
 
-  const recomputed = recomputeStage(state, today);
-  if (recomputed !== state) {
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(recomputed));
+    const recomputed = recomputeStage(state, today);
+    if (recomputed !== state) {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(recomputed));
+    }
+    return recomputed;
+  } catch {
+    return createInitialCharacterState(today, new Date().toISOString());
   }
-  return recomputed;
 }
 
 export async function saveCharacterState(state: CharacterState): Promise<CharacterState> {
