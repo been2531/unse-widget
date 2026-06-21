@@ -486,10 +486,10 @@ export default function GachaScreen() {
     setSpinning(true);
     try {
       const today = getTodayDateString();
+      const card = pullOne();
+      await addToCollection([card]);           // 저장 성공 후에만 차감
       await consumeFreePull(today);
       setFreePulls(0);
-      const card = pullOne();
-      await addToCollection([card]);
       await maybeStoreFortuneBuff([card], today);
       setResult(card);
       setPhase('single_result');
@@ -507,18 +507,20 @@ export default function GachaScreen() {
     if (balance < cost) return;
     setSpinning(true);
     try {
-      const newBal = await spend(cost);
-      setBalance(newBal);
       const today = getTodayDateString();
       if (multi) {
         const cards = pullTen();
-        await addToCollection(cards);
+        await addToCollection(cards);          // 저장 성공 후에만 코인 차감
+        const newBal = await spend(cost);
+        setBalance(newBal);
         await maybeStoreFortuneBuff(cards, today);
         setMulti(cards);
         setPhase('multi_result');
       } else {
         const card = pullOne();
-        await addToCollection([card]);
+        await addToCollection([card]);         // 저장 성공 후에만 코인 차감
+        const newBal = await spend(cost);
+        setBalance(newBal);
         await maybeStoreFortuneBuff([card], today);
         setResult(card);
         setPhase('single_result');
