@@ -18,6 +18,7 @@ import { F } from '@/shared/fonts';
 import { SkeletonBox } from '@/shared/Skeleton';
 import { cardImageFor } from '@/gacha/cardAssets';
 import { deriveMood } from '@/character/mood';
+import { computeEffectiveAffection, computeNeglectDays } from '@/character/state';
 import { type Mood } from '@/character/types';
 import { deriveValence, type FortuneValence } from '@/fortune/deriveValence';
 import { getActiveBuff, type FortuneBuff } from '@/fortune/fortuneCardBuff';
@@ -313,9 +314,11 @@ export default function HomeScreen() {
       const p = await loadUserProfile();
       if (!p) { setLoading(false); return; }
       const today = getTodayDateString();
-      await loadCharacterState();
+      const charState = await loadCharacterState();
       const valence = deriveValence(today, p.diiSign, p.starSign);
-      setMood(deriveMood({ affection: 100, neglectDays: 0, fortuneValence: valence }));
+      const neglectDays = computeNeglectDays(charState, today);
+      const affection = computeEffectiveAffection(charState, today);
+      setMood(deriveMood({ affection, neglectDays, fortuneValence: valence }));
       setElement(DII_ELEMENT[p.diiSign] ?? 'lightning');
 
       const streakState = await checkInStreak(today);
