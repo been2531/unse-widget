@@ -268,6 +268,7 @@ export default function FortuneScreen() {
           return (
             <View key={key} style={[
               styles.card,
+              isUnlocked && { borderColor: `${color}30` },
               isBoosted && { borderColor: `${activeBuff!.color}44` },
             ]}>
               <View style={styles.cardHeader}>
