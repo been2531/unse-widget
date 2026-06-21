@@ -245,7 +245,7 @@ export default function CoinShopScreen() {
               ? <><ActivityIndicator color="#111" size="small" /><Text style={styles.adBtnText}>광고 로딩 중...</Text></>
               : <>
                   <Text style={styles.adBtnText}>
-                    {adsRemaining > 0 ? `광고 보기  +${COINS_PER_AD}코인` : '오늘 광고 모두 시청 완료'}
+                    {adsRemaining > 0 ? `광고 보기 · +${COINS_PER_AD}코인` : '오늘 광고 모두 시청 완료'}
                   </Text>
                   <Text style={styles.adBtnSub}>{adsRemaining}/{MAX_ADS_PER_DAY} 남음</Text>
                 </>
