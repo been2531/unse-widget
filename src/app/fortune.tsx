@@ -2,7 +2,7 @@ import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator, Animated, Pressable,
-  ScrollView, StatusBar, StyleSheet, Text, View,
+  ScrollView, Share, StatusBar, StyleSheet, Text, View,
 } from 'react-native';
 
 import { showRewardedAd } from '@/ads/admob';
@@ -123,6 +123,12 @@ export default function FortuneScreen() {
       setUnlocked(await unlockCategory(today, key));
     }
     setAdLoading(null);
+  }
+
+  async function shareFortuneResult() {
+    if (!fortune || !scores) return;
+    const msg = `[UNSE 오늘의 운세]\n${fortune.date}\n\n종합 운세: ${overall}점 (${scoreLabel(overall)})\n\n✨ ${fortune.general.text}`;
+    try { await Share.share({ message: msg }); } catch {}
   }
 
   if (loading) return (
@@ -282,6 +288,10 @@ export default function FortuneScreen() {
           );
         })}
 
+        <Pressable style={styles.shareBtn} onPress={shareFortuneResult}>
+          <Text style={styles.shareBtnText}>↗  오늘의 운세 공유하기</Text>
+        </Pressable>
+
         <Text style={styles.footNote}>광고 시청은 카테고리당 1회, 자정에 초기화됩니다.</Text>
       </ScrollView>
     </View>
@@ -373,4 +383,11 @@ const styles = StyleSheet.create({
   buffDesc: { fontSize: 12, color: 'rgba(255,255,255,0.50)', lineHeight: 17 },
   buffInline: { borderWidth: 1, borderRadius: 10, padding: 8, marginTop: 4 },
   buffInlineText: { fontSize: 12, lineHeight: 18 },
+
+  shareBtn: {
+    borderWidth: 1, borderColor: 'rgba(255,255,255,0.14)', borderRadius: 16,
+    paddingVertical: 12, alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.04)',
+  },
+  shareBtnText: { color: 'rgba(255,255,255,0.55)', fontSize: 14, fontWeight: '600' },
 });
