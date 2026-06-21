@@ -92,6 +92,8 @@ export default function FortuneScreen() {
   const [luckyInfo, setLuckyInfo]   = useState<LuckyInfo | null>(null);
   const [scores, setScores]         = useState<Record<CategoryKey, number> | null>(null);
   const [overall, setOverall]       = useState(0);
+  const [diiSign, setDiiSign]       = useState('');
+  const [starSign, setStarSign]     = useState('');
 
   useEffect(() => {
     (async () => {
@@ -101,6 +103,8 @@ export default function FortuneScreen() {
 
       setFortune(selectDailyFortune(today, p.diiSign, p.starSign));
       setLuckyInfo(deriveLuckyInfo(today, p.diiSign, p.starSign));
+      setDiiSign(p.diiSign);
+      setStarSign(p.starSign);
 
       const s: Record<CategoryKey, number> = {
         wealth: deriveScore(today, p.diiSign, p.starSign, 'wealth'),
@@ -148,7 +152,9 @@ export default function FortuneScreen() {
 
   async function shareFortuneResult() {
     if (!fortune || !scores) return;
-    const msg = `[UNSE 오늘의 운세]\n${fortune.date}\n\n종합 운세: ${overall}점 (${scoreLabel(overall)})\n\n✨ ${fortune.general.text}`;
+    const diiLine = diiSign ? `\n🐾 ${diiSign} 띠: ${fortune.dii.text}` : '';
+    const starLine = starSign ? `\n⭐ ${starSign}: ${fortune.star.text}` : '';
+    const msg = `[UNSE 오늘의 운세]\n${fortune.date}\n\n종합 운세: ${overall}점 (${scoreLabel(overall)})\n\n✨ ${fortune.general.text}${diiLine}${starLine}`;
     try { await Share.share({ message: msg }); } catch {}
   }
 
@@ -261,6 +267,26 @@ export default function FortuneScreen() {
             <View style={styles.freeBadge}><Text style={styles.freeBadgeText}>무료</Text></View>
           </View>
           <Text style={styles.cardText}>{fortune.general.text}</Text>
+        </View>
+
+        {/* 띠별 운세 — 항상 무료 */}
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardEmoji}>🐾</Text>
+            <Text style={styles.cardLabel}>{diiSign} 띠 운세</Text>
+            <View style={styles.freeBadge}><Text style={styles.freeBadgeText}>무료</Text></View>
+          </View>
+          <Text style={styles.cardText}>{fortune.dii.text}</Text>
+        </View>
+
+        {/* 별자리 운세 — 항상 무료 */}
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
+            <Text style={styles.cardEmoji}>⭐</Text>
+            <Text style={styles.cardLabel}>{starSign} 운세</Text>
+            <View style={styles.freeBadge}><Text style={styles.freeBadgeText}>무료</Text></View>
+          </View>
+          <Text style={styles.cardText}>{fortune.star.text}</Text>
         </View>
 
         {/* 유료 카테고리 */}
