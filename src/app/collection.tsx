@@ -405,7 +405,7 @@ export default function CollectionScreen() {
                 : '아직 카드가 없어요'}
             </Text>
             <Text style={styles.emptySub}>
-              {filter === 'fortune' ? '운세 확인 시 카드가 쌓입니다'
+              {filter === 'fortune' ? '가챠 뽑기로 운세 카드를 획득할 수 있어요'
                 : filter === 'skin' ? '코인샵에서 프레임을 구매해보세요'
                 : '가챠에서 카드를 뽑아보세요!'}
             </Text>

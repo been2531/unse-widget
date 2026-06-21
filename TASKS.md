@@ -1,6 +1,6 @@
 # unse-widget 작업 목록
 
-> 최종 업데이트: 2026-06-21 (루틴 2회차)
+> 최종 업데이트: 2026-06-21 (루틴 3회차)
 > 컨셉 원칙: **한국신화 × 운세** — 이 두 가지는 고정. 나머지 디자인·구조·UI는 루틴/Claude가 자유롭게 개선 가능.
 
 ---
@@ -15,6 +15,11 @@
 
 - ~~[리뷰] fortune.tsx:129 — 코인 부족 시 spend() 실패를 catch {} 무음 처리 → 사용자에게 Alert 없음 (adsRemoved 경로)~~ → 완료
 - ~~[리뷰] coin-shop.tsx:15 — grantRemoveAds import됐지만 handleRemoveAds에서 호출 안 됨 (unused import)~~ → 완료
+- ~~[리뷰] gacha.tsx handleAdReward — 광고 오류(result === 'error') 무음 처리 → Alert 추가~~ → 완료
+- ~~[리뷰] gacha.tsx doSynthesis — 스토리지 실패 시 'rolling' 상태 고착 → try-catch + fail 전환~~ → 완료
+- ~~[리뷰] fortune.tsx watchAdForCategory — 광고 오류 무음 처리 → Alert 추가~~ → 완료
+- ~~[리뷰] fortune.tsx shareFortuneResult — 공유 메시지에 raw 날짜 'YYYY-MM-DD' 노출 → 한국어 날짜 형식으로 수정~~ → 완료
+- ~~[리뷰] collection.tsx — fortune 빈 상태 안내 문구 오류("운세 확인 시 카드가 쌓입니다" → 실제로는 가챠에서 획득) → 수정~~ → 완료
 
 ---
 
