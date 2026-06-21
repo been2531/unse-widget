@@ -193,7 +193,7 @@ export default function FortuneScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* 종합 점수 */}
-        <View style={styles.overallCard}>
+        <View style={[styles.overallCard, { borderColor: `${overallColor}30` }]}>
           <View style={styles.overallLeft}>
             <Text style={styles.overallDate}>{fortune.date}</Text>
             <Text style={[styles.overallScore, { color: overallColor }]}>{overall}</Text>
@@ -320,8 +320,12 @@ export default function FortuneScreen() {
           );
         })}
 
-        <Pressable style={styles.shareBtn} onPress={shareFortuneResult} accessibilityLabel="오늘의 운세 공유하기">
-          <Text style={styles.shareBtnText}>↗  오늘의 운세 공유하기</Text>
+        <Pressable
+          style={[styles.shareBtn, { borderColor: `${overallColor}40`, backgroundColor: `${overallColor}08` }]}
+          onPress={shareFortuneResult}
+          accessibilityLabel="오늘의 운세 공유하기"
+        >
+          <Text style={[styles.shareBtnText, { color: overallColor }]}>↗  오늘의 운세 공유하기</Text>
         </Pressable>
 
         <Text style={styles.footNote}>
