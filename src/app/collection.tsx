@@ -11,6 +11,7 @@ import {
 
 import { F } from '@/shared/fonts';
 import { cardImageFor } from '@/gacha/cardAssets';
+import { canSynthesize } from '@/gacha/synthesis';
 import {
   CARD_POOL, CATEGORY_LABEL, RARITY_COLOR, RARITY_LABEL,
   type CardCategory, type CardDef, type PulledCard,
@@ -156,7 +157,7 @@ function CardItem({ item, CARD_W, CARD_H, onPress }: {
 // ─── 카드 상세 모달 ────────────────────────────────────────────────────────────
 type ModalItem = (CardDef & { owned: boolean }) | PulledCard;
 
-function CardDetailModal({ item, onClose }: { item: ModalItem; onClose: () => void }) {
+function CardDetailModal({ item, ownedCount, canSynth, onClose }: { item: ModalItem; ownedCount: number; canSynth: boolean; onClose: () => void }) {
   const elemColor = ELEM_COLOR[item.element] ?? '#888';
   const [bgTop, bgBot] = ELEM_BG[item.element] ?? ['#12103a', '#0c1e3e'];
   const imgSrc = (item.category === 'character' || item.category === 'skin')
@@ -207,7 +208,18 @@ function CardDetailModal({ item, onClose }: { item: ModalItem; onClose: () => vo
                   {CATEGORY_LABEL[item.category]}
                 </Text>
               </View>
-              {!owned && (
+              {owned ? (
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                  <View style={[modalStyles.countBadge, { backgroundColor: `${elemColor}18`, borderColor: `${elemColor}44` }]}>
+                    <Text style={[modalStyles.countText, { color: elemColor }]}>{ownedCount}장 보유</Text>
+                  </View>
+                  {canSynth && (
+                    <View style={modalStyles.synthHint}>
+                      <Text style={modalStyles.synthHintText}>⚗️ 합성 가능</Text>
+                    </View>
+                  )}
+                </View>
+              ) : (
                 <Text style={{ fontFamily: F.r, color: 'rgba(255,255,255,0.25)', fontSize: 10 }}>미수집</Text>
               )}
             </View>
@@ -253,6 +265,11 @@ export default function CollectionScreen() {
   }, []);
 
   const collectedIds = new Set(collected.map(c => c.id));
+  const ownedCountMap = collected.reduce<Record<string, number>>((acc, c) => {
+    acc[c.id] = (acc[c.id] ?? 0) + 1;
+    return acc;
+  }, {});
+  const allOwnedIds = collected.map(c => c.id);
 
   const characterItems = ALL_CHARS.map(c => ({
     ...c, uid: c.id, pulledAt: '', owned: collectedIds.has(c.id),
@@ -421,7 +438,12 @@ export default function CollectionScreen() {
       />
 
       {selectedCard && (
-        <CardDetailModal item={selectedCard} onClose={() => setSelectedCard(null)} />
+        <CardDetailModal
+          item={selectedCard}
+          ownedCount={ownedCountMap[selectedCard.id] ?? 0}
+          canSynth={canSynthesize(selectedCard.id, allOwnedIds)}
+          onClose={() => setSelectedCard(null)}
+        />
       )}
     </View>
   );
@@ -523,6 +545,15 @@ const modalStyles = StyleSheet.create({
   elemLabel: { fontFamily: F.r, color: 'rgba(255,255,255,0.35)', fontSize: 11 },
   desc: { fontFamily: F.r, color: 'rgba(255,255,255,0.90)', fontSize: 14, lineHeight: 23, textAlign: 'center' },
   pullDate: { fontFamily: F.r, color: 'rgba(255,255,255,0.25)', fontSize: 11, textAlign: 'center', marginTop: 4 },
+  countBadge: {
+    borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3, borderWidth: 1,
+  },
+  countText: { fontFamily: F.sb, fontSize: 10, letterSpacing: 0.3 },
+  synthHint: {
+    borderRadius: 8, paddingHorizontal: 8, paddingVertical: 3, borderWidth: 1,
+    backgroundColor: 'rgba(180,100,255,0.15)', borderColor: 'rgba(180,100,255,0.45)',
+  },
+  synthHintText: { fontFamily: F.sb, color: '#CC88FF', fontSize: 10 },
   closeBtn: {
     width: 160, paddingVertical: 13, borderRadius: 14,
     borderWidth: 1.5, alignItems: 'center',

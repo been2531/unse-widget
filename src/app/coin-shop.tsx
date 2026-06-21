@@ -121,8 +121,9 @@ export default function CoinShopScreen() {
       Alert.alert('구매 완료!', `${card.nameKo}를 획득했습니다.`);
     } catch (e: any) {
       Alert.alert('오류', e.message ?? '구매 중 오류가 발생했습니다.');
+    } finally {
+      setPurchasing(null);
     }
-    setPurchasing(null);
   }
 
   // ─── 광고 제거 구매 ────────────────────────────────────────────────────────
@@ -137,8 +138,9 @@ export default function CoinShopScreen() {
       );
     } catch (e: any) {
       Alert.alert('결제 오류', e.message ?? '알 수 없는 오류');
+    } finally {
+      setPurchasing(null);
     }
-    setPurchasing(null);
   }
 
   // ─── 인앱 결제 ─────────────────────────────────────────────────────────────
@@ -161,8 +163,9 @@ export default function CoinShopScreen() {
       );
     } catch (e: any) {
       Alert.alert('결제 오류', e.message ?? '알 수 없는 오류');
+    } finally {
+      setPurchasing(null);
     }
-    setPurchasing(null);
   }
 
   return (
