@@ -8,9 +8,11 @@ import {
   StyleSheet, Text, View, useWindowDimensions,
 } from 'react-native';
 
+import { F } from '@/shared/fonts';
 import { CARD_POOL, RARITY_COLOR, RARITY_LABEL } from '@/gacha/types';
 import { COINS_PER_AD, MAX_ADS_PER_DAY, getAdsRemaining, recordAdReward } from '@/storage/adRewards';
 import { getBalance, spend } from '@/storage/coins';
+import { grantRemoveAds, hasRemovedAds } from '@/storage/purchases';
 import { addToCollection, getCollection } from '@/storage/collection';
 import { getTodayDateString } from '@/shared/dateUtils';
 
@@ -65,12 +67,14 @@ export default function CoinShopScreen() {
   const [adLoading, setAdLoading] = useState(false);
   const [purchasing, setPurchasing] = useState<string | null>(null);
   const [ownedSkinIds, setOwnedSkinIds] = useState<Set<string>>(new Set());
+  const [adsRemoved, setAdsRemoved] = useState(false);
 
   useEffect(() => {
-    Promise.all([getBalance(), getAdsRemaining(today), getCollection()]).then(([bal, ads, col]) => {
+    Promise.all([getBalance(), getAdsRemaining(today), getCollection(), hasRemovedAds()]).then(([bal, ads, col, noAds]) => {
       setBalance(bal);
       setAdsRemaining(ads);
       setOwnedSkinIds(new Set(col.filter(c => c.category === 'skin').map(c => c.id)));
+      setAdsRemoved(noAds);
     });
   }, []);
 
@@ -123,6 +127,22 @@ export default function CoinShopScreen() {
     setPurchasing(null);
   }
 
+  // ─── 광고 제거 구매 ────────────────────────────────────────────────────────
+  async function handleRemoveAds() {
+    if (purchasing || adsRemoved) return;
+    setPurchasing('remove_ads');
+    try {
+      Alert.alert(
+        '결제 준비 중',
+        'Google Play Console 제품 등록 후 이용 가능합니다.\n\n스토어 출시 전 테스트 계정으로 먼저 확인해보세요.',
+        [{ text: '확인' }],
+      );
+    } catch (e: any) {
+      Alert.alert('결제 오류', e.message ?? '알 수 없는 오류');
+    }
+    setPurchasing(null);
+  }
+
   // ─── 인앱 결제 ─────────────────────────────────────────────────────────────
   async function handlePurchase(sku: string, coins: number) {
     if (purchasing) return;
@@ -171,6 +191,28 @@ export default function CoinShopScreen() {
       </View>
 
       <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+
+        {/* 광고 제거 상품 */}
+        <Pressable
+          style={[styles.removeAdsBtn, adsRemoved && styles.removeAdsBtnOwned]}
+          onPress={handleRemoveAds}
+          disabled={!!purchasing || adsRemoved}
+        >
+          <View style={styles.removeAdsLeft}>
+            <Text style={styles.removeAdsTitle}>🚫 광고 제거</Text>
+            <Text style={styles.removeAdsSub}>
+              {adsRemoved ? '이미 구매하셨습니다' : '운세 잠금 해제 시 광고 없이 코인 차감으로 이용'}
+            </Text>
+          </View>
+          {adsRemoved
+            ? <View style={styles.ownedBadge}><Text style={styles.ownedText}>보유 중</Text></View>
+            : purchasing === 'remove_ads'
+              ? <ActivityIndicator color="#FFF" />
+              : <Text style={styles.removeAdsPrice}>₩4,900</Text>
+          }
+        </Pressable>
+
+        <View style={styles.divider} />
 
         {/* 광고 섹션 */}
         <View style={styles.section}>
@@ -346,4 +388,20 @@ const styles = StyleSheet.create({
   packagePrice: { fontSize: 16, fontWeight: '800' },
 
   notice: { color: 'rgba(255,255,255,0.25)', fontSize: 11, lineHeight: 18, marginTop: 8 },
+
+  removeAdsBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: 'rgba(100,80,255,0.12)', borderWidth: 1.5, borderColor: 'rgba(120,100,255,0.45)',
+    borderRadius: 18, padding: 18, gap: 12,
+  },
+  removeAdsBtnOwned: { borderColor: 'rgba(0,220,100,0.35)', backgroundColor: 'rgba(0,220,100,0.06)' },
+  removeAdsLeft: { flex: 1, gap: 4 },
+  removeAdsTitle: { color: '#FFF', fontSize: 16, fontFamily: F.eb },
+  removeAdsSub: { color: 'rgba(255,255,255,0.45)', fontSize: 12, fontFamily: F.r },
+  removeAdsPrice: { color: '#B89AFF', fontSize: 18, fontFamily: F.bk },
+  ownedBadge: {
+    backgroundColor: 'rgba(0,220,100,0.15)', borderWidth: 1, borderColor: 'rgba(0,220,100,0.4)',
+    borderRadius: 10, paddingHorizontal: 10, paddingVertical: 5,
+  },
+  ownedText: { color: '#00DD77', fontSize: 12, fontFamily: F.b },
 });
