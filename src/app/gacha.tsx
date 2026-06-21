@@ -861,17 +861,24 @@ export default function GachaScreen() {
           <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 32, gap: 14 }} overScrollMode="never">
             <MultiResultGrid cards={multiResult} miniW={MINI_W} />
             {/* 하이라이트: Rare 이상 카드 */}
-            {multiResult.filter(c => c.rarity !== 'common').map(c => (
-              <View key={c.uid} style={styles.highlightRow}>
-                <Text style={{ fontSize: 18 }}>
-                  {c.category === 'character' ? '🐲' : c.category === 'skin' ? '🎨' : '🔮'}
-                </Text>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ color: RARITY_COLOR[c.rarity], fontWeight: '700', fontSize: 13 }}>{c.nameKo}</Text>
-                  <Text style={{ color: 'rgba(255,255,255,0.5)', fontSize: 11 }}>{ELEM_LABEL[c.element]} · {RARITY_LABEL[c.rarity]}</Text>
+            {multiResult.filter(c => c.rarity !== 'common').map(c => {
+              const img = c.category === 'character' ? cardImageFor(c.element, c.rarity, c.id) : null;
+              return (
+                <View key={c.uid} style={[styles.highlightRow, { borderColor: `${ELEM_COLOR[c.element] ?? '#888'}28`, borderWidth: 1 }]}>
+                  {img
+                    ? <Image source={img} style={{ width: 44, height: 44, borderRadius: 8 }} resizeMode="contain" />
+                    : <Text style={{ fontSize: 22 }}>{c.category === 'skin' ? '🎨' : '🔮'}</Text>
+                  }
+                  <View style={{ flex: 1 }}>
+                    <Text style={{ fontFamily: F.b, color: RARITY_COLOR[c.rarity], fontSize: 13 }}>{c.nameKo}</Text>
+                    <Text style={{ fontFamily: F.r, color: 'rgba(255,255,255,0.5)', fontSize: 11 }}>{ELEM_LABEL[c.element]} · {RARITY_LABEL[c.rarity]}</Text>
+                  </View>
+                  <View style={{ backgroundColor: `${RARITY_COLOR[c.rarity]}18`, borderRadius: 8, paddingHorizontal: 6, paddingVertical: 3, borderWidth: 1, borderColor: `${RARITY_COLOR[c.rarity]}44` }}>
+                    <Text style={{ fontFamily: F.b, color: RARITY_COLOR[c.rarity], fontSize: 10 }}>NEW</Text>
+                  </View>
                 </View>
-              </View>
-            ))}
+              );
+            })}
           </ScrollView>
           <View style={[styles.resultBtns, { paddingBottom: 24 }]}>
             <Pressable style={styles.againBtn} onPress={backToLobby}>
