@@ -5,6 +5,7 @@ import {
   ScrollView, Share, StatusBar, StyleSheet, Text, View,
 } from 'react-native';
 
+import { F } from '@/shared/fonts';
 import { showRewardedAd } from '@/ads/admob';
 import { fnv1aHash } from '@/fortune/hash';
 import { spend } from '@/storage/coins';
@@ -75,11 +76,11 @@ function ScoreBar({ score, color, label, emoji, delay }: {
 const barStyles = StyleSheet.create({
   row:   { flexDirection: 'row', alignItems: 'center', gap: 8 },
   emoji: { fontSize: 15, width: 20 },
-  label: { color: 'rgba(255,255,255,0.55)', fontSize: 11, fontWeight: '600', width: 36 },
+  label: { fontFamily: F.sb, color: 'rgba(255,255,255,0.55)', fontSize: 11, width: 36 },
   track: { flex: 1, height: 5, backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 3, overflow: 'hidden' },
   fill:  { height: '100%', borderRadius: 3 },
-  num:   { fontSize: 13, fontWeight: '900', width: 28, textAlign: 'right' },
-  tag:   { color: 'rgba(255,255,255,0.30)', fontSize: 10, width: 26 },
+  num:   { fontFamily: F.bk, fontSize: 13, width: 28, textAlign: 'right' },
+  tag:   { fontFamily: F.r, color: 'rgba(255,255,255,0.30)', fontSize: 10, width: 26 },
 });
 
 export default function FortuneScreen() {
@@ -185,7 +186,7 @@ export default function FortuneScreen() {
       <StatusBar barStyle="light-content" backgroundColor="#080B18" />
       <Text style={styles.err}>운세를 불러올 수 없어요</Text>
       <Pressable onPress={() => router.back()} style={{ marginTop: 16, paddingHorizontal: 20, paddingVertical: 10, backgroundColor: 'rgba(255,255,255,0.07)', borderRadius: 12, borderWidth: 1, borderColor: 'rgba(255,255,255,0.12)' }}>
-        <Text style={{ color: 'rgba(255,255,255,0.55)', fontSize: 14 }}>뒤로 가기</Text>
+        <Text style={{ fontFamily: F.r, color: 'rgba(255,255,255,0.55)', fontSize: 14 }}>뒤로 가기</Text>
       </Pressable>
     </View>
   );
@@ -380,7 +381,7 @@ export default function FortuneScreen() {
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: '#080B18' },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#080B18' },
-  err: { color: 'rgba(255,255,255,0.5)' },
+  err: { fontFamily: F.r, color: 'rgba(255,255,255,0.5)' },
 
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
@@ -391,8 +392,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.07)', borderRadius: 12,
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)',
   },
-  backIcon: { color: '#fff', fontSize: 28, lineHeight: 32, marginTop: -2 },
-  title: { fontSize: 18, fontWeight: '700', color: '#FFFFFF' },
+  backIcon: { fontFamily: F.r, color: '#fff', fontSize: 28, lineHeight: 32, marginTop: -2 },
+  title: { fontFamily: F.b, fontSize: 18, color: '#FFFFFF' },
 
   scroll: { paddingHorizontal: 16, paddingBottom: 40, gap: 12 },
 
@@ -403,10 +404,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row', gap: 16, alignItems: 'center',
   },
   overallLeft: { alignItems: 'center', justifyContent: 'center', width: 68 },
-  overallDate: { color: 'rgba(255,255,255,0.28)', fontSize: 9, letterSpacing: 0.3, marginBottom: 2 },
-  overallScore: { fontSize: 46, fontWeight: '900', lineHeight: 50 },
-  overallGrade: { fontSize: 13, fontWeight: '800', marginTop: 2 },
-  overallLabel: { color: 'rgba(255,255,255,0.30)', fontSize: 10, marginTop: 4 },
+  overallDate: { fontFamily: F.r, color: 'rgba(255,255,255,0.28)', fontSize: 9, letterSpacing: 0.3, marginBottom: 2 },
+  overallScore: { fontFamily: F.bk, fontSize: 46, lineHeight: 50 },
+  overallGrade: { fontFamily: F.eb, fontSize: 13, marginTop: 2 },
+  overallLabel: { fontFamily: F.r, color: 'rgba(255,255,255,0.30)', fontSize: 10, marginTop: 4 },
   overallRight: { flex: 1, gap: 10 },
 
   luckyCard: {
@@ -415,13 +416,13 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
     gap: 12,
   },
-  sectionTitle: { color: 'rgba(255,255,255,0.40)', fontSize: 11, fontWeight: '700', letterSpacing: 0.8 },
+  sectionTitle: { fontFamily: F.b, color: 'rgba(255,255,255,0.40)', fontSize: 11, letterSpacing: 0.8 },
   luckyGrid: { flexDirection: 'row', alignItems: 'center' },
   luckyCell: { flex: 1, alignItems: 'center', gap: 4 },
   luckyDot: { width: 20, height: 20, borderRadius: 10, marginBottom: 2, borderWidth: 1, borderColor: 'rgba(255,255,255,0.20)' },
   luckyCellIcon: { fontSize: 18, marginBottom: 2 },
-  luckyCellLabel: { color: 'rgba(255,255,255,0.30)', fontSize: 9, fontWeight: '600' },
-  luckyCellVal: { color: '#FFFFFF', fontSize: 13, fontWeight: '800' },
+  luckyCellLabel: { fontFamily: F.sb, color: 'rgba(255,255,255,0.30)', fontSize: 9 },
+  luckyCellVal: { fontFamily: F.eb, color: '#FFFFFF', fontSize: 13 },
   luckyDivider: { width: 1, height: 44, backgroundColor: 'rgba(255,255,255,0.07)' },
 
   card: {
@@ -432,41 +433,41 @@ const styles = StyleSheet.create({
   },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   cardEmoji: { fontSize: 18 },
-  cardLabel: { fontSize: 15, fontWeight: '700', color: '#FFFFFF', flex: 1 },
-  inlineScore: { fontSize: 13, fontWeight: '900' },
+  cardLabel: { fontFamily: F.b, fontSize: 15, color: '#FFFFFF', flex: 1 },
+  inlineScore: { fontFamily: F.bk, fontSize: 13 },
   badge: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8, borderWidth: 1 },
-  badgeText: { fontSize: 10, fontWeight: '700' },
+  badgeText: { fontFamily: F.b, fontSize: 10 },
   freeBadge: {
     paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8,
     backgroundColor: 'rgba(255,220,0,0.12)', borderWidth: 1, borderColor: 'rgba(255,220,0,0.35)',
   },
-  freeBadgeText: { fontSize: 10, fontWeight: '700', color: '#FFE500' },
+  freeBadgeText: { fontFamily: F.b, fontSize: 10, color: '#FFE500' },
   lockIcon: { fontSize: 14 },
-  cardText: { fontSize: 14, color: 'rgba(255,255,255,0.72)', lineHeight: 22 },
+  cardText: { fontFamily: F.r, fontSize: 14, color: 'rgba(255,255,255,0.72)', lineHeight: 22 },
 
   watchAdBtn: {
     borderWidth: 1, borderRadius: 12,
     paddingVertical: 12, alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.03)',
   },
-  watchAdText: { fontSize: 14, fontWeight: '600' },
+  watchAdText: { fontFamily: F.sb, fontSize: 14 },
 
-  footNote: { fontSize: 11, color: 'rgba(255,255,255,0.18)', textAlign: 'center', marginTop: 4 },
+  footNote: { fontFamily: F.r, fontSize: 11, color: 'rgba(255,255,255,0.18)', textAlign: 'center', marginTop: 4 },
 
   buffBanner: {
     flexDirection: 'row', alignItems: 'flex-start', gap: 10,
     borderWidth: 1, borderRadius: 14, padding: 12,
   },
   buffEmoji: { fontSize: 22, marginTop: 1 },
-  buffTitle: { fontSize: 12, fontWeight: '700', marginBottom: 2 },
-  buffDesc: { fontSize: 12, color: 'rgba(255,255,255,0.50)', lineHeight: 17 },
+  buffTitle: { fontFamily: F.b, fontSize: 12, marginBottom: 2 },
+  buffDesc: { fontFamily: F.r, fontSize: 12, color: 'rgba(255,255,255,0.50)', lineHeight: 17 },
   buffInline: { borderWidth: 1, borderRadius: 10, padding: 8, marginTop: 4 },
-  buffInlineText: { fontSize: 12, lineHeight: 18 },
+  buffInlineText: { fontFamily: F.r, fontSize: 12, lineHeight: 18 },
 
   shareBtn: {
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.14)', borderRadius: 16,
     paddingVertical: 12, alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.04)',
   },
-  shareBtnText: { color: 'rgba(255,255,255,0.55)', fontSize: 14, fontWeight: '600' },
+  shareBtnText: { fontFamily: F.sb, color: 'rgba(255,255,255,0.55)', fontSize: 14 },
 });
