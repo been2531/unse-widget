@@ -18,6 +18,10 @@ export async function loadUserProfile(): Promise<UserProfile | null> {
 export async function saveUserProfile(birthdate: string): Promise<UserProfile> {
   const { diiSign, starSign } = deriveSigns(birthdate);
   const profile: UserProfile = { birthdate, diiSign, starSign, onboardingComplete: true };
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
+  try {
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(profile));
+  } catch (e) {
+    throw new Error('저장에 실패했습니다. 앱을 재설치 후 다시 시도해주세요.');
+  }
   return profile;
 }

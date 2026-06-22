@@ -89,62 +89,62 @@ const ELEM: Record<ElementType, {
 
 // 불: 위로 올라가는 넘실거리는 불꽃
 function makeFirePath(cx: number, seed: number, charH: number) {
-  const path = Skia.Path.Make();
+  const pb = Skia.PathBuilder.Make();
   const SEGS = 6;
-  path.moveTo(cx, charH - 10);
+  pb.moveTo(cx, charH - 10);
   for (let i = 0; i < SEGS; i++) {
     const t0 = i / SEGS;
     const t1 = (i + 1) / SEGS;
     const y0 = charH - 10 - t0 * (charH - 20);
     const y1 = charH - 10 - t1 * (charH - 20);
     const wave = Math.sin((t0 + seed * 0.4) * Math.PI * 2.5) * 13 * (1 - t0 * 0.6);
-    path.cubicTo(cx + wave, y0 - 10, cx - wave * 0.7, y1 + 8, cx + wave * 0.3, y1);
+    pb.cubicTo(cx + wave, y0 - 10, cx - wave * 0.7, y1 + 8, cx + wave * 0.3, y1);
   }
-  return path;
+  return pb.detach();
 }
 
 // 물: 수평 파동
 function makeWaterPath(baseY: number, seed: number, cardW: number) {
-  const path = Skia.Path.Make();
+  const pb = Skia.PathBuilder.Make();
   const SEGS = 14;
-  path.moveTo(0, baseY);
+  pb.moveTo(0, baseY);
   for (let i = 1; i <= SEGS; i++) {
     const t = i / SEGS;
-    path.lineTo(t * cardW, baseY + Math.sin(t * Math.PI * 5 + seed) * 10);
+    pb.lineTo(t * cardW, baseY + Math.sin(t * Math.PI * 5 + seed) * 10);
   }
-  return path;
+  return pb.detach();
 }
 
 // 번개: 지그재그 볼트
 function makeLightningPath(cx: number, seed: number, charH: number) {
-  const path = Skia.Path.Make();
+  const pb = Skia.PathBuilder.Make();
   const STEPS = 7;
   const stepH = (charH - 30) / STEPS;
-  path.moveTo(cx, 15);
+  pb.moveTo(cx, 15);
   for (let i = 1; i <= STEPS; i++) {
     const sign = (i + seed) % 2 === 0 ? 1 : -1;
-    path.lineTo(cx + sign * (10 + (i * 13 + seed * 7) % 20), 15 + stepH * i);
+    pb.lineTo(cx + sign * (10 + (i * 13 + seed * 7) % 20), 15 + stepH * i);
   }
-  return path;
+  return pb.detach();
 }
 
 // 자연: 덩굴 곡선
 function makeNaturePath(startX: number, seed: number, charH: number) {
-  const path = Skia.Path.Make();
-  path.moveTo(startX, charH - 10);
+  const pb = Skia.PathBuilder.Make();
+  pb.moveTo(startX, charH - 10);
   const SEGS = 5;
   for (let i = 0; i < SEGS; i++) {
     const t = (i + 1) / SEGS;
     const x = startX + Math.sin(t * Math.PI * 2 + seed) * 20;
     const y = charH - 10 - t * (charH - 20);
-    path.cubicTo(startX + 18, y + 15, x - 12, y - 10, x, y);
+    pb.cubicTo(startX + 18, y + 15, x - 12, y - 10, x, y);
   }
-  return path;
+  return pb.detach();
 }
 
 // 암흑: 소용돌이 나선
 function makeDarkPath(cx: number, cy: number, seed: number, r: number) {
-  const path = Skia.Path.Make();
+  const pb = Skia.PathBuilder.Make();
   const STEPS = 40;
   for (let i = 0; i <= STEPS; i++) {
     const t = i / STEPS;
@@ -152,22 +152,22 @@ function makeDarkPath(cx: number, cy: number, seed: number, r: number) {
     const radius = r * (0.1 + t * 0.9);
     const x = cx + Math.cos(angle) * radius;
     const y = cy + Math.sin(angle) * radius * 0.6;
-    if (i === 0) path.moveTo(x, y);
-    else path.lineTo(x, y);
+    if (i === 0) pb.moveTo(x, y);
+    else pb.lineTo(x, y);
   }
-  return path;
+  return pb.detach();
 }
 
 // 빛: 방사형 광선
 function makeLightPaths(cx: number, cy: number, seed: number, len: number) {
   return Array.from({ length: 8 }, (_, i) => {
-    const path = Skia.Path.Make();
+    const pb = Skia.PathBuilder.Make();
     const angle = (i / 8) * Math.PI * 2 + seed * 0.3;
     const r0 = len * 0.22;
     const r1 = len * (0.55 + (i % 3) * 0.12);
-    path.moveTo(cx + Math.cos(angle) * r0, cy + Math.sin(angle) * r0);
-    path.lineTo(cx + Math.cos(angle) * r1, cy + Math.sin(angle) * r1);
-    return path;
+    pb.moveTo(cx + Math.cos(angle) * r0, cy + Math.sin(angle) * r0);
+    pb.lineTo(cx + Math.cos(angle) * r1, cy + Math.sin(angle) * r1);
+    return pb.detach();
   });
 }
 
@@ -961,7 +961,7 @@ export default function HomeScreen() {
               {/* 하단 행: 희귀도 + 버프/기분 */}
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 6, paddingBottom: 6, paddingTop: 3 }}>
                 <Text style={{ fontFamily: F.b, color: R.starColor, fontSize: 12, letterSpacing: 1, textShadowColor: R.starColor, textShadowRadius: 6 }}>{R.stars}</Text>
-                {activeBuff ? (
+                {activeBuff && (
                   <View style={{
                     flexDirection: 'row', alignItems: 'center', gap: 3,
                     backgroundColor: `${activeBuff.color}25`, borderRadius: 6,
@@ -970,19 +970,6 @@ export default function HomeScreen() {
                   }}>
                     <Text style={{ fontFamily: F.eb, fontSize: 8, color: activeBuff.color }}>
                       {activeBuff.emoji} BUFF
-                    </Text>
-                  </View>
-                ) : (
-                  <View style={{
-                    borderRadius: 6, borderWidth: 1, paddingHorizontal: 5, paddingVertical: 2,
-                    backgroundColor: mood === 'joyful' ? 'rgba(68,255,136,0.12)' : mood === 'lonely' ? 'rgba(136,170,255,0.12)' : 'rgba(255,255,255,0.06)',
-                    borderColor: mood === 'joyful' ? 'rgba(68,255,136,0.30)' : mood === 'lonely' ? 'rgba(136,170,255,0.30)' : 'rgba(255,255,255,0.12)',
-                  }}>
-                    <Text style={{
-                      fontFamily: F.r, fontSize: 8,
-                      color: mood === 'joyful' ? '#44FF88' : mood === 'lonely' ? '#88AAFF' : 'rgba(255,255,255,0.40)',
-                    }}>
-                      {mood === 'joyful' ? '😊 기쁨' : mood === 'lonely' ? '😔 외로움' : '😶 보통'}
                     </Text>
                   </View>
                 )}
@@ -1067,7 +1054,8 @@ export default function HomeScreen() {
 
           {profile && weekDays && (
             <View style={styles.infoRight}>
-              <Text style={styles.infoTitle}>이번 주 흐름</Text>
+              <Text style={styles.infoTitle}>이번 주 운세 흐름</Text>
+              <Text style={{ fontFamily: F.r, color: 'rgba(255,255,255,0.25)', fontSize: 9, marginTop: 1, marginBottom: 2 }}>띠·별자리 기반 일별 운세</Text>
               <View style={styles.weekDotsRow}>
                 {weekDays.map(({ date: d, dayLabel, isToday }) => {
                   const v = deriveValence(d, profile.diiSign, profile.starSign);

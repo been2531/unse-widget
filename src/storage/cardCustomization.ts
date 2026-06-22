@@ -13,11 +13,19 @@ export interface CardCustom {
 const DEFAULT: CardCustom = { element: null, rarity: null };
 
 export async function getCardCustom(): Promise<CardCustom> {
-  const raw = await AsyncStorage.getItem(KEY);
-  return raw ? { ...DEFAULT, ...JSON.parse(raw) } : DEFAULT;
+  try {
+    const raw = await AsyncStorage.getItem(KEY);
+    return raw ? { ...DEFAULT, ...JSON.parse(raw) } : DEFAULT;
+  } catch {
+    return DEFAULT;
+  }
 }
 
 export async function saveCardCustom(c: Partial<CardCustom>): Promise<void> {
   const current = await getCardCustom();
-  await AsyncStorage.setItem(KEY, JSON.stringify({ ...current, ...c }));
+  try {
+    await AsyncStorage.setItem(KEY, JSON.stringify({ ...current, ...c }));
+  } catch {
+    // ignore
+  }
 }

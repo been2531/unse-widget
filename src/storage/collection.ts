@@ -14,7 +14,11 @@ export async function getCollection(): Promise<PulledCard[]> {
 
 export async function addToCollection(cards: PulledCard[]): Promise<void> {
   const existing = await getCollection();
-  await AsyncStorage.setItem(KEY, JSON.stringify([...existing, ...cards]));
+  try {
+    await AsyncStorage.setItem(KEY, JSON.stringify([...existing, ...cards]));
+  } catch {
+    // ignore
+  }
 }
 
 // cardId를 가진 카드가 몇 장인지
@@ -31,5 +35,9 @@ export async function removeCards(cardId: string, count: number): Promise<void> 
     if (c.id === cardId && removed < count) { removed++; return false; }
     return true;
   });
-  await AsyncStorage.setItem(KEY, JSON.stringify(next));
+  try {
+    await AsyncStorage.setItem(KEY, JSON.stringify(next));
+  } catch {
+    // ignore
+  }
 }

@@ -73,10 +73,14 @@ export default function OnboardingScreen() {
       return;
     }
     Keyboard.dismiss();
-    const birthdate = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-    await saveUserProfile(birthdate);
-    await refreshFortuneWidget();
-    router.replace('/');
+    try {
+      const birthdate = `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      await saveUserProfile(birthdate);
+      await refreshFortuneWidget();
+      router.replace('/');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : '오류가 발생했습니다. 다시 시도해주세요.');
+    }
   }
 
   const slide = SLIDES[step];
@@ -238,15 +242,13 @@ const styles = StyleSheet.create({
   nextBtn: {
     width: '100%', paddingVertical: 16, borderRadius: 28,
     borderWidth: 1.5, alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    shadowOpacity: 0.3, shadowOffset: { width: 0, height: 4 }, shadowRadius: 12, elevation: 6,
+    backgroundColor: '#12152A',
   },
   nextBtnText: { fontFamily: F.eb, fontSize: 16, letterSpacing: 0.4 },
   submitBtn: {
     width: '100%', paddingVertical: 16, borderRadius: 28,
     borderWidth: 1.5, alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.06)',
-    shadowOpacity: 0.3, shadowOffset: { width: 0, height: 4 }, shadowRadius: 12, elevation: 6,
+    backgroundColor: '#12152A',
   },
   submitBtnText: { fontFamily: F.eb, fontSize: 16, letterSpacing: 0.4 },
   backLink: { paddingVertical: 4 },

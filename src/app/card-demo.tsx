@@ -31,16 +31,16 @@ const HOLO_COLORS = [
 ];
 
 function makeLightPath(offsetX: number, seed: number) {
-  const path = Skia.Path.Make();
+  const pb = Skia.PathBuilder.Make();
   const sx = CARD_W / 2 + offsetX;
   const steps = 7;
   const stepH = (CHAR_H - 30) / steps;
-  path.moveTo(sx, 15);
+  pb.moveTo(sx, 15);
   for (let i = 1; i <= steps; i++) {
     const sign = (i + seed) % 2 === 0 ? 1 : -1;
-    path.lineTo(sx + sign * (12 + (i * 13 + seed * 7) % 22), 15 + stepH * i);
+    pb.lineTo(sx + sign * (12 + (i * 13 + seed * 7) % 22), 15 + stepH * i);
   }
-  return path;
+  return pb.detach();
 }
 
 export default function CardDemoScreen() {

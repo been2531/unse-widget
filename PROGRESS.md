@@ -46,6 +46,22 @@
 - Android 릴리스 키스토어 완료 (`android/keystore.properties`, PKCS12)
 - 스트릭 시스템: 7일+ 연속 시 카드 등급 상승
 
+### 최근 개선 (2026-06-22)
+
+**UX 수정**
+- 온보딩 버튼(다음/시작하기) Android 검은 네모 버그 수정 — `elevation` + 반투명 배경 조합 제거
+- 홈 카드 감정 배지(😊/😔/😶) 제거 — Buff 활성 시만 뱃지 표시
+- "이번 주 흐름" → "이번 주 운세 흐름" + 띠·별자리 기반 일별 운세 부제목
+- 가챠 헤더 컬렉션 아이콘 제거 (탭바로 충분)
+- 컬렉션 FlatList 전체 스크롤 + 여백 균일화 + 운세 카드 버프 정보 모달
+
+**버그·에러 수정**
+- `react-native-android-widget` "not linked" ERROR → `refreshFortuneWidget` try-catch 처리
+- `@shopify/react-native-skia` SkPath deprecation WARN → `Skia.PathBuilder.Make()` 마이그레이션 (3개 파일)
+- `@react-native-async-storage/async-storage` v3 네이티브 모듈 누락 진단 → APK 재빌드로 해결
+- Storage 쓰기 함수 try-catch 누락 4개 파일 보완
+- 온보딩 `handleSubmit` unhandled rejection → try-catch + 화면 에러 메시지
+
 ---
 
 ## 알려진 이슈 / 미완료 → TASKS.md 참조

@@ -1,6 +1,6 @@
 # unse-widget 작업 목록
 
-> 최종 업데이트: 2026-06-22
+> 최종 업데이트: 2026-06-22 (오후)
 > 컨셉 원칙: **한국신화 × 운세** — 이 두 가지는 고정. 나머지 디자인·구조·UI는 루틴/Claude가 자유롭게 개선 가능.
 
 ---
@@ -40,6 +40,14 @@
 
 ## ✅ 진행 중 / 최근 완료
 
+- ~~온보딩 "다음/시작하기" 버튼 검은 네모 수정~~ → Android `elevation` + 반투명 배경 버그 → 솔리드 `#12152A`로 교체
+- ~~홈 카드 감정 상태 배지 제거~~ → 😊/😔/😶 배지 불필요 → activeBuff만 표시
+- ~~"이번 주 흐름" 의미 명확화~~ → "이번 주 운세 흐름" + "띠·별자리 기반 일별 운세" 부제목 추가
+- ~~react-native-android-widget ERROR 수정~~ → `refreshFortuneWidget` try-catch 추가 → 에러 배너 제거
+- ~~Skia `SkPath.moveTo/lineTo` deprecation 경고 수정~~ → `Skia.Path.Make()` → `Skia.PathBuilder.Make()` + `.detach()` (index/gacha/card-demo 3개 파일)
+- ~~Storage 쓰기 함수 try-catch 누락 보완~~ → userProfile·characterState·collection·cardCustomization 4개 파일
+- ~~AsyncStorage v3 네이티브 모듈 누락 진단~~ → "RCTAsyncStorage→RNAsyncStorage" 이름 변경 불일치. `npx expo run:android` 재빌드로 해결
+- ~~온보딩 handleSubmit try-catch 추가~~ → 저장 실패 시 에러를 UI에 표시
 - ~~가챠 무료뽑기 버튼 통합~~ → 별도 버튼 제거, 1회 뽑기 버튼이 무료/유료 상태 전환
 - ~~가챠 서브텍스트 가독성 수정~~ → #555 → rgba(0,0,0,0.60) (노란 배경 위 가독성 개선)
 - ~~홈화면 보조 버튼 제거~~ → 컬렉션·카드뽑기 버튼 제거 (탭바로 충분히 이동 가능)

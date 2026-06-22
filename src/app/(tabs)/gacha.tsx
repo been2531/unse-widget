@@ -171,10 +171,10 @@ function ResultCard({ card, cardW, onReveal }: { card: PulledCard; cardW: number
             {Array.from({ length: 12 }, (_, i) => {
               const angle = (i / 12) * Math.PI * 2 - Math.PI / 2;
               const r0 = cardW * 0.14; const r1 = cardW * 0.44;
-              const p = Skia.Path.Make();
-              p.moveTo(cardW / 2 + Math.cos(angle) * r0, cardH / 2 + Math.sin(angle) * r0);
-              p.lineTo(cardW / 2 + Math.cos(angle) * r1, cardH / 2 + Math.sin(angle) * r1);
-              return <Path key={i} path={p} color={i % 2 === 0 ? 'rgba(255,210,80,0.22)' : 'rgba(180,100,255,0.18)'}
+              const pb = Skia.PathBuilder.Make();
+              pb.moveTo(cardW / 2 + Math.cos(angle) * r0, cardH / 2 + Math.sin(angle) * r0);
+              pb.lineTo(cardW / 2 + Math.cos(angle) * r1, cardH / 2 + Math.sin(angle) * r1);
+              return <Path key={i} path={pb.detach()} color={i % 2 === 0 ? 'rgba(255,210,80,0.22)' : 'rgba(180,100,255,0.18)'}
                 style="stroke" strokeWidth={i % 2 === 0 ? 1.4 : 0.8} />;
             })}
             {/* 외곽 원 */}
@@ -194,9 +194,9 @@ function ResultCard({ card, cardW, onReveal }: { card: PulledCard; cardW: number
               [cardW - CORNER - 4, cardH - CORNER - 4, -1, -1],
             ].map(([cx, cy, sx, sy], i) => {
               const L = cardW * 0.06;
-              const p = Skia.Path.Make();
-              p.moveTo(cx + sx * L, cy); p.lineTo(cx, cy); p.lineTo(cx, cy + sy * L);
-              return <Path key={i} path={p} color="rgba(255,210,80,0.55)" style="stroke" strokeWidth={1.5} strokeCap="square" />;
+              const pb = Skia.PathBuilder.Make();
+              pb.moveTo(cx + sx * L, cy); pb.lineTo(cx, cy); pb.lineTo(cx, cy + sy * L);
+              return <Path key={i} path={pb.detach()} color="rgba(255,210,80,0.55)" style="stroke" strokeWidth={1.5} strokeCap="square" />;
             })}
             {/* 외부 이중 테두리 */}
             <RoundedRect x={1} y={1} width={cardW - 2} height={cardH - 2} r={CORNER}
@@ -632,10 +632,10 @@ export default function GachaScreen() {
                   const angle = (i / 8) * Math.PI * 2;
                   const cx = CARD_W / 2; const cy = CARD_W * 0.71;
                   const r0 = CARD_W * 0.10; const r1 = CARD_W * 0.40;
-                  const p = Skia.Path.Make();
-                  p.moveTo(cx + Math.cos(angle) * r0, cy + Math.sin(angle) * r0);
-                  p.lineTo(cx + Math.cos(angle) * r1, cy + Math.sin(angle) * r1);
-                  return <Path key={i} path={p} color="rgba(200,150,255,0.30)" style="stroke" strokeWidth={1.5} />;
+                  const pb = Skia.PathBuilder.Make();
+                  pb.moveTo(cx + Math.cos(angle) * r0, cy + Math.sin(angle) * r0);
+                  pb.lineTo(cx + Math.cos(angle) * r1, cy + Math.sin(angle) * r1);
+                  return <Path key={i} path={pb.detach()} color="rgba(200,150,255,0.30)" style="stroke" strokeWidth={1.5} />;
                 })}
                 <Circle cx={CARD_W / 2} cy={CARD_W * 0.71} r={CARD_W * 0.36} color="rgba(140,60,255,0.18)">
                   <BlurMask blur={14} style="normal" />

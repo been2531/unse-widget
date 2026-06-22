@@ -39,11 +39,15 @@ function renderPendingOnboardingPlaceholder() {
 // remain as fallbacks for whenever that alarm is delayed (e.g. Doze) or not
 // yet armed (first install, before MainApplication.onCreate() has run once).
 export async function refreshFortuneWidget(): Promise<void> {
-  await requestWidgetUpdate({
-    widgetName: WIDGET_NAME,
-    renderWidget: async () => (await renderCurrentWidgetState()) ?? renderPendingOnboardingPlaceholder(),
-    widgetNotFound: () => {
-      // No widget added to the home screen — nothing to refresh.
-    },
-  });
+  try {
+    await requestWidgetUpdate({
+      widgetName: WIDGET_NAME,
+      renderWidget: async () => (await renderCurrentWidgetState()) ?? renderPendingOnboardingPlaceholder(),
+      widgetNotFound: () => {
+        // No widget added to the home screen — nothing to refresh.
+      },
+    });
+  } catch {
+    // Widget native module not linked in this build — silently skip.
+  }
 }

@@ -49,6 +49,10 @@ export async function loadCharacterState(): Promise<CharacterState> {
 export async function saveCharacterState(state: CharacterState): Promise<CharacterState> {
   const today = getTodayDateString();
   const recomputed = recomputeStage(state, today);
-  await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(recomputed));
+  try {
+    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(recomputed));
+  } catch {
+    // Storage unavailable — state change is in-memory only for this session
+  }
   return recomputed;
 }
