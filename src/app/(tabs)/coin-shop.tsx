@@ -8,12 +8,17 @@ import {
   StatusBar, StyleSheet, Text, View, useWindowDimensions,
 } from 'react-native';
 
+import {
+  finishTransaction, initConnection, purchaseErrorListener,
+  purchaseUpdatedListener, requestPurchase,
+} from 'react-native-iap';
+
 import { F } from '@/shared/fonts';
 import { SkeletonBox } from '@/shared/Skeleton';
 import { showRewardedAd } from '@/ads/admob';
 import { COINS_PER_AD, MAX_ADS_PER_DAY, getAdsRemaining, recordAdReward } from '@/storage/adRewards';
-import { getBalance, spend } from '@/storage/coins';
-import { hasRemovedAds } from '@/storage/purchases';
+import { addCoins, getBalance, spend } from '@/storage/coins';
+import { grantRemoveAds, hasRemovedAds } from '@/storage/purchases';
 import { getOwnedShopSkins, addShopSkin } from '@/storage/skinPurchases';
 import { getEquippedFrame, setEquippedFrame } from '@/storage/equippedFrame';
 import { getTodayDateString } from '@/shared/dateUtils';
@@ -83,6 +88,43 @@ export default function CoinShopScreen() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
+
+    // IAP 연결 초기화
+    initConnection().catch(() => {});
+
+    const purchaseSub = purchaseUpdatedListener(async purchase => {
+      try {
+        const sku = purchase.productId;
+        if (sku === 'remove_ads') {
+          await grantRemoveAds();
+          setAdsRemoved(true);
+        } else {
+          const pkg = IAP_PACKAGES.find(p => p.sku === sku);
+          if (pkg) {
+            const newBal = await addCoins(pkg.coins);
+            setBalance(newBal);
+          }
+        }
+        await finishTransaction({ purchase, isConsumable: sku !== 'remove_ads' });
+        Alert.alert('결제 완료', sku === 'remove_ads' ? '광고 제거가 활성화되었습니다.' : '코인이 지급되었습니다!');
+      } catch {
+        Alert.alert('오류', '코인 지급 중 문제가 발생했습니다. 고객센터에 문의해주세요.');
+      } finally {
+        setPurchasing(null);
+      }
+    });
+
+    const errorSub = purchaseErrorListener(err => {
+      if ((err as any).code !== 'E_USER_CANCELLED') {
+        Alert.alert('결제 오류', err.message ?? '알 수 없는 오류가 발생했습니다.');
+      }
+      setPurchasing(null);
+    });
+
+    return () => {
+      purchaseSub.remove();
+      errorSub.remove();
+    };
   }, []);
 
   // ─── 광고 시청 ─────────────────────────────────────────────────────────────
@@ -137,39 +179,27 @@ export default function CoinShopScreen() {
     if (purchasing || adsRemoved) return;
     setPurchasing('remove_ads');
     try {
-      Alert.alert(
-        '결제 준비 중',
-        'Google Play Console 제품 등록 후 이용 가능합니다.\n\n스토어 출시 전 테스트 계정으로 먼저 확인해보세요.',
-        [{ text: '확인' }],
-      );
+      await requestPurchase({ sku: 'remove_ads' });
     } catch (e: any) {
-      Alert.alert('결제 오류', e.message ?? '알 수 없는 오류');
+      if ((e as any)?.code !== 'E_USER_CANCELLED') {
+        Alert.alert('결제 오류', e.message ?? '알 수 없는 오류');
+      }
+      setPurchasing(null);
     }
-    setPurchasing(null);
   }
 
-  // ─── 인앱 결제 ─────────────────────────────────────────────────────────────
-  async function handlePurchase(sku: string, coins: number) {
+  // ─── 코인 인앱 결제 ────────────────────────────────────────────────────────
+  async function handlePurchase(sku: string, _coins: number) {
     if (purchasing) return;
     setPurchasing(sku);
     try {
-      // TODO: react-native-iap 연동 후 아래 코드로 교체
-      // await initConnection();
-      // await requestPurchase({ sku });
-      // const purchase = await new Promise<Purchase>(...);
-      // await finishTransaction({ purchase });
-      // 코인 추가 로직
-
-      // 임시: Play Console 미연동 안내
-      Alert.alert(
-        '결제 준비 중',
-        'Google Play Console 제품 등록 후 이용 가능합니다.\n\n스토어 출시 전 테스트 계정으로 먼저 확인해보세요.',
-        [{ text: '확인' }],
-      );
+      await requestPurchase({ sku });
     } catch (e: any) {
-      Alert.alert('결제 오류', e.message ?? '알 수 없는 오류');
+      if ((e as any)?.code !== 'E_USER_CANCELLED') {
+        Alert.alert('결제 오류', e.message ?? '알 수 없는 오류');
+      }
+      setPurchasing(null);
     }
-    setPurchasing(null);
   }
 
   return (

@@ -33,6 +33,13 @@ export async function claimDaily(today: string): Promise<{ balance: number; clai
   return { balance: next.balance, claimed: true };
 }
 
+export async function addCoins(amount: number): Promise<number> {
+  const state = await load();
+  const next = { ...state, balance: state.balance + amount };
+  await save(next);
+  return next.balance;
+}
+
 // Returns new balance, or throws if insufficient.
 export async function spend(amount: number): Promise<number> {
   const state = await load();

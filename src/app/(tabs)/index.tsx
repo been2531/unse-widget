@@ -36,6 +36,7 @@ import { checkInStreak, streakRarityBoost, type StreakState } from '@/storage/st
 import { getTodayFortuneBuff } from '@/storage/todayFortuneCard';
 import { loadUserProfile } from '@/storage/userProfile';
 import { getEquippedFrame } from '@/storage/equippedFrame';
+import { requestNotificationPermission, scheduleTonightReminder } from '@/notifications/streakReminder';
 
 function deriveRarity(date: string, diiSign: DiiSign, valence: FortuneValence): Rarity {
   const roll = fnv1aHash(`${date}:${diiSign}:rarity`) % 100;
@@ -318,6 +319,13 @@ export default function HomeScreen() {
     r: 0.4 + (i % 6) * 0.28,
     a: 0.15 + (i % 8) * 0.07,
   })), [screenW, screenH]);
+
+  // ── 알림 권한 요청 + 오늘 밤 리마인더 예약 ─────────────────────────────────
+  useEffect(() => {
+    requestNotificationPermission().then(granted => {
+      if (granted) scheduleTonightReminder().catch(() => {});
+    });
+  }, []);
 
   // ── 데이터 로드 ──────────────────────────────────────────────────────────
   useEffect(() => {

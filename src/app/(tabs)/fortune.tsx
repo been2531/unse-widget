@@ -20,6 +20,7 @@ import { getTodayUnlocked, unlockCategory } from '@/storage/fortuneUnlock';
 import { checkInStreak, type StreakState } from '@/storage/streak';
 import { getTodayFortuneBuff } from '@/storage/todayFortuneCard';
 import { loadUserProfile } from '@/storage/userProfile';
+import { cancelTodayReminder } from '@/notifications/streakReminder';
 
 type CategoryKey = 'wealth' | 'love' | 'health' | 'work';
 
@@ -106,6 +107,7 @@ export default function FortuneScreen() {
       const today = getTodayDateString();
 
       setFortune(selectDailyFortune(today, p.diiSign, p.starSign));
+      cancelTodayReminder().catch(() => {});
       setLuckyInfo(deriveLuckyInfo(today, p.diiSign, p.starSign));
       setDiiSign(p.diiSign);
       setStarSign(p.starSign);
