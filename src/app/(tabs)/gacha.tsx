@@ -601,14 +601,9 @@ export default function GachaScreen() {
           <View style={styles.chevron} />
         </Pressable>
         <Text style={styles.title}>카드 뽑기</Text>
-        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-          <Pressable onPress={() => router.push('/collection')} style={styles.collectionBtn} accessibilityLabel="컬렉션 보기">
-            <Text style={styles.collectionText}>📚</Text>
-          </Pressable>
-          <Pressable onPress={() => router.push('/coin-shop')} style={styles.coinBadge} accessibilityLabel={`코인 ${balance.toLocaleString()}개, 코인샵으로 이동`}>
-            <Text style={styles.coinText}>💰 {balance.toLocaleString()}</Text>
-          </Pressable>
-        </View>
+        <Pressable onPress={() => router.push('/coin-shop')} style={styles.coinBadge} accessibilityLabel={`코인 ${balance.toLocaleString()}개, 코인샵으로 이동`}>
+          <Text style={styles.coinText}>💰 {balance.toLocaleString()}</Text>
+        </Pressable>
       </View>
 
       {phase === 'lobby' && (
@@ -942,11 +937,6 @@ const styles = StyleSheet.create({
     transform: [{ rotate: '45deg' }, { translateX: 2 }],
   },
   title: { fontFamily: F.eb, fontSize: 18, color: '#FFF', letterSpacing: 1 },
-  collectionBtn: {
-    width: 36, height: 36, alignItems: 'center', justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 12,
-  },
-  collectionText: { fontSize: 16 },
   coinBadge: {
     backgroundColor: 'rgba(255,220,0,0.12)', borderWidth: 1, borderColor: 'rgba(255,220,0,0.35)',
     paddingVertical: 5, paddingHorizontal: 12, borderRadius: 14,

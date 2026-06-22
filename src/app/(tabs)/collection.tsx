@@ -15,6 +15,7 @@ import {
   CARD_POOL, CATEGORY_LABEL, RARITY_COLOR, RARITY_LABEL,
   type CardCategory, type CardDef, type PulledCard,
 } from '@/gacha/types';
+import { FORTUNE_CARD_BUFFS } from '@/fortune/fortuneCardBuff';
 import { getCollection } from '@/storage/collection';
 import { getEquippedFrame, setEquippedFrame } from '@/storage/equippedFrame';
 
@@ -167,8 +168,8 @@ function CardItem({ item, CARD_W, CARD_H, onPress }: {
           <Text style={{ fontFamily: F.b, color: '#fff', fontSize: 9, textAlign: 'center', lineHeight: 13 }} numberOfLines={1}>
             {item.nameKo}
           </Text>
-          <Text style={{ fontFamily: F.sb, color: RARITY_COLOR[item.rarity], fontSize: 8, lineHeight: 12 }}>
-            {RARITY_LABEL[item.rarity]}
+          <Text style={{ fontFamily: F.sb, color: RARITY_COLOR[item.rarity as keyof typeof RARITY_COLOR], fontSize: 8, lineHeight: 12 }}>
+            {RARITY_LABEL[item.rarity as keyof typeof RARITY_LABEL]}
           </Text>
           {!owned && (
             <Text style={{ fontFamily: F.r, color: 'rgba(255,255,255,0.35)', fontSize: 7, lineHeight: 11 }}>미수집</Text>
@@ -269,6 +270,25 @@ function CardDetailModal({ item, equippedFrameId, onClose, onEquipChanged }: {
               </Text>
             ) : null}
           </View>
+
+          {/* 운세 카드 버프 정보 */}
+          {item.category === 'fortune' && (() => {
+            const buff = FORTUNE_CARD_BUFFS[item.id];
+            if (!buff) return null;
+            const CAT_LABEL: Record<string, string> = { wealth: '재물운', love: '연애운', health: '건강운', work: '직장운', all: '전체 운세' };
+            return (
+              <View style={[modalStyles.buffBox, { borderColor: `${buff.color}44`, backgroundColor: `${buff.color}0E` }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 6 }}>
+                  <Text style={{ fontSize: 18 }}>{buff.emoji}</Text>
+                  <View>
+                    <Text style={{ fontFamily: F.b, color: buff.color, fontSize: 12 }}>버프 효과 — {CAT_LABEL[buff.affectedCategory]}</Text>
+                    <Text style={{ fontFamily: F.r, color: 'rgba(255,255,255,0.30)', fontSize: 10 }}>가챠에서 뽑은 날 하루 적용</Text>
+                  </View>
+                </View>
+                <Text style={{ fontFamily: F.r, color: 'rgba(255,255,255,0.75)', fontSize: 12, lineHeight: 18 }}>{buff.bonusText}</Text>
+              </View>
+            );
+          })()}
 
           {isSkin && owned && (
             <Pressable
@@ -381,58 +401,6 @@ export default function CollectionScreen() {
         </Text>
       </View>
 
-      {/* 수집률 진행 바 */}
-      <View style={styles.progressWrap}>
-        <View style={styles.progressRow}>
-          <Text style={styles.progressLabel}>캐릭터 수집률</Text>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
-            <Text style={styles.progressCount}>{totalCharOwned} / {totalCharAll}</Text>
-            <Pressable onPress={shareCollection} style={styles.shareBtn} accessibilityLabel="수집률 공유하기">
-              <Text style={styles.shareBtnText}>↗</Text>
-            </Pressable>
-          </View>
-        </View>
-        <View style={styles.progressTrack}>
-          <View style={[styles.progressFill, { width: `${Math.round(completionPct * 100)}%` as any }]} />
-        </View>
-      </View>
-
-      {/* 카테고리 필터 탭 — 언더라인 스타일 */}
-      <View style={styles.tabTrack}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.tabsContainer} style={{ flexGrow: 0 }}>
-          {FILTERS.map(({ key, label }) => (
-            <Pressable key={key}
-              style={[styles.tab, filter === key && styles.tabActive]}
-              onPress={() => { setFilter(key); setElemFilter('all'); }}>
-              <Text style={[styles.tabText, filter === key && styles.tabTextActive]}>
-                {label}
-              </Text>
-            </Pressable>
-          ))}
-        </ScrollView>
-      </View>
-
-      {/* 원소 필터 — 캐릭터 탭에서만 */}
-      {filter === 'character' && (
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.elemTabsContainer} style={{ flexGrow: 0 }}>
-          {ELEM_FILTERS.map(({ key, label }) => {
-            const color = key !== 'all' ? (ELEM_COLOR[key] ?? '#888') : undefined;
-            const isActive = elemFilter === key;
-            return (
-              <Pressable key={key}
-                style={[styles.elemTab, isActive && { borderColor: color ? `${color}99` : 'rgba(255,255,255,0.55)', backgroundColor: color ? `${color}18` : 'rgba(255,255,255,0.10)' }]}
-                onPress={() => setElemFilter(key)}>
-                <Text style={[styles.elemTabText, isActive && { color: color ?? '#FFF', fontFamily: F.sb }]}>
-                  {label}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-      )}
-
       <FlatList
         data={data as AnyCardItem[]}
         keyExtractor={item => item.uid}
@@ -446,9 +414,64 @@ export default function CollectionScreen() {
         )}
         numColumns={COLS}
         key={`${filter}-${elemFilter}`}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40, paddingTop: 4 }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40, paddingTop: 0 }}
         showsVerticalScrollIndicator={false}
         overScrollMode="never"
+        ListHeaderComponent={
+          <View style={{ marginHorizontal: -16 }}>
+            {/* 수집률 진행 바 */}
+            <View style={styles.progressWrap}>
+              <View style={styles.progressRow}>
+                <Text style={styles.progressLabel}>캐릭터 수집률</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                  <Text style={styles.progressCount}>{totalCharOwned} / {totalCharAll}</Text>
+                  <Pressable onPress={shareCollection} style={styles.shareBtn} accessibilityLabel="수집률 공유하기">
+                    <Text style={styles.shareBtnText}>↗</Text>
+                  </Pressable>
+                </View>
+              </View>
+              <View style={styles.progressTrack}>
+                <View style={[styles.progressFill, { width: `${Math.round(completionPct * 100)}%` as any }]} />
+              </View>
+            </View>
+
+            {/* 카테고리 필터 탭 — 언더라인 스타일 */}
+            <View style={styles.tabTrack}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.tabsContainer} style={{ flexGrow: 0 }}>
+                {FILTERS.map(({ key, label }) => (
+                  <Pressable key={key}
+                    style={[styles.tab, filter === key && styles.tabActive]}
+                    onPress={() => { setFilter(key); setElemFilter('all'); }}>
+                    <Text style={[styles.tabText, filter === key && styles.tabTextActive]}>
+                      {label}
+                    </Text>
+                  </Pressable>
+                ))}
+              </ScrollView>
+            </View>
+
+            {/* 원소 필터 — 캐릭터 탭에서만 */}
+            {filter === 'character' && (
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.elemTabsContainer} style={{ flexGrow: 0 }}>
+                {ELEM_FILTERS.map(({ key, label }) => {
+                  const color = key !== 'all' ? (ELEM_COLOR[key] ?? '#888') : undefined;
+                  const isActive = elemFilter === key;
+                  return (
+                    <Pressable key={key}
+                      style={[styles.elemTab, isActive && { borderColor: color ? `${color}99` : 'rgba(255,255,255,0.55)', backgroundColor: color ? `${color}18` : 'rgba(255,255,255,0.10)' }]}
+                      onPress={() => setElemFilter(key)}>
+                      <Text style={[styles.elemTabText, isActive && { color: color ?? '#FFF', fontFamily: F.sb }]}>
+                        {label}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </ScrollView>
+            )}
+          </View>
+        }
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <Text style={styles.emptyEmoji}>
@@ -510,7 +533,7 @@ const styles = StyleSheet.create({
   tabText: { fontFamily: F.r, color: 'rgba(255,255,255,0.40)', fontSize: 14 },
   tabTextActive: { fontFamily: F.b, color: '#FFF' },
   progressWrap: {
-    marginHorizontal: 20, marginBottom: 6, gap: 6,
+    marginHorizontal: 20, marginBottom: 8, gap: 6,
   },
   progressRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   progressLabel: { fontFamily: F.sb, color: 'rgba(255,255,255,0.40)', fontSize: 11 },
@@ -529,7 +552,7 @@ const styles = StyleSheet.create({
     height: '100%', borderRadius: 2,
     backgroundColor: '#FFD700',
   },
-  elemTabsContainer: { paddingHorizontal: 16, paddingTop: 6, paddingBottom: 8, gap: 8 },
+  elemTabsContainer: { paddingHorizontal: 16, paddingTop: 8, paddingBottom: 8, gap: 8 },
   elemTab: {
     height: 34,
     paddingHorizontal: 14, borderRadius: 17,
@@ -580,6 +603,9 @@ const modalStyles = StyleSheet.create({
   elemLabel: { fontFamily: F.r, color: 'rgba(255,255,255,0.35)', fontSize: 11 },
   desc: { fontFamily: F.r, color: 'rgba(255,255,255,0.90)', fontSize: 14, lineHeight: 23, textAlign: 'center' },
   pullDate: { fontFamily: F.r, color: 'rgba(255,255,255,0.25)', fontSize: 11, textAlign: 'center', marginTop: 4 },
+  buffBox: {
+    width: 280, borderRadius: 12, borderWidth: 1, padding: 12,
+  },
   equipBtn: {
     width: 280, paddingVertical: 12, borderRadius: 12,
     borderWidth: 1.5, alignItems: 'center',

@@ -2,8 +2,8 @@ import {
   BlurMask, Canvas, Circle, Group, Image as SkiaImage, LinearGradient,
   Path, RadialGradient, Rect, RoundedRect, Skia, vec, useImage,
 } from '@shopify/react-native-skia';
-import { Redirect, router } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { Redirect, router, useFocusEffect } from 'expo-router';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View,
   useWindowDimensions, StatusBar,
@@ -366,6 +366,11 @@ export default function HomeScreen() {
     })();
   }, []);
 
+  // 탭 포커스 시 코인 잔액·장착 프레임 갱신 (코인샵/컬렉션에서 변경 반영)
+  useFocusEffect(useCallback(() => {
+    getBalance().then(setBalance);
+    getEquippedFrame().then(setEquippedFrameId);
+  }, []));
 
   // ── 이펙트 애니메이션 ────────────────────────────────────────────────────
   useEffect(() => {
@@ -1083,6 +1088,27 @@ export default function HomeScreen() {
                   );
                 })}
               </View>
+              {(() => {
+                const cnt = weekDays.reduce(
+                  (a, { date: d }) => { const v = deriveValence(d, profile.diiSign, profile.starSign); a[v]++; return a; },
+                  { good: 0, neutral: 0, bad: 0 } as Record<string, number>,
+                );
+                const g = cnt.good, n = cnt.neutral, b = cnt.bad;
+                const dominant = g >= n && g >= b ? { label: '좋은 흐름', color: '#FFD700' }
+                  : b >= n && b >= g ? { label: '주의 필요', color: '#FF6B9D' }
+                  : { label: '평온한 주', color: '#88AAFF' };
+                return (
+                  <View style={{ marginTop: 8, gap: 3 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 5 }}>
+                      <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: dominant.color }} />
+                      <Text style={{ fontFamily: F.b, color: dominant.color, fontSize: 11 }}>{dominant.label}</Text>
+                    </View>
+                    <Text style={{ fontFamily: F.r, color: 'rgba(255,255,255,0.30)', fontSize: 10, lineHeight: 14 }}>
+                      🟡{g} · 🔵{n} · 🔴{b}
+                    </Text>
+                  </View>
+                );
+              })()}
             </View>
           )}
         </View>
