@@ -526,7 +526,7 @@ const styles = StyleSheet.create({
   },
   tabsContainer: { paddingHorizontal: 20, gap: 0 },
   tab: {
-    paddingHorizontal: 16, paddingTop: 10, paddingBottom: 12,
+    paddingHorizontal: 16, paddingTop: 10, paddingBottom: 4,
     borderBottomWidth: 2, borderBottomColor: 'transparent', marginBottom: -1,
   },
   tabActive: { borderBottomColor: '#FFD700' },
