@@ -1,6 +1,6 @@
 # unse-widget 작업 목록
 
-> 최종 업데이트: 2026-06-22 (오후)
+> 최종 업데이트: 2026-06-22 (저녁)
 > 컨셉 원칙: **한국신화 × 운세** — 이 두 가지는 고정. 나머지 디자인·구조·UI는 루틴/Claude가 자유롭게 개선 가능.
 
 ---
@@ -149,7 +149,7 @@
 - ~~주요 Pressable에 `accessibilityLabel` 추가 — 스토어 심사 영향~~ → 홈/운세/가챠/컬렉션/코인샵 완료
 
 ### 리텐션 / 참여
-- [ ] 스트릭 알림 — 자정 전 "오늘 운세 확인하셨나요?" 푸시 알림 (expo-notifications, 네이티브)
+- ~~스트릭 알림 — 자정 전 "오늘 운세 확인하셨나요?" 푸시 알림~~ → `src/notifications/streakReminder.ts` 완료, index/fortune 연동 완료 (네이티브 빌드 필요)
 - ~~컬렉션 완성률 공유 기능 — "나는 24/24 수집 완료!" 이미지 공유~~ → Share API 텍스트 공유 완료
 
 ---
@@ -195,21 +195,20 @@
 - ~~운세 잠금 해제: 광고 제거 구매 시 광고 대신 50코인 차감으로 분기~~ → 완료
 
 **[네이티브] 빌드 필요 — 코인 IAP 결제 연동:**
-- [ ] `react-native-iap` 설치 + `app.json` 플러그인 추가
-- [ ] Play Console에 4개 인앱 상품 등록 (SKU: coins_100/330/1100, remove_ads)
-- [ ] `handlePurchase` 스텁 → 실제 IAP 호출 교체
-  ```ts
-  await initConnection();
-  await requestPurchase({ sku });
-  // 결제 완료 후 코인 지급 + finishTransaction
-  ```
+- ~~`react-native-iap` 설치 + `app.json` 플러그인 추가~~ → 완료
+- ~~`handlePurchase` / `handleRemoveAds` → 실제 IAP 호출 교체~~ → 완료 (purchaseUpdatedListener/purchaseErrorListener 패턴)
+- ~~`addCoins()` 함수 coins.ts 추가~~ → 완료
+- [ ] **네이티브 빌드** — `npx expo run:android` (메모리 부족으로 실패, 재시도 필요. RAM 여유 확보 후)
+- [ ] Play Console에 4개 인앱 상품 등록 (SKU: remove_ads / coins_100 / coins_330 / coins_1100)
 - [ ] 구매 복원(restore purchases) 처리
 - [ ] 영수증 서버 검증 (선택, 출시 후 고려)
 
 ### 스토어 등록
-- [ ] 앱 아이콘 (1024×1024) — 봉황 또는 도깨비 컨셉
-- [ ] 스크린샷 5장 (홈/컬렉션/가챠/운세/코인샵)
-- [ ] 개인정보처리방침 URL
+- ~~앱 아이콘 (1024×1024) — 봉황 컨셉~~ → Pollinations.ai Flux 생성 완료, assets/images 적용 완료
+- ~~스크린샷 5장 (홈/운세/가챠/컬렉션/코인샵)~~ → `scripts/test-output/store_01~05.png` 완료
+- ~~개인정보처리방침 작성~~ → `docs/privacy-policy.html` 완료, GitHub Pages 배포 중
+  - URL: `https://been2531.github.io/unse-widget/privacy-policy.html`
+  - `.nojekyll` 추가 후 재배포 중 (Actions 탭 확인)
 - [ ] Google Play Console 등록 및 심사 제출
 
 ---
