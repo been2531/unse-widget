@@ -200,7 +200,7 @@
 - ~~`addCoins()` 함수 coins.ts 추가~~ → 완료
 - [ ] **네이티브 빌드** — `npx expo run:android` (메모리 부족으로 실패, 재시도 필요. RAM 여유 확보 후)
 - [ ] Play Console에 4개 인앱 상품 등록 (SKU: remove_ads / coins_100 / coins_330 / coins_1100)
-- [ ] 구매 복원(restore purchases) 처리
+- ~~구매 복원(restore purchases) 처리~~ → 완료 (`getAvailablePurchases` + 코인샵 하단 버튼)
 - [ ] 영수증 서버 검증 (선택, 출시 후 고려)
 
 ### 스토어 등록

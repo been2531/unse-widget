@@ -14,11 +14,12 @@ function iap() {
   if (!_iap) try { _iap = require('react-native-iap'); } catch { _iap = {}; }
   return _iap;
 }
-const initConnection        = (...a: any[]) => iap().initConnection?.(...a) ?? Promise.resolve();
+const initConnection          = (...a: any[]) => iap().initConnection?.(...a)          ?? Promise.resolve();
 const purchaseUpdatedListener = (...a: any[]) => iap().purchaseUpdatedListener?.(...a) ?? { remove: () => {} };
 const purchaseErrorListener   = (...a: any[]) => iap().purchaseErrorListener?.(...a)   ?? { remove: () => {} };
-const finishTransaction     = (...a: any[]) => iap().finishTransaction?.(...a) ?? Promise.resolve();
-const requestPurchase       = (...a: any[]) => iap().requestPurchase?.(...a)  ?? Promise.resolve();
+const finishTransaction       = (...a: any[]) => iap().finishTransaction?.(...a)       ?? Promise.resolve();
+const requestPurchase         = (...a: any[]) => iap().requestPurchase?.(...a)         ?? Promise.resolve();
+const getAvailablePurchases   = (...a: any[]) => iap().getAvailablePurchases?.(...a)   ?? Promise.resolve([]);
 
 import { F } from '@/shared/fonts';
 import { SkeletonBox } from '@/shared/Skeleton';
@@ -80,6 +81,7 @@ export default function CoinShopScreen() {
   const [adsRemaining, setAdsRemaining] = useState(0);
   const [adLoading, setAdLoading] = useState(false);
   const [purchasing, setPurchasing] = useState<string | null>(null);
+  const [restoring, setRestoring] = useState(false);
   const [ownedShopSkinIds, setOwnedShopSkinIds] = useState<Set<string>>(new Set());
   const [equippedFrameId, setEquippedFrameId] = useState<string | null>(null);
   const [adsRemoved, setAdsRemoved] = useState(false);
@@ -192,6 +194,27 @@ export default function CoinShopScreen() {
         Alert.alert('결제 오류', e.message ?? '알 수 없는 오류');
       }
       setPurchasing(null);
+    }
+  }
+
+  // ─── 구매 복원 ────────────────────────────────────────────────────────────
+  async function handleRestorePurchases() {
+    if (restoring) return;
+    setRestoring(true);
+    try {
+      const purchases = await getAvailablePurchases();
+      const hadRemoveAds = purchases.some((p: any) => p.productId === 'remove_ads');
+      if (hadRemoveAds) {
+        await grantRemoveAds();
+        setAdsRemoved(true);
+        Alert.alert('복원 완료', '광고 제거가 복원되었습니다.');
+      } else {
+        Alert.alert('복원할 항목 없음', '이전에 구매한 항목을 찾을 수 없습니다.');
+      }
+    } catch {
+      Alert.alert('오류', '구매 복원 중 문제가 발생했습니다.');
+    } finally {
+      setRestoring(false);
     }
   }
 
@@ -341,6 +364,18 @@ export default function CoinShopScreen() {
           • 미성년자 결제 주의
         </Text>
 
+        <Pressable
+          style={styles.restoreBtn}
+          onPress={handleRestorePurchases}
+          disabled={restoring}
+          accessibilityLabel="이전 구매 복원"
+        >
+          {restoring
+            ? <ActivityIndicator size="small" color="rgba(255,255,255,0.4)" />
+            : <Text style={styles.restoreBtnText}>이전 구매 복원</Text>
+          }
+        </Pressable>
+
         {/* 구분선 */}
         <View style={styles.divider} />
 
@@ -469,6 +504,8 @@ const styles = StyleSheet.create({
   packagePrice: { fontFamily: F.eb, fontSize: 16 },
 
   notice: { fontFamily: F.r, color: 'rgba(255,255,255,0.25)', fontSize: 11, lineHeight: 18, marginTop: 8 },
+  restoreBtn: { alignSelf: 'center', marginTop: 12, paddingVertical: 6, paddingHorizontal: 16 },
+  restoreBtnText: { fontFamily: F.r, color: 'rgba(255,255,255,0.3)', fontSize: 12, textDecorationLine: 'underline' },
 
   buyBtn: {
     paddingHorizontal: 14, paddingVertical: 9, borderRadius: 12,
