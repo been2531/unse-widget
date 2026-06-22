@@ -8,10 +8,17 @@ import {
   StatusBar, StyleSheet, Text, View, useWindowDimensions,
 } from 'react-native';
 
-import {
-  finishTransaction, initConnection, purchaseErrorListener,
-  purchaseUpdatedListener, requestPurchase,
-} from 'react-native-iap';
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _iap: any = null;
+function iap() {
+  if (!_iap) try { _iap = require('react-native-iap'); } catch { _iap = {}; }
+  return _iap;
+}
+const initConnection        = (...a: any[]) => iap().initConnection?.(...a) ?? Promise.resolve();
+const purchaseUpdatedListener = (...a: any[]) => iap().purchaseUpdatedListener?.(...a) ?? { remove: () => {} };
+const purchaseErrorListener   = (...a: any[]) => iap().purchaseErrorListener?.(...a)   ?? { remove: () => {} };
+const finishTransaction     = (...a: any[]) => iap().finishTransaction?.(...a) ?? Promise.resolve();
+const requestPurchase       = (...a: any[]) => iap().requestPurchase?.(...a)  ?? Promise.resolve();
 
 import { F } from '@/shared/fonts';
 import { SkeletonBox } from '@/shared/Skeleton';

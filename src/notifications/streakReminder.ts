@@ -1,49 +1,71 @@
-import * as Notifications from 'expo-notifications';
-import { Platform } from 'react-native';
+import { NativeModules, Platform } from 'react-native';
 
-const NOTIFICATION_ID_KEY = 'streak_reminder_id';
 const CHANNEL_ID = 'streak_reminder';
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-  }),
-});
+// 네이티브 모듈이 링크되지 않은 환경(Expo Go, notifications 미포함 빌드)에서 전체 no-op
+const HAS_NATIVE = !!NativeModules.ExpoPushTokenManager;
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let _n: any = null;
+function notif() {
+  if (!HAS_NATIVE) return {};
+  if (!_n) try { _n = require('expo-notifications'); } catch { _n = {}; }
+  return _n;
+}
+
+// setNotificationHandler는 모듈 로드 시점에 실행되면 안 되므로 lazy 호출
+let _handlerSet = false;
+function ensureHandler() {
+  if (_handlerSet) return;
+  const n = notif();
+  if (!n?.setNotificationHandler) return;
+  n.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: false,
+      shouldSetBadge: false,
+    }),
+  });
+  _handlerSet = true;
+}
 
 async function ensureChannel() {
   if (Platform.OS !== 'android') return;
-  await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
+  const n = notif();
+  if (!n?.setNotificationChannelAsync) return;
+  await n.setNotificationChannelAsync(CHANNEL_ID, {
     name: '운세 알림',
-    importance: Notifications.AndroidImportance.DEFAULT,
+    importance: n.AndroidImportance?.DEFAULT,
     vibrationPattern: [0, 250, 250, 250],
   });
 }
 
 export async function requestNotificationPermission(): Promise<boolean> {
-  const { status } = await Notifications.getPermissionsAsync();
+  const n = notif();
+  if (!n?.getPermissionsAsync) return false;
+  const { status } = await n.getPermissionsAsync();
   if (status === 'granted') return true;
-  const { status: newStatus } = await Notifications.requestPermissionsAsync();
+  const { status: newStatus } = await n.requestPermissionsAsync();
   return newStatus === 'granted';
 }
 
 // 오늘 밤 23:00에 알림 예약 (이미 예약된 게 있으면 교체)
 export async function scheduleTonightReminder() {
-  await ensureChannel();
+  ensureHandler();
+  const n = notif();
+  if (!n?.scheduleNotificationAsync) return;
 
-  // 기존 알림 취소
-  await Notifications.cancelAllScheduledNotificationsAsync();
+  await ensureChannel();
+  await n.cancelAllScheduledNotificationsAsync();
 
   const now = new Date();
   const tonight = new Date(now);
   tonight.setHours(23, 0, 0, 0);
 
-  // 이미 23시 지났으면 건너뜀
   if (tonight <= now) return;
 
-  await Notifications.scheduleNotificationAsync({
+  await n.scheduleNotificationAsync({
     content: {
       title: '🔮 오늘의 운세',
       body: '오늘 운세 아직 확인 안 하셨나요? 잠깐 확인해보세요!',
@@ -51,7 +73,7 @@ export async function scheduleTonightReminder() {
       ...(Platform.OS === 'android' && { channelId: CHANNEL_ID }),
     },
     trigger: {
-      type: Notifications.SchedulableTriggerInputTypes.DATE,
+      type: n.SchedulableTriggerInputTypes?.DATE,
       date: tonight,
     },
   });
@@ -59,5 +81,7 @@ export async function scheduleTonightReminder() {
 
 // 운세 확인 완료 → 오늘 알림 취소
 export async function cancelTodayReminder() {
-  await Notifications.cancelAllScheduledNotificationsAsync();
+  const n = notif();
+  if (!n?.cancelAllScheduledNotificationsAsync) return;
+  await n.cancelAllScheduledNotificationsAsync();
 }
