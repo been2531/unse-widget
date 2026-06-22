@@ -235,6 +235,168 @@ const CARDS = [
       'ancient cosmic bird deity living within the heart of the Korean sun, ' +
       'black feathers rimmed in solar gold, supreme celestial divine bird, ',
   },
+
+  // ── 신규: 봉황 시리즈 (오색 평화 신조) ──────────────────────────────────
+  {
+    id: 'bonghwang_1', seed: 3001, rarity: 'common',
+    prompt: 'Bongi young Korean Bonghwang phoenix hatchling of peace and virtue, ' +
+      'small round chick covered in soft five-colored osaek plumage, ' +
+      'delicate gold crimson azure jade white feathers just emerging, ' +
+      'gentle warm glow, peaceful serene expression, sacred tree branch perch, ' +
+      'Korean mythological bird of peace, ',
+  },
+  {
+    id: 'bonghwang_2', seed: 3002, rarity: 'rare',
+    prompt: 'Hwangi adolescent Korean Bonghwang phoenix growing in grace, ' +
+      'elegant bird with developing five-colored osaek plumage in full bloom, ' +
+      'wings beginning to spread showing multicolored feather splendor, ' +
+      'gentle golden light radiating peaceful aura, sacred blossoms around, ' +
+      'noble Korean peace deity bird, ',
+  },
+  {
+    id: 'bonghwang_3', seed: 3003, rarity: 'epic',
+    prompt: 'Bonghwang the supreme Korean sacred phoenix of peace and virtue, ' +
+      'magnificent five-colored osaek phoenix with breathtaking plumage, ' +
+      'gold crimson azure jade white feathers blazing in radiant harmony, ' +
+      'wings fully spread in majestic display of celestial peace, ' +
+      'sacred tree and flowering branches in background, divine peaceful gaze, ' +
+      'apex Korean mythological bird of divine virtue and prosperity, ',
+  },
+
+  // ── 신규: 도깨비 시리즈 (암흑 트릭스터) ─────────────────────────────────
+  {
+    id: 'dokkaebi_1', seed: 3101, rarity: 'common',
+    prompt: 'Dokki young Korean Dokkaebi trickster spirit, small mischievous goblin, ' +
+      'tiny wild red horns, small ornate magic club Dokkaebi-bangmangi, ' +
+      'tiger-pattern traditional clothes, wild hair and gap-toothed grin, ' +
+      'playful dark spirit energy, small pranks and sparks, ' +
+      'young Korean shamanistic goblin spirit, ',
+  },
+  {
+    id: 'dokkaebi_2', seed: 3102, rarity: 'rare',
+    prompt: 'Gwisini growing Korean Dokkaebi supernatural trickster, ' +
+      'powerful goblin with large wild red horns and fierce expression, ' +
+      'wielding ornate magic club crackling with star burst energy, ' +
+      'tiger and leopard pattern haori robe, dark spirit smoke swirling, ' +
+      'intermediate Dokkaebi power growing, wild chaotic presence, ',
+  },
+  {
+    id: 'dokkaebi_3', seed: 3103, rarity: 'epic',
+    prompt: 'Dokkaebi the great Korean supernatural trickster of ancient folklore, ' +
+      'immensely powerful wild goblin with enormous blazing red horns, ' +
+      'massive ornate Dokkaebi-bangmangi club erupting with star magic, ' +
+      'ancient tiger-pattern ceremonial garb, wild untamed spirit aura, ' +
+      'dark energy and mischievous lightning surrounding mighty form, ' +
+      'apex Korean mythological trickster and chaos spirit, ',
+  },
+
+  // ── 신규: 해태 시리즈 (정의 수호 사자) ──────────────────────────────────
+  {
+    id: 'haetae_1', seed: 3201, rarity: 'common',
+    prompt: 'Haei young Haetae justice guardian lion of Korean mythology, ' +
+      'small lion-like creature with single straight horn on forehead, ' +
+      'compact sturdy body covered in white and silver fur, ' +
+      'gentle but watchful eyes of justice, soft flame-scale markings, ' +
+      'young Korean divine justice guardian awakening, ',
+  },
+  {
+    id: 'haetae_2', seed: 3202, rarity: 'rare',
+    prompt: 'Taetae adult Haetae Korean justice guardian growing in power, ' +
+      'proud lion-like creature with prominent single horn gleaming, ' +
+      'silver-white scaled fur with blue fire markings, powerful build, ' +
+      'scales that absorb and judge evil energy, noble guardian stance, ' +
+      'divine justice aura radiating outward, Korean law guardian spirit, ',
+  },
+  {
+    id: 'haetae_3', seed: 3203, rarity: 'epic',
+    prompt: 'Haetae the supreme Korean divine guardian of law and justice, ' +
+      'majestic powerful lion with magnificent single celestial horn blazing, ' +
+      'radiant silver-white body covered in divine protective scales, ' +
+      'blazing blue-white justice fire erupting from horn and body, ' +
+      'supreme protector that punishes evil and guards the righteous, ' +
+      'overwhelming divine guardian presence of ancient Korean justice, ',
+  },
+
+  // ── 신규: 청룡 시리즈 (동방 수호 청룡) ──────────────────────────────────
+  {
+    id: 'cheongnyong_1', seed: 3301, rarity: 'common',
+    prompt: 'Cheongi young Cheongnyong azure dragon of Korean eastern guardian mythology, ' +
+      'small young dragon with bright azure blue-green scales and tiny horns, ' +
+      'slender serpentine body coiled gracefully, wood element energy, ' +
+      'spring wind and cherry blossoms around young form, ' +
+      'guardian of the east awakening, Korean four divine beasts, ',
+  },
+  {
+    id: 'cheongnyong_2', seed: 3302, rarity: 'rare',
+    prompt: 'Nyongi adolescent Cheongnyong azure dragon growing in power, ' +
+      'elegant dragon with deep azure and teal scales in full development, ' +
+      'spiraling body with growing wood-spirit energy, spring storm forming, ' +
+      'eastern wind and young tree energy swirling around form, ' +
+      'Korean eastern guardian dragon growing in celestial power, ',
+  },
+  {
+    id: 'cheongnyong_3', seed: 3303, rarity: 'epic',
+    prompt: 'Cheongnyong the supreme azure dragon guardian of the Korean east, ' +
+      'magnificent dragon with resplendent deep azure celestial scales, ' +
+      'immense coiling form commanding eastern winds and spring energy, ' +
+      'wood element power erupting, spring thunder and forest energy, ' +
+      'one of the four divine beasts protecting Korean cosmos, ' +
+      'supreme eastern guardian radiating azure divine light, ',
+  },
+
+  // ── 신규: 백호 시리즈 (서방 수호 백호) ──────────────────────────────────
+  {
+    id: 'baekho_1', seed: 3401, rarity: 'common',
+    prompt: 'Baeigi young Baekho white tiger guardian of Korean western mythology, ' +
+      'small pure white tiger cub with distinctive black tiger stripes, ' +
+      'metal element energy faintly glowing silver-white, ' +
+      'autumn leaves and cool wind around young form, ' +
+      'western guardian tiger cub awakening in Korean cosmology, ',
+  },
+  {
+    id: 'baekho_2', seed: 3402, rarity: 'rare',
+    prompt: 'Hoigi adolescent Baekho white tiger growing in power, ' +
+      'sleek white tiger with bold black stripes and silver metal aura, ' +
+      'powerful growing form in dynamic hunting stance, ' +
+      'autumn wind and metal energy crackling around form, ' +
+      'Korean western guardian growing in divine predator power, ',
+  },
+  {
+    id: 'baekho_3', seed: 3403, rarity: 'epic',
+    prompt: 'Baekho the supreme white tiger guardian of the Korean west, ' +
+      'magnificent pure white tiger with blazing black stripes, ' +
+      'immense powerful body emanating silver-white metal divine energy, ' +
+      'autumn storm and metal lightning erupting around apex predator form, ' +
+      'one of the four divine beasts of Korean celestial guardianship, ' +
+      'supreme western guardian with overwhelming divine metal energy, ',
+  },
+
+  // ── 신규: 현무 시리즈 (북방 수호 현무) ──────────────────────────────────
+  {
+    id: 'hyeonmu_1', seed: 3501, rarity: 'common',
+    prompt: 'Hyeoni young Hyeonmu black tortoise-serpent of Korean northern guardian, ' +
+      'small turtle with intertwined serpent companion, dark blue-black coloring, ' +
+      'water element and earth energy in nascent form, ' +
+      'winter cold and deep water mist around small form, ' +
+      'northern guardian awakening in Korean four divine beast cosmology, ',
+  },
+  {
+    id: 'hyeonmu_2', seed: 3502, rarity: 'rare',
+    prompt: 'Mui adolescent Hyeonmu black warrior tortoise-serpent growing in power, ' +
+      'sturdy dark turtle with powerful serpent coiling around shell, ' +
+      'deep blue-black water and earth energy developing, ' +
+      'winter deep water and ancient stone energy emanating, ' +
+      'Korean northern guardian growing in primordial power, ',
+  },
+  {
+    id: 'hyeonmu_3', seed: 3503, rarity: 'epic',
+    prompt: 'Hyeonmu the supreme black tortoise-serpent guardian of the Korean north, ' +
+      'ancient massive dark turtle with great serpent entwined around its shell, ' +
+      'deep black-blue water and earth divine energy erupting, ' +
+      'winter storm and deep ocean abyss power around immovable form, ' +
+      'one of the four divine beasts of Korean celestial guardianship, ' +
+      'supreme northern guardian of ancient wisdom and endurance, ',
+  },
 ];
 
 function download(url, dest) {
