@@ -277,7 +277,6 @@ export default function CoinShopScreen() {
             )}
             <Text style={styles.packageIcon}>{pkg.icon}</Text>
             <View style={styles.packageInfo}>
-              <Text style={styles.packageLabel}>{pkg.label}</Text>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
                 <Text style={[styles.packageCoins, { color: pkg.color }]}>
                   {pkg.coins.toLocaleString()}코인
@@ -289,10 +288,13 @@ export default function CoinShopScreen() {
                 ) : null}
               </View>
             </View>
-            {purchasing === pkg.sku
-              ? <ActivityIndicator color={pkg.color} />
-              : <Text style={[styles.packagePrice, { color: pkg.color }]}>{pkg.price}</Text>
-            }
+            <View style={{ alignItems: 'flex-end', gap: 3 }}>
+              <Text style={styles.packageLabel}>{pkg.label}</Text>
+              {purchasing === pkg.sku
+                ? <ActivityIndicator color={pkg.color} />
+                : <Text style={[styles.packagePrice, { color: pkg.color }]}>{pkg.price}</Text>
+              }
+            </View>
           </Pressable>
         ))}
 
@@ -388,7 +390,7 @@ const styles = StyleSheet.create({
   },
   balanceText: { fontFamily: F.b, color: '#FFE500', fontSize: 13 },
 
-  content: { paddingHorizontal: 20, paddingBottom: 48, gap: 12 },
+  content: { paddingHorizontal: 20, paddingBottom: 100, gap: 12 },
 
   section: { gap: 8 },
   sectionTitle: { fontFamily: F.eb, color: '#FFF', fontSize: 16, borderLeftWidth: 3, borderLeftColor: '#C8A84B', paddingLeft: 10 },
@@ -411,8 +413,7 @@ const styles = StyleSheet.create({
     borderRadius: 16, padding: 16, position: 'relative',
   },
   packageHighlight: {
-    borderColor: 'rgba(255,220,0,0.55)', backgroundColor: 'rgba(255,220,0,0.08)',
-    shadowColor: '#FFE500', shadowOpacity: 0.20, shadowOffset: { width: 0, height: 2 }, shadowRadius: 8, elevation: 3,
+    borderColor: 'rgba(255,220,0,0.45)',
   },
   bestBadge: {
     position: 'absolute', top: -8, right: 12,
@@ -420,14 +421,14 @@ const styles = StyleSheet.create({
   },
   bestText: { fontFamily: F.bk, color: '#111', fontSize: 10 },
   packageIcon: { fontSize: 28 },
-  packageInfo: { flex: 1, gap: 4 },
+  packageInfo: { flex: 1, gap: 2 },
   packageLabel: { fontFamily: F.r, color: 'rgba(255,255,255,0.7)', fontSize: 13 },
   packageCoins: { fontFamily: F.bk, fontSize: 18 },
   bonusBadge: {
-    backgroundColor: 'rgba(0,220,100,0.15)', borderWidth: 1, borderColor: 'rgba(0,220,100,0.35)',
+    backgroundColor: 'rgba(0,200,80,0.28)', borderWidth: 1, borderColor: 'rgba(0,220,100,0.7)',
     borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2,
   },
-  bonusText: { fontFamily: F.b, color: '#00DD77', fontSize: 10 },
+  bonusText: { fontFamily: F.b, color: '#00EE88', fontSize: 10 },
   packagePrice: { fontFamily: F.eb, fontSize: 16 },
 
   notice: { fontFamily: F.r, color: 'rgba(255,255,255,0.25)', fontSize: 11, lineHeight: 18, marginTop: 8 },
