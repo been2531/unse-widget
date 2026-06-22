@@ -536,7 +536,7 @@ const styles = StyleSheet.create({
     marginHorizontal: 20, marginBottom: 8, gap: 6,
   },
   progressRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  progressLabel: { fontFamily: F.sb, color: 'rgba(255,255,255,0.40)', fontSize: 11 },
+  progressLabel: { fontFamily: F.sb, color: 'rgba(255,255,255,0.55)', fontSize: 11 },
   progressCount: { fontFamily: F.b, color: 'rgba(255,255,255,0.60)', fontSize: 11 },
   shareBtn: {
     paddingHorizontal: 8, paddingVertical: 3,
@@ -569,7 +569,7 @@ const styles = StyleSheet.create({
     paddingTop: 80, paddingHorizontal: 32, gap: 12,
   },
   emptyEmoji: { fontSize: 52, marginBottom: 4 },
-  emptyTitle: { fontFamily: F.b, color: 'rgba(255,255,255,0.65)', fontSize: 16, textAlign: 'center' },
+  emptyTitle: { fontFamily: F.eb, color: 'rgba(255,255,255,0.72)', fontSize: 16, textAlign: 'center' },
   emptySub: { fontFamily: F.r, color: 'rgba(255,255,255,0.30)', fontSize: 13, textAlign: 'center', lineHeight: 20 },
   emptyBtn: {
     marginTop: 8, paddingHorizontal: 24, paddingVertical: 12,

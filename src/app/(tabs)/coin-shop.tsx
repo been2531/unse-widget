@@ -437,13 +437,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.06)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)',
     alignItems: 'center', minWidth: 80,
   },
-  buyBtnText: { fontSize: 13, fontWeight: '800' },
+  buyBtnText: { fontFamily: F.eb, fontSize: 13 },
   equipBtn: {
     paddingHorizontal: 14, paddingVertical: 9, borderRadius: 12,
     backgroundColor: 'rgba(255,255,255,0.06)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.18)',
     alignItems: 'center', minWidth: 52,
   },
-  equipBtnText: { fontSize: 13, fontWeight: '700' },
+  equipBtnText: { fontFamily: F.b, fontSize: 13 },
 
   removeAdsBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',

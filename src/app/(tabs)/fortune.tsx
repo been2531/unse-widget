@@ -426,7 +426,7 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.10)',
   },
   backIcon: { fontFamily: F.r, color: '#fff', fontSize: 28, lineHeight: 32, marginTop: -2 },
-  title: { fontFamily: F.b, fontSize: 18, color: '#FFFFFF' },
+  title: { fontFamily: F.eb, fontSize: 18, color: '#FFFFFF' },
 
   scroll: { paddingHorizontal: 16, paddingBottom: 40, gap: 12 },
 
@@ -450,12 +450,12 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)',
     gap: 12,
   },
-  sectionTitle: { fontFamily: F.b, color: 'rgba(255,255,255,0.40)', fontSize: 11, letterSpacing: 0.8 },
+  sectionTitle: { fontFamily: F.eb, color: 'rgba(255,255,255,0.55)', fontSize: 11, letterSpacing: 1.0, textTransform: 'uppercase' },
   luckyGrid: { flexDirection: 'row', alignItems: 'center' },
   luckyCell: { flex: 1, alignItems: 'center', gap: 4 },
   luckyDot: { width: 20, height: 20, borderRadius: 10, marginBottom: 2, borderWidth: 1, borderColor: 'rgba(255,255,255,0.20)' },
   luckyCellIcon: { fontSize: 18, marginBottom: 2 },
-  luckyCellLabel: { fontFamily: F.sb, color: 'rgba(255,255,255,0.30)', fontSize: 9 },
+  luckyCellLabel: { fontFamily: F.sb, color: 'rgba(255,255,255,0.42)', fontSize: 9 },
   luckyCellVal: { fontFamily: F.eb, color: '#FFFFFF', fontSize: 13 },
   luckyDivider: { width: 1, height: 44, backgroundColor: 'rgba(255,255,255,0.07)' },
 
@@ -467,7 +467,7 @@ const styles = StyleSheet.create({
   },
   cardHeader: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   cardEmoji: { fontSize: 18 },
-  cardLabel: { fontFamily: F.b, fontSize: 15, color: '#FFFFFF', flex: 1 },
+  cardLabel: { fontFamily: F.eb, fontSize: 15, color: '#FFFFFF', flex: 1 },
   inlineScore: { fontFamily: F.bk, fontSize: 13 },
   badge: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8, borderWidth: 1 },
   badgeText: { fontFamily: F.b, fontSize: 10 },
@@ -475,7 +475,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8,
     backgroundColor: 'rgba(255,220,0,0.12)', borderWidth: 1, borderColor: 'rgba(255,220,0,0.35)',
   },
-  freeBadgeText: { fontFamily: F.b, fontSize: 10, color: '#FFE500' },
+  freeBadgeText: { fontFamily: F.eb, fontSize: 10, color: '#FFE500' },
   lockIcon: { fontSize: 14 },
   cardText: { fontFamily: F.r, fontSize: 14, color: 'rgba(255,255,255,0.72)', lineHeight: 22 },
 
@@ -484,7 +484,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12, alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.03)',
   },
-  watchAdText: { fontFamily: F.sb, fontSize: 14 },
+  watchAdText: { fontFamily: F.b, fontSize: 14 },
 
   footNote: { fontFamily: F.r, fontSize: 11, color: 'rgba(255,255,255,0.18)', textAlign: 'center', marginTop: 4 },
 

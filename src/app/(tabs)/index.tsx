@@ -1091,9 +1091,13 @@ export default function HomeScreen() {
                       <View style={{ width: 6, height: 6, borderRadius: 3, backgroundColor: dominant.color }} />
                       <Text style={{ fontFamily: F.b, color: dominant.color, fontSize: 11 }}>{dominant.label}</Text>
                     </View>
-                    <Text style={{ fontFamily: F.r, color: 'rgba(255,255,255,0.30)', fontSize: 10, lineHeight: 14 }}>
-                      🟡{g} · 🔵{n} · 🔴{b}
-                    </Text>
+                    <View style={{ flexDirection: 'row', gap: 4, alignItems: 'center' }}>
+                      <Text style={{ fontFamily: F.r, color: '#FFD700', fontSize: 9 }}>● 좋음 {g}</Text>
+                      <Text style={{ fontFamily: F.r, color: 'rgba(255,255,255,0.20)', fontSize: 9 }}>·</Text>
+                      <Text style={{ fontFamily: F.r, color: '#88AAFF', fontSize: 9 }}>● 보통 {n}</Text>
+                      <Text style={{ fontFamily: F.r, color: 'rgba(255,255,255,0.20)', fontSize: 9 }}>·</Text>
+                      <Text style={{ fontFamily: F.r, color: '#FF6B9D', fontSize: 9 }}>● 주의 {b}</Text>
+                    </View>
                   </View>
                 );
               })()}
