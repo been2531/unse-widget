@@ -30,6 +30,30 @@ export const CARD_IMAGES: Record<string, ImageRequireSource> = {
   jujak_1:       require('../assets/character/jujak_1.png'),
   jujak_2:       require('../assets/character/jujak_2.png'),
   jujak_3:       require('../assets/character/jujak_3.png'),
+  // ── 신규: 봉황 시리즈 (nature) ─────────────────────────────────────────
+  bonghwang_1:   require('../assets/character/bonghwang_1.png'),
+  bonghwang_2:   require('../assets/character/bonghwang_2.png'),
+  bonghwang_3:   require('../assets/character/bonghwang_3.png'),
+  // ── 신규: 도깨비 시리즈 (dark) ─────────────────────────────────────────
+  dokkaebi_1:    require('../assets/character/dokkaebi_1.png'),
+  dokkaebi_2:    require('../assets/character/dokkaebi_2.png'),
+  dokkaebi_3:    require('../assets/character/dokkaebi_3.png'),
+  // ── 신규: 해태 시리즈 (light) ──────────────────────────────────────────
+  haetae_1:      require('../assets/character/haetae_1.png'),
+  haetae_2:      require('../assets/character/haetae_2.png'),
+  haetae_3:      require('../assets/character/haetae_3.png'),
+  // ── 신규: 청룡 시리즈 (nature) ─────────────────────────────────────────
+  cheongnyong_1: require('../assets/character/cheongnyong_1.png'),
+  cheongnyong_2: require('../assets/character/cheongnyong_2.png'),
+  cheongnyong_3: require('../assets/character/cheongnyong_3.png'),
+  // ── 신규: 백호 시리즈 (light) ──────────────────────────────────────────
+  baekho_1:      require('../assets/character/baekho_1.png'),
+  baekho_2:      require('../assets/character/baekho_2.png'),
+  baekho_3:      require('../assets/character/baekho_3.png'),
+  // ── 신규: 현무 시리즈 (water) ──────────────────────────────────────────
+  hyeonmu_1:     require('../assets/character/hyeonmu_1.png'),
+  hyeonmu_2:     require('../assets/character/hyeonmu_2.png'),
+  hyeonmu_3:     require('../assets/character/hyeonmu_3.png'),
   // ── 신규: 구미호 시리즈 (fire) ─────────────────────────────────────────
   gumiho_1:      require('../assets/character/gumiho_1.png'),
   gumiho_2:      require('../assets/character/gumiho_2.png'),

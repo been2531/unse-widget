@@ -446,7 +446,7 @@ export default function CollectionScreen() {
         )}
         numColumns={COLS}
         key={`${filter}-${elemFilter}`}
-        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40, paddingTop: 8 }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 40, paddingTop: 4 }}
         showsVerticalScrollIndicator={false}
         overScrollMode="never"
         ListEmptyComponent={
@@ -510,7 +510,7 @@ const styles = StyleSheet.create({
   tabText: { fontFamily: F.r, color: 'rgba(255,255,255,0.40)', fontSize: 14 },
   tabTextActive: { fontFamily: F.b, color: '#FFF' },
   progressWrap: {
-    marginHorizontal: 20, marginBottom: 10, gap: 6,
+    marginHorizontal: 20, marginBottom: 6, gap: 6,
   },
   progressRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   progressLabel: { fontFamily: F.sb, color: 'rgba(255,255,255,0.40)', fontSize: 11 },
@@ -529,7 +529,7 @@ const styles = StyleSheet.create({
     height: '100%', borderRadius: 2,
     backgroundColor: '#FFD700',
   },
-  elemTabsContainer: { paddingHorizontal: 16, paddingTop: 10, paddingBottom: 14, gap: 8 },
+  elemTabsContainer: { paddingHorizontal: 16, paddingTop: 6, paddingBottom: 8, gap: 8 },
   elemTab: {
     height: 34,
     paddingHorizontal: 14, borderRadius: 17,
